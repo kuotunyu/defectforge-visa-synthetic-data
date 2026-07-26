@@ -1,0 +1,245 @@
+# Interfaces — 腳本、CLI 與設定契約
+
+> **這份是契約，不是建議。** 無人值守執行時 agent 一律照這裡的參數名稱呼叫，
+> **不准自己發明參數**。要新增或改語意，先更新這份文件並在 worklog 記一筆。
+> 對應規則見 [autonomy_policy.md §4](autonomy_policy.md)。
+
+---
+
+## 1. 全域慣例
+
+### 1.1 所有腳本共用的參數
+
+| 參數 | 型別 | 預設 | 說明 |
+|---|---|---|---|
+| `--paths` | path | `configs/paths.yaml` | 路徑真相來源，**不得硬編絕對路徑** |
+| `--config` | path | 各腳本自己的 `configs/<name>.yaml` | 該階段的參數 |
+| `--object` | str（可重複） | 全部（`pcb1`, `capsules`） | 只處理指定物件 |
+| `--seed` | int | `42` | 隨機種子 |
+| `--device` | str | `cuda` | `cuda` / `cpu` |
+| `--dry-run` | flag | off | 只印出「會做什麼」與預估輸出數量／磁碟，**不寫任何檔案** |
+| `--resume` | flag | off | 掃描既有輸出，跳過已完成的項目 |
+| `--log-level` | str | `INFO` | |
+
+### 1.2 退出碼
+
+| 碼 | 意義 | agent 應該 |
+|---|---|---|
+| `0` | 成功且所有內建斷言通過 | 繼續 |
+| `1` | 一般錯誤 | 讀 stderr，可重試（最多 3 次） |
+| `2` | **驗證／斷言失敗** | **立刻停止**，寫 handoff |
+| `3` | **紅線違反**（碰到 test blocklist、split 被動過） | **立刻停止**，絕不重試 |
+| `4` | 資源不足（磁碟／VRAM） | 停止，回報需求量 |
+
+### 1.3 每支腳本都必須做的事
+
+1. 啟動時載入 `configs/paths.yaml`，**任何路徑都從那裡來**
+2. 讀任何影像前呼叫 `src/common/guard.py::assert_not_test(path)` → 命中就 `exit 3`
+3. 用單一 `numpy.random.Generator(PCG64(seed))` 派生所有隨機，**不用全域 random state**
+4. 結束時把「本次執行的參數 + 產出數量 + 耗時」附加到 `logs/<script>.jsonl`
+5. 所有路徑用 `pathlib.Path`，**不用字串串接**（Colab 是 Linux）
+6. DataLoader 預設 `num_workers=0`；要開多 worker 時進入點必須包 `if __name__ == "__main__":`
+
+---
+
+## 2. 共用模組（`src/common/`）
+
+| 模組 | 提供 |
+|---|---|
+| `paths.py` | `load_paths(cfg="configs/paths.yaml") -> Paths`；`Paths.data_root`、`.visa_raw`、`.synthetic`、`.runs`… 已展開 `${data_root}` |
+| `guard.py` | `assert_not_test(path)`；`assert_manifest_frozen()`；`assert_disk_free(gb)`；`preflight(milestone)` — 對應 [autonomy_policy.md §2](autonomy_policy.md) |
+| `provenance.py` | `write_record(jsonl_path, record: dict)`；`validate_record(record) -> list[str]`（回傳缺漏欄位，空 list = 通過）。Schema 見 [synthesis_spec.md §1](synthesis_spec.md) |
+| `imaging.py` | `crop_to_roi`、`blend_back`（poisson / feather）、`connected_components`、`mask_morphology_features` |
+| `embed.py` | `dinov2_embed(images) -> np.ndarray`（`facebook/dinov2-base` CLS token、L2 normalized，含磁碟快取） |
+| `report.py` | contact sheet / grid 產生器，統一樣式 |
+
+---
+
+## 3. 逐支腳本契約
+
+### M2 `scripts/download_visa.py`
+```
+--paths --dry-run
+--skip-download        # 只做校驗，不重新下載
+```
+產出：`${raw}/VisA_20220922.tar`、解壓的 `${visa_raw}/`、`splits/source_checksums.json`
+斷言：tar 大小 == `1929840640`；解壓後 pcb1 = 1004/100、capsules = 602/100 → 不符 `exit 2`
+
+### M3 `scripts/prepare_splits.py`
+```
+--paths --object
+--split-type {2cls_highshot,2cls_fewshot,both}   # 預設 both
+--spot-diff-dir PATH                             # spot-diff repo 位置（自動 clone 到 ${data_root}/tools/）
+```
+產出：`${visa_highshot}/`、`${visa_fewshot}/`
+斷言（[ADR-007](decisions.md#adr-007)）：八格張數相符；`highshot_train ∩ highshot_test == ∅`；
+`fewshot_train ⊆ highshot_train`；每張 bad 有對應 mask → 不符 `exit 2`
+
+### M4 `scripts/freeze_manifest.py`
+```
+--paths --object --seed
+--phash-threshold INT      # 預設 6
+--force                    # 覆寫既有 manifest；無人值守時禁用
+```
+產出：`splits/split_manifest.json`、`splits/MANIFEST.sha256`、`splits/test_blocklist.json`、
+`reports/split_report.md`
+斷言：同 `group_id` 必定同 `set`；blocklist 數量 == test 影像數
+
+### M5 `scripts/sample_fewshot.py`
+```
+--paths --object --seed
+--k INT                    # 預設 10
+```
+產出：manifest 內的 `in_fewshot_seed` / `in_val` 欄位、`reports/fewshot_stats.md`、
+`reports/real_mask_stats.json`、`reports/figures/fewshot_contact_sheet_<object>.png`
+斷言：重跑兩次的檔名清單雜湊相同
+
+### M6 `scripts/cluster_defect_types.py`
+```
+--paths --object --seed
+--k-range 1 5              # silhouette 搜尋範圍
+--min-cluster-size INT     # 預設 3
+--min-component-area INT   # 雜點過濾，預設 32 (px)
+--auto-name                # 無人值守用：產生 <obj-typeN> 暫用 token 直接凍結，不等人
+```
+產出：`splits/defect_types.json`（+ SHA256）、`reports/figures/defect_type_cluster_<object>_<k>.png`
+斷言：每群 ≥ `--min-cluster-size`（否則自動 fallback 合併）；所有輸入路徑不在 blocklist
+
+### M7 `src/synthetic/copy_paste.py`
+```
+--paths --config configs/stage_a.yaml --object --seed --resume --dry-run
+--n INT                    # 每物件張數，預設 500
+--blend {poisson,feather,mixed}   # 預設 mixed
+--out-name STR             # 預設 stageA_copypaste
+```
+產出：`${synthetic}/<out-name>/{images,masks}/`、`metadata.jsonl`
+
+### M8 `src/synthetic/procedural.py`
+```
+（同 M7 的共用參數）
+--n INT                    # 預設 500
+--shapes perlin,crack,scratch,spot     # 預設全開
+--no-real-stats            # 不讀 real_mask_stats.json，用手訂固定分布（ADR-011）
+--out-name STR             # 預設 stageA_procedural；--no-real-stats 時預設 stageA_procedural_norealstats
+```
+斷言：`--no-real-stats` 時執行過程中**從未開啟** `real_mask_stats.json`（用檔案存取記錄驗證）
+
+### M9 `src/synthetic/mask_placement.py`
+```
+--paths --config configs/placement.yaml --object --seed --resume --dry-run
+--n-per-image INT          # 每張正常圖產生幾組配對，預設 3
+--roi-method {otsu,dinov2,intersect}    # 預設 intersect
+--max-place-tries INT      # 預設 50
+--viz-n INT                # 產生幾張視覺化檢查圖，預設 24
+```
+產出：`${synthetic}/placements/<object>/placements.jsonl`、
+`reports/figures/placement_check_<object>.png`
+斷言：放置 mask 100% 在 legal ROI 內；不與其他 mask 重疊；面積在真實 5–95 百分位內
+
+### M10 / M11 `src/training/train_inpaint_lora.py`
+**本機與 Colab notebook 都呼叫這一支**（[ADR-008](decisions.md#adr-008)），notebook 不得複製訓練迴圈。
+```
+--paths --config configs/lora_sd2.yaml | configs/lora_sdxl.yaml --object --seed
+--base-model STR           # 由 config 指定，CLI 可覆寫
+--resolution INT           # SD2 512 / SDXL 1024
+--rank INT --alpha INT
+--max-train-steps INT
+--lr FLOAT
+--output-dir PATH          # 預設 ${runs}/lora_<model>/<object>/seed_<seed>
+--resume-from-checkpoint {latest,PATH}
+--sample-every INT         # 每 N steps 產一張 held-out 樣本圖到 output-dir/samples/
+--smoke                    # 1 step、極小 batch，只驗證流程能跑通並存權重
+--drive-sync PATH          # Colab 專用：checkpoint 定期同步目的地
+```
+斷言：存出的權重能被 `PeftModel` 載回；`--smoke` 模式下不覆寫正式 checkpoint
+
+### M12 `src/synthetic/generate_diffusion.py`
+```
+--paths --config configs/generate_sd2.yaml | configs/generate_sdxl.yaml --object --seed --resume --dry-run --device
+--lora PATH                # 訓練好的 adapter
+--defect-type STR          # 可重複；預設全部
+--n INT                    # 每物件總量：SD2 500 / SDXL 250（ADR-010）
+--bucket {original,searched}          # 預設 original
+--guidance-scale FLOAT --num-inference-steps INT --crop-ratio FLOAT
+--refine                   # 開啟 refine 搜尋，輸出到 searched/
+--num-search-run INT       # 預設 4
+--guidance-grid 5.0,7.5,10.0,12.5
+--crop-ratio-grid 1.8,2.5,3.5
+--out-name STR             # 預設 stageB_sd2 / stageB_sdxl
+```
+產出：`${synthetic}/<out-name>/{original,searched}/{images,masks}/` + `metadata.jsonl`
+斷言：每行 metadata 通過 `provenance.validate_record`；同 seed 重跑位元相同
+
+### M13 `src/filtering/run_filters.py`
+```
+--paths --config configs/filters.yaml --object --dry-run
+--input PATH               # 可重複，指向一個 generator 的輸出目錄
+--disable RULE             # 可重複：roi|area|aspect|phash|dinov2|seam（做「哪道規則貢獻最大」分析用）
+--tau-copy FLOAT           # 預設由 leave-one-out 自動校準，可覆寫
+--recalibrate              # 重新校準門檻並寫進 reports/filter_report.md
+```
+產出：`${synthetic}/<gen>/filtered/`、`.../unfiltered/`（皆含 `metadata.jsonl`，
+`unfiltered` 保留所有樣本並標 `passed` 與 `reject_reasons`）、`reports/filter_report.md`
+
+### M14 `src/evaluation/quality_metrics.py`
+```
+--paths --object
+--input PATH               # 可重複
+--sanity-check             # 真實 crop 自餵 + 純雜訊 crop，驗證指標實作正確
+```
+產出：`reports/generation_quality.md`、`results/generation_quality.csv`
+斷言：`--sanity-check` 下真實 crop 的 `nn_score ≈ 1`、KID ≈ 0；不成立 `exit 2`
+
+### M16 `src/training/train_classifier.py`
+```
+--paths --config configs/classifier.yaml --object --seed
+--group STR                # real_only | std_aug | unfiltered_syn | filtered_syn | full_real
+                           # | real_20 | real_60 | syn_125 | syn_250 | syn_500
+                           # | src_procedural | src_copypaste | src_diffusion
+                           # | base_sdxl | procedural_norealstats | bucket_original
+--run-name STR             # 預設由 group+object+seed 組出
+--total-steps INT          # 固定 total steps 而非 epochs（公平性規則）
+```
+產出：`${runs}/cls/<run-name>/`、附加一列到 `results/classification.csv`
+斷言：`df-guard` 的防洩漏檢查表全綠；訓練集 ∩ highshot test == ∅
+
+### M18 `src/training/train_segmenter.py`
+```
+（同 M16 的共用參數）
+--group STR                # real_only | std_aug | unfiltered_syn | filtered_syn | full_real
+                           # | procedural_only | copypaste_only | diffusion_only
+--drive-sync PATH          # Colab 專用
+--smoke
+```
+產出：`${runs}/seg/<run-name>/`、`results/segmentation.csv`
+註：第 9 組「全部混合」**＝ `filtered_syn`，直接引用不重跑**
+
+### M22 `src/inference/demo_gradio.py`
+```
+--paths --cls-ckpt PATH --seg-ckpt PATH --port INT --share   # --share 預設 off，不對外開放
+```
+
+### 驗證用腳本
+| 腳本 | 用途 |
+|---|---|
+| `scripts/verify_filter_report.py` | 從 `metadata.jsonl` 重算漏斗表，與 `reports/filter_report.md` 逐格比對 |
+| `scripts/verify_readme.py` | 從 `results/*.csv` 重算 README 每張表的數字並比對 |
+| `scripts/verify_splits.py` | 重跑 [ADR-007](decisions.md#adr-007) 的四項斷言 |
+| `scripts/upload_hf.py` | 見 [publish_spec.md](publish_spec.md)；**預設 `--dry-run`，上傳要顯式加 `--confirm`** |
+
+---
+
+## 4. 設定檔
+
+全部放 `configs/`，YAML，**參數的預設值寫在 config 而不是程式碼裡**，
+CLI 只用於覆寫。每支腳本執行時把「合併後的最終 config」存進該次 run 的輸出目錄，確保可重現。
+
+| 檔案 | 給誰 |
+|---|---|
+| `paths.yaml` | 全部（唯一路徑真相來源） |
+| `stage_a.yaml` | copy_paste / procedural |
+| `placement.yaml` | mask_placement |
+| `lora_sd2.yaml` / `lora_sdxl.yaml` | train_inpaint_lora |
+| `generate_sd2.yaml` / `generate_sdxl.yaml` | generate_diffusion |
+| `filters.yaml` | run_filters |
+| `classifier.yaml` / `segmenter.yaml` | 下游訓練 |

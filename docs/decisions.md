@@ -103,7 +103,11 @@ FLUX.1-Fill-dev、SD1.5-inpainting。同時受限於 Colab Pro 每月 100 comput
 <a id="adr-003"></a>
 ## ADR-003 — few-shot 預算：k=10 瑕疵圖 + train pool 全部正常圖，四組完全相同
 
-**狀態**：Accepted ｜ **日期**：2026-07-27
+**狀態**：Accepted，但**基底 split 的部分已被 [ADR-007](#adr-007) 取代** ｜ **日期**：2026-07-27
+
+> ⚠️ 本 ADR 的核心原則（k=10 瑕疵、正常圖充足、第 1–4 組真實資料完全相同）**仍然有效**。
+> 但「基底用 `2cls_fewshot`、Full-real 上限用 `2cls_highshot`」這一段是**錯的**，
+> 會造成 50% 的測試瑕疵洩漏進 Full-real 的訓練集。修正見 [ADR-007](#adr-007)。
 
 ### 脈絡
 spot-diff 官方 `2cls_fewshot` 協定是「20%/80% 切 train/test，再從 train pool
@@ -236,3 +240,231 @@ KID 應接近 0。不成立表示實作有錯，不准往下走。
 ### 來源
 - [NVIDIA/skills · physical-ai-defect-image-generation](https://github.com/NVIDIA/skills/tree/main/skills/physical-ai-defect-image-generation)
 - 課程簡報 slide 8：Image based quality 的 detail 列出「Feature similarity: FID, MNN, ...」
+
+---
+
+<a id="adr-007"></a>
+## ADR-007 — 基底 split 改用 `2cls_highshot`，修正 ADR-003 的跨 partition 洩漏
+
+**狀態**：Accepted ｜ **日期**：2026-07-27 ｜ **取代**：[ADR-003](#adr-003) 的基底 split 部分
+
+### 脈絡
+[ADR-003](#adr-003) 讓第 1–4 組用 `2cls_fewshot` 的 test 評測，Full-real 上限組卻用
+`2cls_highshot` 的 train 訓練。**這兩個 CSV 是同一批影像的不同切法**，把兩者混用等於洩漏。
+
+實測（下載兩份官方 CSV 後計算，不是推測）：
+
+| | train | test |
+|---|---|---|
+| `2cls_fewshot` pcb1 | 201 normal / **20** anomaly | 803 normal / **80** anomaly |
+| `2cls_highshot` pcb1 | 602 normal / **60** anomaly | 402 normal / **40** anomaly |
+| `2cls_fewshot` capsules | 120 normal / **20** anomaly | 482 normal / **80** anomaly |
+| `2cls_highshot` capsules | 361 normal / **60** anomaly | 241 normal / **40** anomaly |
+
+```
+highshot TRAIN(anomaly) ∩ fewshot TEST(anomaly) = 40   (兩個物件都是 40)
+highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
+```
+
+→ 照 ADR-003 執行的話，**Full-real 上限組的訓練集包含了一半的測試瑕疵**。
+那組數字會非常漂亮，而且完全是假的。
+
+同時實測發現兩套切法是**巢狀**的：
+```
+fewshot TRAIN ⊂ highshot TRAIN     (True)
+highshot TEST ⊂ fewshot TEST       (True)
+```
+
+### 決策
+**以 `2cls_highshot` 為唯一基底 partition。**
+
+```
+k=10  ⊂  fewshot_train(20)  ⊂  highshot_train(60)      ← 三者皆與 highshot_test 互斥
+                                                          （因為 fewshot_train ⊂ highshot_train）
+```
+
+| 項目 | 定義 | pcb1 | capsules |
+|---|---|---|---|
+| **Test（唯一，凍結）** | `2cls_highshot` test | 402 normal / 40 anomaly | 241 normal / 40 anomaly |
+| **Train pool** | `2cls_highshot` train | 602 normal / 60 anomaly | 361 normal / 60 anomaly |
+| **few-shot 瑕疵集** | 從 `2cls_fewshot` train 的 20 張中以 seed=42 抽 **k=10** | 10 anomaly | 10 anomaly |
+| **正常圖（所有組共用）** | train pool 全部 normal | 602 | 361 |
+| **Full-real 上限** | train pool 全部 anomaly | 60 anomaly | 60 anomaly |
+| **中間點（免費附贈）** | `2cls_fewshot` train 全部 anomaly | 20 anomaly | 20 anomaly |
+
+**額外收穫**：因為巢狀，我們免費得到一條「真實瑕疵 **10 → 20 → 60** 張」的縮放曲線，
+可以回答「合成資料相當於多少張真實瑕疵」——這比原本只有單一上限點強得多，
+而且 k=10 仍然是從官方 `2cls_fewshot` train pool 抽的，協定可引用。
+
+### 後果
+- **所有組別（含 Full-real）共用同一個凍結 test set**，完全可比、零洩漏
+- Test 變小（每物件 40 張瑕疵，兩物件合計 80），統計變異較大 → per-object 指標要附樣本數，
+  Real-only 與最佳 Filtered 組補 3 seeds 報 mean±std 的規定因此更重要
+- 背景正常圖從 201/120 增加到 602/361，合成的背景多樣性明顯變好
+- 類別極不平衡（pcb1 約 60:1）→ **所有組一律用相同的 class-balanced sampling**，不得只對某組調整
+- `df-guard` 要新增一條斷言：**任何訓練集與 `highshot_test` 的交集必須為空**
+
+### 驗證方式（M3 必跑）
+重算上表所有數字並與本 ADR 逐格比對；重算 `highshot_train ∩ highshot_test = ∅`；
+重算 `fewshot_train ⊂ highshot_train`。任何一項不符即停。
+
+---
+
+<a id="adr-008"></a>
+## ADR-008 — SD2 LoRA 在本機 4090 訓練；訓練邏輯單一實作、notebook 只是薄封裝
+
+**狀態**：Accepted ｜ **日期**：2026-07-27（使用者決定）
+
+### 脈絡
+[CLAUDE.md](../CLAUDE.md) 的分工原則是「>30 分鐘的 GPU 訓練一律 Colab」。
+但 SD2-inpainting 的 LoRA 訓練規模很小：UNet 865M、512 patch、只有 10 張訓練圖、
+只訓 LoRA 與 token embedding —— 在 4090 上估計 20–30 分鐘，**在本機門檻之內**。
+
+若照原計畫兩個底模都上 Colab，無人值守的自動執行只能跑到 M11（notebook 備好）就卡住，
+M12 之後全部要等人跑完 Colab —— 這與「睡覺時讓 AI 按圖施工」的目標直接衝突。
+
+### 決策
+- **SD2 LoRA 在本機 4090 訓練**（合規：≤30 分鐘）→ M1→M14 整條 critical path 可無人值守
+- **SDXL LoRA 上 Colab**（2.6B UNet、1024，超過本機門檻）
+- **訓練邏輯只寫一份**：`src/training/train_inpaint_lora.py`，本機 CLI 與 Colab notebook
+  **都呼叫同一支腳本**。notebook 只負責掛 Drive、解壓資料到 `/content/data`、讀 Secrets、
+  組參數、呼叫腳本、同步 checkpoint。**不得把訓練迴圈複製一份到 notebook 裡**
+
+### 後果
+- Colab 額度只花在 SDXL LoRA 與 Phase 2 的 SegFormer，估計省下一半以上
+- 本機訓練必須自己記錄實際耗時；**若實測超過 30 分鐘，就要回頭改回 Colab 並更新本 ADR**
+- notebook 的 smoke test 因此變成「確認薄封裝能正確呼叫腳本」，而不是驗證訓練邏輯
+  （訓練邏輯由本機的完整訓練直接驗證）
+
+---
+
+<a id="adr-009"></a>
+## ADR-009 — 下游實驗設計：分類每物件一個二元模型；分割跑五組鐵律 + 四組來源消融
+
+**狀態**：Accepted ｜ **日期**：2026-07-27
+
+### 脈絡
+Phase 2 的 prompt 對分割只列了「合成來源」四組（程序化-only／copy-paste／diffusion／混合），
+沒有 Real-only 基準。但「程序化-only ＝ 零真實瑕疵也能做分割」要成為標題，
+就**必須**有 Real-only 對照，否則沒有東西可比。
+分類則要決定是「每物件一個模型」還是「跨物件單一模型」。
+
+### 決策
+
+**分類**：每物件一個二元分類器（good / bad），ConvNeXt-Tiny @384。
+理由：VisA 官方的 2-class 設定就是 per-object 二元異常分類，可直接對照文獻；
+兩個物件外觀差異極大，混在一起訓練會讓「哪個物件變好」變得不可解讀。
+報告 per-object F1/AUROC，再取跨物件 macro 平均。
+
+**分割**：SegFormer-B0 @512、Dice+BCE。跑 **5 組鐵律 + 4 組來源消融 = 9 組**：
+
+| 組 | 訓練資料 |
+|---|---|
+| 1 Real-only | k=10 真實瑕疵 + 正常圖 |
+| 2 + Standard Aug | 同上 + 傳統增強 |
+| 3 + Unfiltered Syn | 同上 + 未過濾合成（全來源混合） |
+| 4 + Filtered Syn | 同上 + 過濾後合成（全來源混合） |
+| 5 Full-real 上限 | 60 張真實瑕疵 + 正常圖 |
+| 6 程序化-only | **正常圖 + 程序化合成**，零真實瑕疵影像 |
+| 7 copy-paste-only | k=10 + copy-paste 合成 |
+| 8 diffusion-only | k=10 + Stage B 合成 |
+| 9 全部混合 | = 第 4 組（不重跑，直接引用） |
+
+SegFormer-B0 很小，T4 上估每組 20–40 分鐘、9 組約 5 小時 ≈ 9 CU，Colab 額度吃得下。
+
+### 後果
+- 分割的 Colab notebook 要能用 `--group` 參數跑任一組，並支援平行開多本
+- 第 6 組是本專案最有記憶點的結果，`reports/` 要專門為它做一組視覺化
+- 第 9 組直接引用第 4 組，`instructions_for_me.md` 要寫清楚只需跑 8 次
+
+---
+
+<a id="adr-010"></a>
+## ADR-010 — 合成量掃描用絕對值 {125, 250, 500}，每物件生成 500 張
+
+**狀態**：Accepted ｜ **日期**：2026-07-27
+
+### 脈絡
+Phase 2 的 prompt 寫「合成量 0.5x/1x/2x（相對真實正樣本數）」。
+但真實正樣本只有 **10 張**，算出來是 **5 / 10 / 20 張**——這個刻度掃不出任何訊號。
+課程 slide 8 自己展示的曲線是 **+125 / +250 / +500 張**（mIoU +0.0519 / +0.0676 / +0.0851）。
+
+### 決策
+改用**絕對值**，直接對上課程的刻度：
+
+| 項目 | 值 |
+|---|---|
+| SD2 每物件生成總量 | **500 張** |
+| 掃描點 | **{125, 250, 500}** |
+| SDXL 每物件生成總量 | **250 張**（它是底模容量消融，不是主線） |
+| SD2 vs SDXL 的對照點 | **250 張**（同量比較才公平） |
+| Stage A（copy-paste / procedural） | 各 **500 張／物件** |
+| 型別配額 | 500 依各瑕疵型的連通元件數**按比例**分配（課程 `prep-testcase` 規則）；任一型不足 50 張就補到 50 |
+
+若曲線在 500 仍在上升，之後補跑到 1000 —— 生成腳本支援 `--resume`，
+既有的 500 張不用重生。**不要為了「更完整」在第一輪就跑 1000 而讓過夜跑不完。**
+
+### 後果
+- 磁碟估算：SD2 500×2 物件 ×（original + searched）= 2000 張，SDXL 250×2×2 = 1000 張，
+  Stage A 500×2×2 = 2000 張，合計約 5000 張全解析度 PNG ≈ **12–15 GB**
+- 本機生成時間估算（4090）：SD2 約 2 s/張 → 2000 張約 70 分鐘；
+  refine 搜尋 ×4 → 再加約 3.5 小時。SDXL 約 7 s/張 → 1000 張約 2 小時
+- 報表的曲線圖要與課程的三點並排，方便對照敘事
+
+---
+
+<a id="adr-011"></a>
+## ADR-011 —「程序化-only」的口徑：零真實瑕疵**像素**，但用了真實 mask 的**統計量**
+
+**狀態**：Accepted ｜ **日期**：2026-07-27
+
+### 脈絡
+[synthesis_spec.md](synthesis_spec.md) 規定程序化合成的 mask 面積與長寬比要落在
+真實 mask 分布的 5–95 百分位內。這用到了 **10 張 few-shot seed 的真實 mask 統計量**。
+因此「零真實瑕疵」這個說法在字面上不成立。
+
+### 決策
+**保留這個設計（它讓合成更合理），但把口徑講清楚**，而不是假裝沒用到。
+
+正式措辭（README 與報表一律照抄）：
+
+> **Zero real defect pixels.** The procedural-only group never sees a single real defect
+> pixel. It does use *aggregate shape statistics* (area ratio and aspect ratio percentiles)
+> computed from the 10 few-shot training masks — that is the entire leakage surface,
+> and it is disclosed here.
+
+並提供 `--no-real-stats` 旗標跑一組**完全不看真實統計**的版本（用手訂的固定分布），
+在報表中並列，讓讀者自己判斷那些統計量值多少。
+
+### 後果
+- `procedural.py` 必須支援 `--no-real-stats`
+- 報表要同時列「用統計量」與「不用統計量」兩版的分割結果
+- 這種主動揭露洩漏面的寫法本身就是加分項，不要為了標題好看而含糊
+
+---
+
+<a id="adr-012"></a>
+## ADR-012 — 無人值守執行模式：跑到底，任何驗證失敗即停
+
+**狀態**：Accepted ｜ **日期**：2026-07-27（使用者決定）
+
+### 脈絡
+使用者希望「去睡覺時讓 AI 按圖施工就能幫我們跑」。這需要明確界定 agent 在無人監督時
+可以自己決定什麼、必須停在哪裡、以及停下來時要留下什麼。
+
+### 決策
+採**跑到底模式**：連續執行 M1 → M14，每個里程碑跑完 [PLAN.md](../PLAN.md) 的驗證欄，
+**全綠才前進**。任何一項不過就**立刻停止**，寫一份 handoff 報告，不得自行降低標準、
+不得跳過、不得「先繼續之後再回來修」。
+
+完整規則書寫在 [autonomy_policy.md](autonomy_policy.md)，重點：
+- **可自己決定**：門檻校準、隨機種子以外的實作細節、重試暫時性錯誤、瑕疵型別的暫用命名
+- **必須停**：任何驗證失敗、需要花錢、>2GB 下載、任何 push/發佈、Colab 訓練、
+  磁碟不足、生成結果目視明顯異常
+- **瑕疵型別命名不阻塞**：自動產生 `<pcb1-type0>` 之類的暫用 token 繼續跑，
+  使用者醒來只改**顯示名稱**（不動 token 字串，因此不需要重訓）
+
+### 後果
+- [PLAN.md](../PLAN.md) 每個里程碑要標註「無人值守可跑 / 需要你在場」
+- 需要 `docs/interfaces.md` 把每支腳本的 CLI 契約寫死，agent 才不會自己發明參數
+- 每晚的執行結果落在 `reports/handoff/<date>.md`，早上一看就知道跑到哪、為什麼停

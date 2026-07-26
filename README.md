@@ -30,11 +30,29 @@ This is exactly the asymmetry synthetic data should be able to close.
 | Downstream tasks | defect classification + defect-region segmentation |
 | Labels for synthetic data | **fully automatic** — the placed mask *is* the segmentation ground truth |
 
+### The split matters, and it is easy to get wrong
+
+VisA's official `2cls_fewshot` and `2cls_highshot` CSVs are two different partitions of the
+same images. We measured their overlap before writing any code:
+
+```
+highshot TRAIN(anomaly) ∩ fewshot TEST(anomaly) = 40   (per object, out of 80)
+fewshot TRAIN ⊂ highshot TRAIN                          True
+highshot TEST ⊂ fewshot TEST                            True
+```
+
+Training a "full-real upper bound" on the highshot train split and scoring it on the fewshot
+test split would put **half the test defects into training**. We therefore use
+`2cls_highshot` as the single base partition, giving one frozen test set shared by every
+group. Because the partitions nest, this also hands us a free real-data scaling curve at
+**10 → 20 → 60** real defect images — which is what lets us answer *how many real defect
+images our synthetic data is worth*. Details: [ADR-007](docs/decisions.md#adr-007).
+
 ## Method
 
 ```mermaid
 flowchart TD
-    A[VisA raw] --> B[spot-diff 2cls_fewshot split]
+    A[VisA raw] --> B[spot-diff 2cls_highshot base partition]
     B --> C[pHash grouping + frozen split manifest + test blocklist]
     C --> D[k=10 few-shot defect seeds]
     D --> E[Defect typing: DINOv2 + mask morphology clustering]
@@ -64,17 +82,23 @@ parts are our own interpretation rather than published NVIDIA formulas.
 
 ## Experiments
 
-Five groups, identical real data in groups 1–4, synthetic strictly additive:
+Five groups, identical real data in groups 1–4, synthetic strictly additive, all scored on
+the same frozen test set:
 
-1. Real-only
-2. + Standard Augmentation
+1. Real-only (10 real defects)
+2. + Standard Augmentation — rules out "plain augmentation would have done it"
 3. + Unfiltered Synthetic
-4. + Filtered Synthetic
-5. Full-real upper bound (a deliberately larger real budget, labelled as such)
+4. + Filtered Synthetic — main result, and the case for the filtering pipeline
+5. Full-real upper bound (60 real defects)
+
+Plus: a real-data scaling curve (10 / 20 / 60), a synthetic-volume sweep at
+{125, 250, 500} mirroring the course's own curve, a base-model ablation (SD2 vs SDXL),
+and a segmentation group trained with **zero real defect pixels**.
 
 Anti-leakage: validation and test are real-only; the generator, the filter and the
 defect-type clusterer never read a test image. The split manifest (seed, SHA256,
-pHash groups) is frozen before a single synthetic image is generated.
+pHash groups) is frozen before a single synthetic image is generated, and
+`splits/test_blocklist.json` is published so anyone can check us.
 Full protocol: [docs/experiment_protocol.md](docs/experiment_protocol.md).
 
 ## Results

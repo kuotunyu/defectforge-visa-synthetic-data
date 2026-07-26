@@ -26,7 +26,9 @@
 | `sdg-refine` | `df-refine` | 對 `original/` 做 `(guidance_scale, crop_ratio)` 逐樣本搜尋，組裝最佳結果進 `searched/` 桶 | M12 |
 | — | `df-filter` | 六道過濾、輸出 filtered/unfiltered 兩版、產漏斗報表 | M13 |
 | `eval` | `df-eval` | per-type `nn_score`（主 KPI）／`mnn_score`／FID／KID，含健全性檢查 | M14 |
-| `anomalygen-release` | `df-release` | 發佈前總驗收：重現性、數字誠實性、防洩漏自查、授權標註、HF card、金鑰掃描 | Phase 2 收尾 |
+| — | `df-downstream` | Phase 2 下游訓練：分類（本機約 40 run）與分割（Colab 8×2 run）的組別展開、防洩漏 preflight、結果聚合 | M16 / M18 / M20 |
+| — | `df-report` | 圖表全套 + README 數字自動核對（`verify_readme.py`），含「負面結果照實寫」的檢查 | M21 / M23 |
+| `anomalygen-release` | `df-release` | 發佈前總驗收：照 [publish_spec.md](publish_spec.md) 的檢查表逐項跑，含 Contributors 紅線掃描 | M24 |
 
 課程另有 `anomalygen-release` 的 Docker 建置職責，我們的 `df-release` 改為對應
 「發佈到 GitHub / Hugging Face 前的完整檢查」，因為本專案沒有容器化需求。
@@ -48,9 +50,11 @@ description: <一句話，寫清楚「什麼情況該用它」，因為這是觸
 
 1. **先寫前置條件**（哪些里程碑必須已完成、哪些檔案必須存在），不滿足就中止並回報
 2. **每一步都要有可判定成敗的驗證**，不要只寫「執行 X」
-3. **明確寫出停下來問使用者的時機**（例如 `df-types` 必須等使用者確認型別名稱）
-4. **對應到 PLAN.md 的里程碑編號**，方便回頭追
-5. 完成後要求：更新 PLAN.md 勾選 → 追加 worklog → git commit → 給「換你做」清單
+3. **CLI 一律照 [interfaces.md](interfaces.md)**，skill 內不得出現沒登記過的參數
+4. **明確寫出停下來的時機**，並區分「無人值守也能繼續」與「必須等人」
+   （對照 [PLAN.md](../PLAN.md) 的 🤖 / 👀 / 🙋 標記與 [autonomy_policy.md §4](autonomy_policy.md)）
+5. **對應到 PLAN.md 的里程碑編號**，方便回頭追
+6. 完成後要求：跑驗證欄 → 全綠才勾選 PLAN.md → 追加 worklog → git commit → 給「換你做」清單
 
 ---
 

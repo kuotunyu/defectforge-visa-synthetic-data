@@ -76,6 +76,13 @@ M1 要**重新查證一次**再鎖版，並把 `uv.lock` 提交進 git。
 `HF_TOKEN`、`WANDB_API_KEY`、`GEMINI_API_KEY`(+3 backups)、`OPENAI_API_KEY`、
 `DISCORD_WEBHOOK_URL`、`KAGGLE_API_TOKEN`。本專案只需要 `HF_TOKEN`（下載模型與 Phase 2 上傳）。
 
+### 帳號
+
+| 平台 | 帳號 |
+|---|---|
+| GitHub | **`kuotunyu`**（repo `01-defectforge-visa`） |
+| Hugging Face | **`steven0226`**（Phase 2 上傳合成資料集與 LoRA，見 [publish_spec.md](publish_spec.md)） |
+
 ---
 
 ## 4. Windows 踩雷清單

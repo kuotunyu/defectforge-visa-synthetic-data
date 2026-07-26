@@ -96,9 +96,21 @@ Stage A 的樣本把 `generation` 內不適用的欄位設為 `null`，不省略
 每個瑕疵型的目標張數 = ceil(TOTAL_PER_OBJECT × n_components(type) / n_components(object))
 ```
 
-Phase 1 的目標值：**每瑕疵型 200 張**（Stage B），Stage A 每個 generator 每物件 200 張。
-若某型的元件數過少導致配額 <50，補到 50（避免該型的樣本數少到無法做 per-type 指標），
-並在 `reports/generation_report.md` 記錄這次補齊。
+Phase 1 的目標值（[ADR-010](decisions.md#adr-010)）：
+
+| generator | 每物件總量 | 備註 |
+|---|---|---|
+| `stageA_copypaste` | **500** | |
+| `stageA_procedural` | **500** | 另跑一份 `--no-real-stats` 版本（[ADR-011](decisions.md#adr-011)） |
+| `stageB_sd2` | **500** | 主線；Phase 2 的合成量掃描點 {125, 250, 500} 從這裡取子集 |
+| `stageB_sdxl` | **250** | 底模容量消融；與 SD2 在 **250 張**這一點上比較 |
+
+配額在**物件**層級決定，再依各瑕疵型的連通元件數按比例分到型別。
+若某型的配額 <50，補到 50（避免該型樣本少到無法做 per-type 指標），
+並在 `reports/generation_report.md` 記錄補齊了哪幾型、補了多少。
+
+**不要為了「更完整」在第一輪就跑 1000 張。** 生成腳本支援 `--resume`，
+Phase 2 若發現曲線在 500 仍在上升，再補跑到 1000，既有的 500 張不重生。
 
 mask 的**面積 / 位置 / 長寬比分布**由真實 few-shot mask 的統計（`reports/real_mask_stats.json`）
 控制：抽樣時從真實分布的 KDE 取樣，超出 5–95 百分位就重抽。
@@ -139,8 +151,17 @@ mask 的**面積 / 位置 / 長寬比分布**由真實 few-shot mask 的統計�
 
 **參考**：Zavrtanik et al., *DRAEM* (ICCV 2021) 的合成異常思路。
 
-**M8 驗證**：同 M7 的自動斷言；額外驗證產生的 mask 面積與長寬比落在
-`reports/real_mask_stats.json` 的 5–95 百分位內，超出比例 <10%。
+#### ⚠️「零真實瑕疵」的口徑（[ADR-011](decisions.md#adr-011)）
+本產生器**不使用任何真實瑕疵像素**，但預設會用 `reports/real_mask_stats.json`
+（來自 10 張 few-shot seed 的 mask 面積比與長寬比百分位）來約束形狀。
+這是唯一的洩漏面，**必須主動揭露**，不得用「零真實瑕疵」含糊帶過。
+
+必須支援 `--no-real-stats`：改用手訂的固定分布，完全不看真實統計，
+另存成 `stageA_procedural_norealstats/`，在 Phase 2 的分割報表中與預設版**並列**。
+
+**M8 驗證**：同 M7 的自動斷言；預設版的 mask 面積與長寬比落在
+`reports/real_mask_stats.json` 的 5–95 百分位內、超出比例 <10%；
+`--no-real-stats` 版本要斷言執行過程中**從未開啟** `real_mask_stats.json`。
 
 ---
 
@@ -168,7 +189,12 @@ mask 的**面積 / 位置 / 長寬比分布**由真實 few-shot mask 的統計�
 **M9 驗證**：自動斷言（100% 在 ROI 內、不與其他 mask 重疊、面積分布合格）＋
 抽 24 張視覺化檢查圖**自己看**，ROI 明顯抓錯就換方法（例如改用 DINOv2 前景分割為主）。
 
-### 4.2 LoRA 微調（M10 SD2 / M11 SDXL）
+### 4.2 LoRA 微調（M10 SD2 本機 / M11 SDXL Colab）
+
+**訓練邏輯只有一份實作**：`src/training/train_inpaint_lora.py`。
+本機 CLI 與 Colab notebook **都呼叫同一支腳本**，notebook 只做掛 Drive、
+解壓資料到 `/content/data`、讀 Secrets、組參數、同步 checkpoint。
+**不得把訓練迴圈複製進 notebook**（[ADR-008](decisions.md#adr-008)）。
 
 | 項目 | 設定 |
 |---|---|
@@ -177,16 +203,22 @@ mask 的**面積 / 位置 / 長寬比分布**由真實 few-shot mask 的統計�
 | 適配器 | 每**物件**一個 LoRA（UNet attention 層），rank / alpha 寫進 config |
 | 型別區分 | 每**瑕疵型**一個 trigger token，嵌在 prompt 內；token embedding 與 LoRA 一起訓 |
 | prompt 模板 | `a photo of <obj-type> defect on <object description>` |
-| 輸出目錄 | `runs/lora_<model>/<object>/seed_42/`（每本 notebook 唯一，可平行） |
-| 平台 | Colab（SD2 → T4 即可；SDXL → 需 L4） |
-| 斷點續跑 | 偵測 Drive 上既有 checkpoint 自動接續 |
+| 輸出目錄 | `runs/lora_<model>/<object>/seed_42/` |
+| **SD2 平台** | **本機 4090**（估 20–30 分鐘，在 CLAUDE.md 的 30 分鐘門檻內）。**實測若超過 30 分鐘就改回 Colab 並更新 ADR-008** |
+| **SDXL 平台** | **Colab L4**（2.6B UNet @1024，超過本機門檻） |
+| 斷點續跑 | 兩邊都要支援；Colab 版偵測 Drive 上既有 checkpoint 自動接續 |
 
 ⚠️ **10 張訓練圖極容易 overfit**。必要防護：低 LoRA rank、早停、
 固定一組 held-out prompt 每 N steps 生一張樣本圖存進 `runs/.../samples/` 供目視，
-以及 M14 的 `nn_score ≥ τ_copy` 過濾（把「只是複製原圖」的樣本刷掉）。
+以及 M13 的 `nn_score ≥ τ_copy` 過濾（把「只是複製原圖」的樣本刷掉）。
 
-**M10/M11 驗證**：本機 `--max_train_steps 1 --smoke` 跑通並存出可被 `PeftModel` 載回的
-權重檔；斷點續跑分支（有／無 checkpoint）各跑一次確認行為；notebook 內無明文 token。
+**M10 驗證（SD2，本機完整訓練）**：訓練跑完並存出可被 `PeftModel` 載回的權重；
+記錄實際耗時（超過 30 分鐘要回報並改計畫）；`runs/.../samples/` 的樣本圖**自己打開檢視**，
+若每張都長得跟某張 seed 一模一樣就是 overfit，要降 rank 或減 steps 重跑。
+
+**M11 驗證（SDXL，Colab）**：本機 `--max-train-steps 1 --smoke` 跑通薄封裝並存出權重檔；
+斷點續跑分支（有／無 checkpoint）各跑一次確認行為；notebook 內無明文 token；
+峰值 VRAM 記錄進 `instructions_for_me.md` 以佐證需要 L4。
 
 ### 4.3 批次生成（M12）— `src/synthetic/generate_diffusion.py`
 

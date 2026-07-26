@@ -19,6 +19,17 @@
 - ≤30 分鐘的訓練、以及所有 notebook 的 1-step smoke test
 - 生成優先跑本機以節省 Colab compute units
 
+**本專案的實際分配**（[ADR-008](docs/decisions.md#adr-008)）：
+
+| 工作 | 跑在哪 |
+|---|---|
+| SD2-inpainting LoRA（865M @512、10 張圖） | **本機**，估 20–30 分鐘。實測超過 30 分鐘就改回 Colab 並更新 ADR |
+| SDXL-inpainting LoRA（2.6B @1024） | Colab **L4** |
+| Phase 2 SegFormer-B0 分割（9 組） | Colab **T4** |
+| Phase 2 ConvNeXt-Tiny 分類（五組 + 合成量掃描） | 本機 |
+| 所有生成、過濾、評測、demo | 本機 |
+
+訓練邏輯只寫一份在 `src/training/`，Colab notebook 只是薄封裝，**不得複製訓練迴圈**。
 Colab 產出由使用者放回 `results/colab/` 後，Claude Code 才接手分析。
 
 ---
@@ -34,6 +45,8 @@ Colab 產出由使用者放回 `results/colab/` 後，Claude Code 才接手分�
 
 **不可違反的規則**
 - Validation / Test **只用真實資料**；generator、過濾器、分型器都**不得接觸 Test**
+- **基底 split 是 `2cls_highshot`，唯一 test set 是 highshot test**。
+  絕不可拿 `2cls_fewshot` 的 test 來評測——那兩套切法混用會洩漏一半的測試瑕疵（[ADR-007](docs/decisions.md#adr-007)）
 - 先凍結 split manifest（`splits/*.json`＋seed=42＋來源檔 SHA256）**才能**開始生成
 - 近似圖片先用 pHash 分群，**同群必須同 split**
 - 全組合先跑 1 seed；Real-only 與最佳 Filtered 組補到 3 seeds 報 mean±std
@@ -88,12 +101,26 @@ git log -1 --format="%an <%ae>"; git log -1 --format="%B" | Select-String "Co-[A
 
 ---
 
+## 【無人值守執行】
+
+使用者可能在睡覺時讓你連續執行多個里程碑。模式是**跑到底，任何驗證失敗即停**
+（[ADR-012](docs/decisions.md#adr-012)）。完整規則書：**[docs/autonomy_policy.md](docs/autonomy_policy.md)**。
+
+三條最重要的：
+1. 每個里程碑跑完 `PLAN.md` 的驗證欄，**全綠才前進**。任何一項不過就**立刻停止**，
+   寫 `reports/handoff/<date>.md`，**不得降低標準、不得跳過、不得「先繼續之後再修」**
+2. 腳本的 CLI 參數一律照 [docs/interfaces.md](docs/interfaces.md)，**不准自己發明參數名稱**
+3. 需要花錢、>2GB 下載、push/發佈、Colab 訓練 → **一律停下來等人**
+
+---
+
 ## 【專案座標】
 
 | 項目 | 值 |
 |---|---|
 | 本機資料夾 | `C:\Users\3Hml\Desktop\mySyntheticData\1_DefectForge` |
-| 未來 GitHub repo | `01-defectforge-visa` |
+| 未來 GitHub repo | `kuotunyu/01-defectforge-visa` |
+| 未來 Hugging Face | `steven0226`（合成資料集 + LoRA 權重，見 [docs/publish_spec.md](docs/publish_spec.md)） |
 | 資料集 | VisA（CC BY 4.0），先做 `pcb1` 與 `capsules` |
 | 目標 | 少樣本瑕疵情境下，證明合成資料能提升**瑕疵分類**與**瑕疵區域分割** |
 | 方法論來源 | NVIDIA GTC 2026 *Few-shot Industrial SDG (Cosmos AnomalyGen)*，用開源工具復刻，見 [docs/methodology.md](docs/methodology.md) |

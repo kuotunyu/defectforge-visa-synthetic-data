@@ -78,15 +78,55 @@ python ./utils/prepare_data.py --split-type 2cls_highshot --data-folder <VisA> -
   ground_truth/test/bad/
 ```
 
-官方協定（論文）：
+### 3.1 官方協定與實測張數
 
-| split-type | train / test 比例 | 用途 |
-|---|---|---|
-| `2cls_fewshot` | 20% / 80%（normal 與 anomaly 皆是），再從 train pool 抽 k=5 或 10 | **主實驗基底** |
-| `2cls_highshot` | 60% / 40% | **Full-real 上限組**（約 60 張瑕疵／物件） |
+論文的比例：`2cls_fewshot` = 20%/80%（再從 train pool 抽 k=5 或 10）；`2cls_highshot` = 60%/40%。
+**下載兩份官方 CSV 實際計算後的張數**（2026-07-27，非推測）：
 
-**驗證**：印出每個物件的 train/test × good/bad 四格計數表，與上表比例相符；
-每張 bad 影像都必須有對應 mask（數量相等、檔名可對上）。
+| CSV | 物件 | train | test |
+|---|---|---|---|
+| `2cls_fewshot` | pcb1 | 201 normal / **20** anomaly | 803 normal / **80** anomaly |
+| `2cls_fewshot` | capsules | 120 normal / **20** anomaly | 482 normal / **80** anomaly |
+| `2cls_highshot` | pcb1 | 602 normal / **60** anomaly | 402 normal / **40** anomaly |
+| `2cls_highshot` | capsules | 361 normal / **60** anomaly | 241 normal / **40** anomaly |
+
+### 3.2 ⚠️ 兩套切法**不可混用**（實測結論）
+
+```
+highshot TRAIN(anomaly) ∩ fewshot TEST(anomaly) = 40   ← 兩個物件都是 40
+highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
+```
+
+拿 highshot 訓練、用 fewshot test 評測 → **一半的測試瑕疵在訓練集裡**。詳見 [ADR-007](decisions.md#adr-007)。
+
+但兩套切法是**巢狀**的，這救了我們：
+```
+fewshot TRAIN ⊂ highshot TRAIN     (實測 True)
+highshot TEST ⊂ fewshot TEST       (實測 True)
+```
+
+### 3.3 本專案採用的基底：`2cls_highshot`（[ADR-007](decisions.md#adr-007)）
+
+```
+k=10  ⊂  fewshot_train(20)  ⊂  highshot_train(60)      三者皆與 highshot_test 互斥
+```
+
+| 角色 | 定義 | pcb1 | capsules |
+|---|---|---|---|
+| **Test（唯一、凍結）** | highshot test | 402 normal / 40 anomaly | 241 normal / 40 anomaly |
+| **Train pool** | highshot train | 602 normal / 60 anomaly | 361 normal / 60 anomaly |
+| **few-shot 瑕疵集** | 從 fewshot train 的 20 張中 seed=42 抽 k=10 | 10 | 10 |
+| **正常圖（所有組共用）** | train pool 全部 normal | 602 | 361 |
+| **中間點** | fewshot train 全部 anomaly | 20 | 20 |
+| **Full-real 上限** | train pool 全部 anomaly | 60 | 60 |
+
+→ 免費得到一條「真實瑕疵 **10 → 20 → 60** 張」的縮放曲線。
+
+**M3 驗證（任一不符即停）**：
+1. 重算 3.1 的八格數字，與上表逐格相符
+2. `highshot_train ∩ highshot_test == ∅`
+3. `fewshot_train ⊆ highshot_train`
+4. 每張 bad 影像都有對應 mask（數量相等、檔名可對上）
 
 ---
 
@@ -146,16 +186,18 @@ manifest 自身的 SHA256 寫進 `splits/MANIFEST.sha256`。
 
 ## 5. few-shot 抽樣與瑕疵分型（M5–M6）
 
-### 5.1 few-shot 預算（[ADR-003](decisions.md#adr-003)）
+### 5.1 few-shot 預算（[ADR-003](decisions.md#adr-003) 原則 + [ADR-007](decisions.md#adr-007) 基底）
 
 | 項目 | 值 |
 |---|---|
-| 真實瑕疵圖 | **k = 10 張／物件**，從 `2cls_fewshot` 的 train pool 以 seed=42 抽 |
-| 真實正常圖 | **train pool 全部**（pcb1 約 200、capsules 約 120） |
+| 真實瑕疵圖 | **k = 10 張／物件**，從 `2cls_fewshot` train 的 20 張中以 seed=42 抽 |
+| 真實正常圖 | **highshot train pool 全部**（pcb1 **602**、capsules **361**） |
 | 適用組別 | Real-only / +Std Aug / +Unfiltered Syn / +Filtered Syn **共用完全相同的真實影像集合** |
-| Full-real 上限組 | 改用 `2cls_highshot` train split（約 60 張瑕疵／物件），標示為**不同（較大）的真實預算** |
-| Validation | 只從 train pool 切、只用真實資料 |
-| Test | **原封不動** |
+| Full-real 上限組 | highshot train 的全部 60 張瑕疵 + 同一批正常圖（**同一個 test set，零洩漏**） |
+| 中間點（免費） | fewshot train 的全部 20 張瑕疵 → 真實資料縮放曲線 10 / 20 / 60 |
+| Validation | 只從 train pool 切、只用真實資料，**所有組共用同一個 val 集合** |
+| Test | highshot test，**原封不動** |
+| 類別不平衡 | pcb1 約 60:1、capsules 約 36:1 → **所有組一律用相同的 class-balanced sampling**，不得只對某組調整 |
 
 抽樣必須可重現：固定 `random.Random(42)`，對排序後的檔名清單抽樣。
 **驗證方式：重跑兩次，抽出的檔名清單雜湊必須相同。**
@@ -230,5 +272,7 @@ few-shot seed 的 GT mask
 |---|---|---|
 | few-shot 只有 10 張瑕疵 → 分型後每型可能只剩 2–4 個元件 | trigger token 學不起來 | [ADR-002](decisions.md#adr-002) 的 fallback；必要時退回單一 token |
 | pHash 分群把太多影像合併 → train pool 被掏空 | 訓練資料不足 | M4 先印分群大小分布再決定閾值，並記錄移動張數 |
-| `2cls_fewshot` 的 train pool 正常圖數量兩物件差很多（200 vs 120） | 物件間不可直接比較 | per-object 指標分開報告；必要時對齊 |
+| train pool 正常圖數量兩物件差很多（602 vs 361） | 物件間不可直接比較 | per-object 指標分開報告；合成配額按物件各自計算 |
+| **Test 只有 40 張瑕疵／物件**（採 highshot 基底的代價） | 指標變異大 | 所有表格附樣本數；Real-only 與最佳 Filtered 組**必須**補 3 seeds 報 mean±std；不要對 <1% 的差異下結論 |
+| 極端類別不平衡（pcb1 60:1） | 準確率失去意義 | 主指標用 Macro-F1 與 AUROC，額外報正常品 false-positive rate；所有組共用同一套 balanced sampling |
 | VisA 下載 URL 或內容變更 | 不可重現 | `source_checksums.json` 鎖住 SHA256；不符即停 |
