@@ -1,0 +1,4 @@
+interface:
+  display_name: "DefectForge Types"
+  short_description: "Audit frozen DINOv2 defect types"
+  default_prompt: "Resume or audit DefectForge M6 component extraction, DINOv2 clustering, and frozen temporary defect tokens."

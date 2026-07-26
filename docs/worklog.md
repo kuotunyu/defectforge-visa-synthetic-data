@@ -352,6 +352,49 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 08：M6 DINOv2 + morphology 瑕疵分型凍結
+
+### 做了什麼
+- 再次執行 `df-guard`，20 張 seed image + mask 全數未命中 test blocklist
+- 查證目前官方 Hugging Face 用法，以 `AutoImageProcessor + AutoModel` 載入
+  `facebook/dinov2-base`，取 `last_hidden_state[:, 0, :]` 的 768-D CLS embedding
+- 新增 `scripts/cluster_defect_types.py`：連通元件、32px 雜點過濾、DINOv2 crop embedding、
+  八項 morphology、block-standardization/balancing、Ward agglomerative 與 silhouette 選 k
+- 模型鎖定 revision `f9e44c814b77203eaa57a6bdbbd535f21ede1415`（Apache-2.0）
+- 凍結 `splits/defect_types.json` + `splits/DEFECT_TYPES.sha256`，
+  產出兩張 clustering contact sheet 與 `reports/defect_type_report.md`
+- 建立並通過 validator 的 `.claude/skills/df-types/`
+
+### 分群結果
+- pcb1：23 components（另濾 3 個 <32px 雜點），k=2，群大小 16 / 7；
+  k=3–5 雖 silhouette 稍高但都有 singleton，依硬性 min-size=3 排除
+- capsules：12 components，k=2，群大小 9 / 3；k=3–5 均有 1–2 張小群而排除
+- Defect types SHA256：
+  `0c7669287fb1b8f48b3f6aff202eaefc914e8bfc1d892b9e63f88b20996cb41a`
+- 暫用 token：`<pcb1-type0>`、`<pcb1-type1>`、`<capsules-type0>`、
+  `<capsules-type1>`；`confirmed_by_user=false`
+
+### 目視與驗證
+- pcb1 type0 以接腳／大型結構區為主，type1 以小型板面局部區為主
+- capsules type0 以局部圓斑／凹點為主，type1 是較大破損或整顆受損
+- 每個紅色輪廓皆對準非空 GT component，沒有空背景 crop；微小瑕疵 crop 模糊但合理
+- 每群 ≥3；所有來源都來自 frozen seed 且不在 blocklist
+- frozen manifest / selection checksum 前後不變
+- `ruff check` 全綠；pytest 7 passed；`df-types` validator 通過
+
+### 未決
+- 暫用 display names 可由使用者日後改成語意名稱；trigger token 不得變，且不阻塞後續
+- Hugging Face cache 的 Windows symlink warning 不影響結果，已記 troubleshooting
+
+### 下一步
+**M7** — 實作並生成每物件 500 張 copy-paste 合成（mixed blend），先做 ROI/placement
+自動斷言，再抽 24 張 grid 目視。
+
+### 換你做
+目前沒有；顯示名稱可以等你醒來再改，M7 不需要等待。
+
+---
+
 ## 2026-07-27 — Session 06：M4 pHash 分群、manifest 凍結與防洩漏 guard
 
 ### 做了什麼

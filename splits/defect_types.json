@@ -1,0 +1,1133 @@
+{
+  "confirmed_by_user": false,
+  "created_at": "2026-07-26T20:03:18.970996+00:00",
+  "fewshot_selection_sha256": "7021234d0bef51926832591d60c205fa7273e0cc32fd0ae5348740094b060ea2",
+  "manifest_sha256": "3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c",
+  "method": "agglomerative(standardized block-balanced DINOv2-base CLS + morphology), silhouette-selected k with minimum cluster size",
+  "min_cluster_size": 3,
+  "min_component_area": 32,
+  "model": {
+    "embedding": "last_hidden_state[:, 0, :]",
+    "id": "facebook/dinov2-base",
+    "license": "Apache-2.0",
+    "revision": "f9e44c814b77203eaa57a6bdbbd535f21ede1415"
+  },
+  "naming": "auto-temporary; trigger tokens are frozen, display names may change",
+  "objects": {
+    "capsules": {
+      "clustering_candidates": [
+        {
+          "cluster_sizes": {
+            "0": 9,
+            "1": 3
+          },
+          "eligible": true,
+          "k": 2,
+          "silhouette": 0.2374092575590997
+        },
+        {
+          "cluster_sizes": {
+            "0": 9,
+            "1": 1,
+            "2": 2
+          },
+          "eligible": false,
+          "k": 3,
+          "silhouette": 0.2471532499651464
+        },
+        {
+          "cluster_sizes": {
+            "0": 7,
+            "1": 2,
+            "2": 1,
+            "3": 2
+          },
+          "eligible": false,
+          "k": 4,
+          "silhouette": 0.22530235017342484
+        },
+        {
+          "cluster_sizes": {
+            "0": 4,
+            "1": 2,
+            "2": 1,
+            "3": 3,
+            "4": 2
+          },
+          "eligible": false,
+          "k": 5,
+          "silhouette": 0.2085104018159257
+        }
+      ],
+      "fallback_applied": false,
+      "filtered_tiny_components": 0,
+      "n_components": 12,
+      "types": [
+        {
+          "cluster_id": 0,
+          "components": [
+            {
+              "area_px": 1187,
+              "bbox": [
+                858,
+                285,
+                41,
+                38
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                838,
+                263,
+                920,
+                345
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/004.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/004.png",
+              "morphology": {
+                "area_ratio": 0.0007913333333333333,
+                "aspect_ratio": 1.0789473684210527,
+                "components_in_image": 1.0,
+                "contrast_delta": -0.08391711860895157,
+                "eccentricity": 0.3124630614882339,
+                "extent": 0.7618741976893453,
+                "intensity_delta": 0.05727851390838623,
+                "solidity": 0.9745484400656814
+              }
+            },
+            {
+              "area_px": 2242,
+              "bbox": [
+                780,
+                188,
+                52,
+                52
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                754,
+                162,
+                858,
+                266
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/009.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/009.png",
+              "morphology": {
+                "area_ratio": 0.0014946666666666667,
+                "aspect_ratio": 1.0,
+                "components_in_image": 1.0,
+                "contrast_delta": 0.02398013323545456,
+                "eccentricity": 0.1570840832983915,
+                "extent": 0.8291420118343196,
+                "intensity_delta": 0.19625023007392883,
+                "solidity": 0.9846288976723759
+              }
+            },
+            {
+              "area_px": 2647,
+              "bbox": [
+                810,
+                416,
+                61,
+                55
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                780,
+                382,
+                902,
+                504
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/010.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/010.png",
+              "morphology": {
+                "area_ratio": 0.0017646666666666668,
+                "aspect_ratio": 1.1090909090909091,
+                "components_in_image": 1.0,
+                "contrast_delta": 0.010237887501716614,
+                "eccentricity": 0.4726350362657721,
+                "extent": 0.7889716840536513,
+                "intensity_delta": 0.17668193578720093,
+                "solidity": 0.9836492010405053
+              }
+            },
+            {
+              "area_px": 1935,
+              "bbox": [
+                466,
+                309,
+                49,
+                51
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                440,
+                284,
+                542,
+                386
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/016.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/016.png",
+              "morphology": {
+                "area_ratio": 0.00129,
+                "aspect_ratio": 0.9607843137254902,
+                "components_in_image": 1.0,
+                "contrast_delta": -0.008004613220691681,
+                "eccentricity": 0.271012194207218,
+                "extent": 0.7743097238895558,
+                "intensity_delta": 0.10091006755828857,
+                "solidity": 0.979746835443038
+              }
+            },
+            {
+              "area_px": 193,
+              "bbox": [
+                393,
+                296,
+                18,
+                16
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                370,
+                272,
+                434,
+                336
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/037.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/037.png",
+              "morphology": {
+                "area_ratio": 0.00012866666666666666,
+                "aspect_ratio": 1.125,
+                "components_in_image": 1.0,
+                "contrast_delta": -0.1349066197872162,
+                "eccentricity": 0.5195499884276777,
+                "extent": 0.6701388888888888,
+                "intensity_delta": -0.3314904570579529,
+                "solidity": 0.9601990049751243
+              }
+            },
+            {
+              "area_px": 118,
+              "bbox": [
+                409,
+                80,
+                14,
+                12
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                384,
+                54,
+                448,
+                118
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/038.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/038.png",
+              "morphology": {
+                "area_ratio": 7.866666666666666e-05,
+                "aspect_ratio": 1.1666666666666667,
+                "components_in_image": 1.0,
+                "contrast_delta": -0.026127152144908905,
+                "eccentricity": 0.6451779509680752,
+                "extent": 0.7023809523809523,
+                "intensity_delta": -0.1909061074256897,
+                "solidity": 0.9365079365079365
+              }
+            },
+            {
+              "area_px": 3345,
+              "bbox": [
+                876,
+                645,
+                65,
+                67
+              ],
+              "component_id": 1,
+              "crop_bbox": [
+                842,
+                612,
+                976,
+                746
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/050.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/050.png",
+              "morphology": {
+                "area_ratio": 0.00223,
+                "aspect_ratio": 0.9701492537313433,
+                "components_in_image": 2.0,
+                "contrast_delta": -0.05260021239519119,
+                "eccentricity": 0.3672786929184909,
+                "extent": 0.7680826636050516,
+                "intensity_delta": 0.12330472469329834,
+                "solidity": 0.9826674500587544
+              }
+            },
+            {
+              "area_px": 3444,
+              "bbox": [
+                838,
+                187,
+                92,
+                61
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                792,
+                126,
+                976,
+                310
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/051.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/051.png",
+              "morphology": {
+                "area_ratio": 0.002296,
+                "aspect_ratio": 1.5081967213114753,
+                "components_in_image": 2.0,
+                "contrast_delta": 0.051517173647880554,
+                "eccentricity": 0.7552456355362985,
+                "extent": 0.6136849607982894,
+                "intensity_delta": -0.17252220213413239,
+                "solidity": 0.9612056935528887
+              }
+            },
+            {
+              "area_px": 3239,
+              "bbox": [
+                849,
+                254,
+                65,
+                64
+              ],
+              "component_id": 1,
+              "crop_bbox": [
+                816,
+                221,
+                946,
+                351
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/051.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/051.png",
+              "morphology": {
+                "area_ratio": 0.0021593333333333334,
+                "aspect_ratio": 1.015625,
+                "components_in_image": 2.0,
+                "contrast_delta": -0.02915029227733612,
+                "eccentricity": 0.2929732144224713,
+                "extent": 0.7786057692307692,
+                "intensity_delta": 0.1201578676700592,
+                "solidity": 0.9827063106796117
+              }
+            }
+          ],
+          "n_components": 9,
+          "trigger_token": "<capsules-type0>",
+          "type_name": "type0 (temporary)"
+        },
+        {
+          "cluster_id": 1,
+          "components": [
+            {
+              "area_px": 2619,
+              "bbox": [
+                813,
+                609,
+                72,
+                118
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                731,
+                550,
+                967,
+                786
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/050.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/050.png",
+              "morphology": {
+                "area_ratio": 0.001746,
+                "aspect_ratio": 0.6101694915254238,
+                "components_in_image": 2.0,
+                "contrast_delta": -0.00391976535320282,
+                "eccentricity": 0.9120705513088465,
+                "extent": 0.3082627118644068,
+                "intensity_delta": -0.21850302815437317,
+                "solidity": 0.7297297297297297
+              }
+            },
+            {
+              "area_px": 23119,
+              "bbox": [
+                211,
+                141,
+                151,
+                239
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                48,
+                22,
+                526,
+                500
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/081.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/081.png",
+              "morphology": {
+                "area_ratio": 0.015412666666666667,
+                "aspect_ratio": 0.6317991631799164,
+                "components_in_image": 1.0,
+                "contrast_delta": 0.05846364051103592,
+                "eccentricity": 0.9007756413542161,
+                "extent": 0.6406107124054421,
+                "intensity_delta": -0.02485215663909912,
+                "solidity": 0.9905737178113887
+              }
+            },
+            {
+              "area_px": 24121,
+              "bbox": [
+                56,
+                135,
+                176,
+                215
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                0,
+                28,
+                430,
+                458
+              ],
+              "image_path": "capsules/Data/Images/Anomaly/084.JPG",
+              "mask_path": "capsules/Data/Masks/Anomaly/084.png",
+              "morphology": {
+                "area_ratio": 0.016080666666666667,
+                "aspect_ratio": 0.8186046511627907,
+                "components_in_image": 1.0,
+                "contrast_delta": 0.06279579550027847,
+                "eccentricity": 0.8582756841707143,
+                "extent": 0.6374471458773784,
+                "intensity_delta": -0.022153913974761963,
+                "solidity": 0.9917358769838007
+              }
+            }
+          ],
+          "n_components": 3,
+          "trigger_token": "<capsules-type1>",
+          "type_name": "type1 (temporary)"
+        }
+      ]
+    },
+    "pcb1": {
+      "clustering_candidates": [
+        {
+          "cluster_sizes": {
+            "0": 16,
+            "1": 7
+          },
+          "eligible": true,
+          "k": 2,
+          "silhouette": 0.12492735219115503
+        },
+        {
+          "cluster_sizes": {
+            "0": 15,
+            "1": 7,
+            "2": 1
+          },
+          "eligible": false,
+          "k": 3,
+          "silhouette": 0.14168907247801646
+        },
+        {
+          "cluster_sizes": {
+            "0": 5,
+            "1": 10,
+            "2": 7,
+            "3": 1
+          },
+          "eligible": false,
+          "k": 4,
+          "silhouette": 0.14104813991274562
+        },
+        {
+          "cluster_sizes": {
+            "0": 5,
+            "1": 5,
+            "2": 5,
+            "3": 7,
+            "4": 1
+          },
+          "eligible": false,
+          "k": 5,
+          "silhouette": 0.1619384317007104
+        }
+      ],
+      "fallback_applied": false,
+      "filtered_tiny_components": 3,
+      "n_components": 23,
+      "types": [
+        {
+          "cluster_id": 0,
+          "components": [
+            {
+              "area_px": 1109,
+              "bbox": [
+                475,
+                762,
+                39,
+                76
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                418,
+                724,
+                570,
+                876
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/004.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/004.png",
+              "morphology": {
+                "area_ratio": 0.0007382112522299439,
+                "aspect_ratio": 0.5131578947368421,
+                "components_in_image": 2.0,
+                "contrast_delta": 0.08571672439575195,
+                "eccentricity": 0.982804682147993,
+                "extent": 0.3741565452091768,
+                "intensity_delta": 0.01781708002090454,
+                "solidity": 0.9120065789473685
+              }
+            },
+            {
+              "area_px": 1092,
+              "bbox": [
+                514,
+                762,
+                49,
+                71
+              ],
+              "component_id": 1,
+              "crop_bbox": [
+                468,
+                726,
+                610,
+                868
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/004.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/004.png",
+              "morphology": {
+                "area_ratio": 0.0007268951194184839,
+                "aspect_ratio": 0.6901408450704225,
+                "components_in_image": 2.0,
+                "contrast_delta": 0.09879453480243683,
+                "eccentricity": 0.9818051388249034,
+                "extent": 0.31388329979879276,
+                "intensity_delta": 0.014836639165878296,
+                "solidity": 0.9365351629502573
+              }
+            },
+            {
+              "area_px": 4769,
+              "bbox": [
+                616,
+                758,
+                138,
+                113
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                547,
+                676,
+                823,
+                952
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/009.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/009.png",
+              "morphology": {
+                "area_ratio": 0.003174508081050137,
+                "aspect_ratio": 1.2212389380530972,
+                "components_in_image": 1.0,
+                "contrast_delta": 0.03150762617588043,
+                "eccentricity": 0.8067694505738486,
+                "extent": 0.3058227523406438,
+                "intensity_delta": 0.2686753273010254,
+                "solidity": 0.5117501877883893
+              }
+            },
+            {
+              "area_px": 1750,
+              "bbox": [
+                587,
+                744,
+                63,
+                125
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                494,
+                682,
+                744,
+                932
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/010.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/010.png",
+              "morphology": {
+                "area_ratio": 0.0011648960247091088,
+                "aspect_ratio": 0.504,
+                "components_in_image": 2.0,
+                "contrast_delta": -0.0895080715417862,
+                "eccentricity": 0.9948937639324632,
+                "extent": 0.2222222222222222,
+                "intensity_delta": 0.23640352487564087,
+                "solidity": 0.9308510638297872
+              }
+            },
+            {
+              "area_px": 3403,
+              "bbox": [
+                635,
+                744,
+                100,
+                131
+              ],
+              "component_id": 1,
+              "crop_bbox": [
+                554,
+                678,
+                816,
+                940
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/010.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/010.png",
+              "morphology": {
+                "area_ratio": 0.0022652235269057697,
+                "aspect_ratio": 0.7633587786259542,
+                "components_in_image": 2.0,
+                "contrast_delta": -0.022283434867858887,
+                "eccentricity": 0.7849603529509407,
+                "extent": 0.2597709923664122,
+                "intensity_delta": 0.2353440821170807,
+                "solidity": 0.4103955619874578
+              }
+            },
+            {
+              "area_px": 3542,
+              "bbox": [
+                601,
+                824,
+                122,
+                61
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                540,
+                732,
+                784,
+                976
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/016.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/016.png",
+              "morphology": {
+                "area_ratio": 0.0023577495540112363,
+                "aspect_ratio": 2.0,
+                "components_in_image": 1.0,
+                "contrast_delta": 0.011096671223640442,
+                "eccentricity": 0.9245732675510979,
+                "extent": 0.4759473259876377,
+                "intensity_delta": 0.36399996280670166,
+                "solidity": 0.6216216216216216
+              }
+            },
+            {
+              "area_px": 1017,
+              "bbox": [
+                638,
+                709,
+                83,
+                29
+              ],
+              "component_id": 3,
+              "crop_bbox": [
+                596,
+                640,
+                762,
+                806
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/037.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/037.png",
+              "morphology": {
+                "area_ratio": 0.0006769710040738078,
+                "aspect_ratio": 2.8620689655172415,
+                "components_in_image": 6.0,
+                "contrast_delta": -0.13124266266822815,
+                "eccentricity": 0.970517571627161,
+                "extent": 0.4225176568342335,
+                "intensity_delta": 0.4253103733062744,
+                "solidity": 0.6111778846153846
+              }
+            },
+            {
+              "area_px": 2517,
+              "bbox": [
+                565,
+                815,
+                88,
+                68
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                521,
+                761,
+                697,
+                937
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/038.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/038.png",
+              "morphology": {
+                "area_ratio": 0.0016754533109673297,
+                "aspect_ratio": 1.2941176470588236,
+                "components_in_image": 1.0,
+                "contrast_delta": -0.010714948177337646,
+                "eccentricity": 0.9014371575896256,
+                "extent": 0.42062165775401067,
+                "intensity_delta": 0.4767775535583496,
+                "solidity": 0.6294073518379595
+              }
+            },
+            {
+              "area_px": 95936,
+              "bbox": [
+                265,
+                363,
+                350,
+                349
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                90,
+                188,
+                790,
+                888
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/050.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/050.png",
+              "morphology": {
+                "area_ratio": 0.0638602657294246,
+                "aspect_ratio": 1.002865329512894,
+                "components_in_image": 1.0,
+                "contrast_delta": -0.11077211797237396,
+                "eccentricity": 0.0777429130761743,
+                "extent": 0.7853950061399918,
+                "intensity_delta": 0.4817766547203064,
+                "solidity": 0.9950112532022362
+              }
+            },
+            {
+              "area_px": 32,
+              "bbox": [
+                578,
+                706,
+                5,
+                8
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                548,
+                678,
+                612,
+                742
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/051.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/051.png",
+              "morphology": {
+                "area_ratio": 2.1300955880395134e-05,
+                "aspect_ratio": 0.625,
+                "components_in_image": 3.0,
+                "contrast_delta": -0.06771411746740341,
+                "eccentricity": 0.7971141513189115,
+                "extent": 0.8,
+                "intensity_delta": 0.17190825939178467,
+                "solidity": 0.9142857142857143
+              }
+            },
+            {
+              "area_px": 2175,
+              "bbox": [
+                648,
+                743,
+                18,
+                133
+              ],
+              "component_id": 3,
+              "crop_bbox": [
+                524,
+                676,
+                790,
+                942
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/051.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/051.png",
+              "morphology": {
+                "area_ratio": 0.0014477993449956068,
+                "aspect_ratio": 0.13533834586466165,
+                "components_in_image": 3.0,
+                "contrast_delta": -0.05219321697950363,
+                "eccentricity": 0.9923418892607754,
+                "extent": 0.9085213032581454,
+                "intensity_delta": -0.08055800199508667,
+                "solidity": 0.974025974025974
+              }
+            },
+            {
+              "area_px": 2082,
+              "bbox": [
+                701,
+                743,
+                17,
+                131
+              ],
+              "component_id": 4,
+              "crop_bbox": [
+                578,
+                678,
+                840,
+                940
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/051.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/051.png",
+              "morphology": {
+                "area_ratio": 0.0013858934419682084,
+                "aspect_ratio": 0.1297709923664122,
+                "components_in_image": 3.0,
+                "contrast_delta": -0.07725975662469864,
+                "eccentricity": 0.9926646098259387,
+                "extent": 0.9348899865289627,
+                "intensity_delta": -0.057027727365493774,
+                "solidity": 0.9665738161559888
+              }
+            },
+            {
+              "area_px": 6373,
+              "bbox": [
+                668,
+                340,
+                135,
+                62
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                600,
+                236,
+                870,
+                506
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/081.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/081.png",
+              "morphology": {
+                "area_ratio": 0.004242218494554943,
+                "aspect_ratio": 2.1774193548387095,
+                "components_in_image": 1.0,
+                "contrast_delta": -0.15418344736099243,
+                "eccentricity": 0.8939419699620001,
+                "extent": 0.7614097968936678,
+                "intensity_delta": 0.3687540292739868,
+                "solidity": 0.8573927081931925
+              }
+            },
+            {
+              "area_px": 911,
+              "bbox": [
+                736,
+                171,
+                23,
+                79
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                668,
+                132,
+                826,
+                290
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/084.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/084.png",
+              "morphology": {
+                "area_ratio": 0.0006064115877199989,
+                "aspect_ratio": 0.2911392405063291,
+                "components_in_image": 5.0,
+                "contrast_delta": -0.030447103083133698,
+                "eccentricity": 0.978509034904662,
+                "extent": 0.5013758943313154,
+                "intensity_delta": 0.4301600456237793,
+                "solidity": 0.7128325508607198
+              }
+            },
+            {
+              "area_px": 1779,
+              "bbox": [
+                725,
+                312,
+                71,
+                56
+              ],
+              "component_id": 1,
+              "crop_bbox": [
+                690,
+                269,
+                832,
+                411
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/084.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/084.png",
+              "morphology": {
+                "area_ratio": 0.001184200015975717,
+                "aspect_ratio": 1.2678571428571428,
+                "components_in_image": 5.0,
+                "contrast_delta": -0.08723025768995285,
+                "eccentricity": 0.9292228866624963,
+                "extent": 0.4474346076458752,
+                "intensity_delta": 0.33522307872772217,
+                "solidity": 0.9127757824525398
+              }
+            },
+            {
+              "area_px": 329,
+              "bbox": [
+                294,
+                338,
+                106,
+                19
+              ],
+              "component_id": 2,
+              "crop_bbox": [
+                241,
+                242,
+                453,
+                454
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/084.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/084.png",
+              "morphology": {
+                "area_ratio": 0.00021900045264531246,
+                "aspect_ratio": 5.578947368421052,
+                "components_in_image": 5.0,
+                "contrast_delta": -0.15612870454788208,
+                "eccentricity": 0.9992954230015495,
+                "extent": 0.16335650446871897,
+                "intensity_delta": 0.13147062063217163,
+                "solidity": 0.6172607879924953
+              }
+            }
+          ],
+          "n_components": 16,
+          "trigger_token": "<pcb1-type0>",
+          "type_name": "type0 (temporary)"
+        },
+        {
+          "cluster_id": 1,
+          "components": [
+            {
+              "area_px": 253,
+              "bbox": [
+                509,
+                654,
+                19,
+                20
+              ],
+              "component_id": 0,
+              "crop_bbox": [
+                486,
+                632,
+                550,
+                696
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/037.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/037.png",
+              "morphology": {
+                "area_ratio": 0.00016841068242937402,
+                "aspect_ratio": 0.95,
+                "components_in_image": 6.0,
+                "contrast_delta": -0.16557061672210693,
+                "eccentricity": 0.7679278629903367,
+                "extent": 0.6657894736842105,
+                "intensity_delta": 0.2805361747741699,
+                "solidity": 0.9068100358422939
+              }
+            },
+            {
+              "area_px": 123,
+              "bbox": [
+                461,
+                680,
+                11,
+                22
+              ],
+              "component_id": 1,
+              "crop_bbox": [
+                434,
+                659,
+                498,
+                723
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/037.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/037.png",
+              "morphology": {
+                "area_ratio": 8.187554916526879e-05,
+                "aspect_ratio": 0.5,
+                "components_in_image": 6.0,
+                "contrast_delta": -0.13981759548187256,
+                "eccentricity": 0.9528239475152336,
+                "extent": 0.5082644628099173,
+                "intensity_delta": 0.26275259256362915,
+                "solidity": 0.9044117647058824
+              }
+            },
+            {
+              "area_px": 48,
+              "bbox": [
+                846,
+                711,
+                8,
+                7
+              ],
+              "component_id": 4,
+              "crop_bbox": [
+                818,
+                682,
+                882,
+                746
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/037.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/037.png",
+              "morphology": {
+                "area_ratio": 3.1951433820592696e-05,
+                "aspect_ratio": 1.1428571428571428,
+                "components_in_image": 6.0,
+                "contrast_delta": 0.07019633799791336,
+                "eccentricity": 0.5369152956701919,
+                "extent": 0.8571428571428571,
+                "intensity_delta": 0.3315546214580536,
+                "solidity": 1.0
+              }
+            },
+            {
+              "area_px": 41,
+              "bbox": [
+                814,
+                722,
+                8,
+                8
+              ],
+              "component_id": 5,
+              "crop_bbox": [
+                786,
+                694,
+                850,
+                758
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/037.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/037.png",
+              "morphology": {
+                "area_ratio": 2.7291849721756265e-05,
+                "aspect_ratio": 1.0,
+                "components_in_image": 6.0,
+                "contrast_delta": 0.03745567798614502,
+                "eccentricity": 0.6200804326993515,
+                "extent": 0.640625,
+                "intensity_delta": 0.2984822988510132,
+                "solidity": 0.9318181818181818
+              }
+            },
+            {
+              "area_px": 150,
+              "bbox": [
+                452,
+                727,
+                27,
+                8
+              ],
+              "component_id": 6,
+              "crop_bbox": [
+                434,
+                699,
+                498,
+                763
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/037.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/037.png",
+              "morphology": {
+                "area_ratio": 9.984823068935218e-05,
+                "aspect_ratio": 3.375,
+                "components_in_image": 6.0,
+                "contrast_delta": -0.03842266649007797,
+                "eccentricity": 0.9726206847306714,
+                "extent": 0.6944444444444444,
+                "intensity_delta": 0.3526633381843567,
+                "solidity": 0.8333333333333334
+              }
+            },
+            {
+              "area_px": 178,
+              "bbox": [
+                456,
+                369,
+                19,
+                14
+              ],
+              "component_id": 3,
+              "crop_bbox": [
+                434,
+                344,
+                498,
+                408
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/084.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/084.png",
+              "morphology": {
+                "area_ratio": 0.00011848656708469793,
+                "aspect_ratio": 1.3571428571428572,
+                "components_in_image": 5.0,
+                "contrast_delta": -0.1164933294057846,
+                "eccentricity": 0.7857395564961693,
+                "extent": 0.6691729323308271,
+                "intensity_delta": -0.05695563554763794,
+                "solidity": 0.9368421052631579
+              }
+            },
+            {
+              "area_px": 215,
+              "bbox": [
+                451,
+                385,
+                23,
+                19
+              ],
+              "component_id": 4,
+              "crop_bbox": [
+                430,
+                362,
+                494,
+                426
+              ],
+              "image_path": "pcb1/Data/Images/Anomaly/084.JPG",
+              "mask_path": "pcb1/Data/Masks/Anomaly/084.png",
+              "morphology": {
+                "area_ratio": 0.0001431157973214048,
+                "aspect_ratio": 1.2105263157894737,
+                "components_in_image": 5.0,
+                "contrast_delta": -0.14256955683231354,
+                "eccentricity": 0.9073591275640248,
+                "extent": 0.4919908466819222,
+                "intensity_delta": 0.1561284065246582,
+                "solidity": 0.8333333333333334
+              }
+            }
+          ],
+          "n_components": 7,
+          "trigger_token": "<pcb1-type1>",
+          "type_name": "type1 (temporary)"
+        }
+      ]
+    }
+  },
+  "seed": 42
+}

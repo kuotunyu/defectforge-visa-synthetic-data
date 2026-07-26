@@ -49,3 +49,20 @@ Python 3.12 只能從 source build。本機有 MSVC Build Tools，但沒有 Wind
 
 **預防**：下載器的 dry-run 現在明確印出 `${visa_raw}`；資料協定也記錄官方 tar
 member 佈局。第一次誤解壓的重複副本因刪除護欄拒絕而暫時保留在 D:，不影響正確資料。
+
+---
+
+## 2026-07-27 — Hugging Face cache 在 Windows 顯示 symlink degraded warning
+
+**里程碑**：M6
+
+**症狀**：首次下載 `facebook/dinov2-base` 時，`huggingface_hub` 警告目前 Windows
+未啟用 Developer Mode，cache 無法建立 symlink，可能多佔磁碟；模型仍正常載入。
+
+**根因**：Windows 非系統管理員程序預設不能建立 symlink；這不是模型、權重或 CUDA 錯誤。
+
+**解法**：不為單一約 346 MB 模型提升權限或改系統設定；保留預設 degraded cache。
+本次鎖定 revision `f9e44c814b77203eaa57a6bdbbd535f21ede1415` 且 35 個元件全數抽取成功。
+
+**預防**：看到這個 warning 時先確認 cache 空間與模型 checksum/revision；不要把它誤判成
+下載失敗，也不要在無人值守時自行開啟 Developer Mode。

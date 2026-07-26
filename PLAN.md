@@ -61,7 +61,7 @@
     `reports/figures/fewshot_contact_sheet_{pcb1,capsules}.png` **自己用 Read 打開檢視**，
     確認每格都疊了 mask 輪廓、瑕疵肉眼可辨；`reports/real_mask_stats.json` 產出
 
-- [ ] **M6** 👀 瑕疵分型（DINOv2 + 形態特徵分群）→ 暫用命名 → 凍結 `splits/defect_types.json`
+- [x] **M6** 👀 瑕疵分型（DINOv2 + 形態特徵分群）→ 暫用命名 → 凍結 `splits/defect_types.json`
   - **無人值守做法**（[ADR-012](docs/decisions.md#adr-012)）：自動產生暫用 token `<pcb1-type0>`…並繼續往下跑，
     **不要停在這裡等命名**。使用者事後只改**顯示名稱**（不動 token 字串，因此不需重訓）
   - **驗證**：每群 ≥3 個元件（否則已依 [ADR-002](docs/decisions.md#adr-002) fallback 合併）；
