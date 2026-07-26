@@ -25,7 +25,7 @@
 
 ## M1–M2 — 環境與資料落地
 
-- [ ] **M1** 🤖 建立 uv 虛擬環境並鎖版（Python 3.12、torch **2.13.0+cu130**）
+- [x] **M1** 🤖 建立 uv 虛擬環境並鎖版（Python 3.12、torch **2.13.0+cu130**）
   - **驗證**：`uv run python -c "import torch; ..."` 印出 `2.13.0+cu130`、CUDA 可用、裝置為 RTX 4090
     （**版本字串必須含 `+cu130` 後綴**——沒有就是裝到 PyPI 的 CPU-only 輪子，見 `docs/environment.md`）；
     `uv run python -c "import diffusers, peft, timm, cv2, imagehash, sklearn, cleanfid"` 全數匯入成功；

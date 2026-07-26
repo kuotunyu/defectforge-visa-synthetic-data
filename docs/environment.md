@@ -15,8 +15,8 @@
 | uv | 0.11.18 |
 | git / git-lfs | 2.41.0.windows.1 / 已安裝 |
 | gh CLI | 已登入 **`kuotunyu`**（`gh api user` 回傳 id 61350295）。注意 `gh auth status` 顯示的是舊快取名稱 `tun0000`（帳號改過名），**以 `gh api user` 為準** |
-| git 身分 | repo-local 已鎖 `user.name=kuotunyu` / `user.email=[redacted-school-email]`（見 [CLAUDE.md](../CLAUDE.md) 的 Git 署名規則） |
-| C: 可用 | 202 GB |
+| git 身分 | repo-local 已鎖 `user.name=kuotunyu` / `user.email=61350295+kuotunyu@users.noreply.github.com`（見 [CLAUDE.md](../CLAUDE.md) 的 Git 署名規則） |
+| C: 可用 | 182 GiB（M1 preflight） |
 | D: 可用 | 1728 GB |
 | Desktop | **未**被 OneDrive 接管（已查 `User Shell Folders`，OneDrive 程序未執行） |
 
@@ -28,12 +28,12 @@
 ## 2. 建立環境（M1）
 
 ```powershell
-uv venv --python 3.12
-uv sync
+uv lock --python 3.12
+uv sync --frozen --python 3.12
 ```
 
-Python 選 **3.12** 是為了與 Colab runtime 對齊（M1 開工時要先確認 Colab 當時的 Python 版本，
-不一致就改成一致的）。
+實際建立的是 uv 管理的 **CPython 3.12.13**。`--frozen` 保證安裝完全以已提交的
+`uv.lock` 為準，不在安裝時悄悄重解依賴。
 
 ### PyTorch 要走 CUDA index，不能從 PyPI 裝
 
@@ -71,7 +71,7 @@ torchvision = [{ index = "pytorch-cu130" }]
 
 然後 `uv sync` 即可，**不要用 `pip install torch`**。
 
-M1 執行時仍**重新確認一次**當時的 CUDA 版本與可用輪子，確認後 `uv lock` 並提交 `uv.lock`。
+M1 已在 2026-07-27 **重新確認** CUDA 版本與可用輪子，並產生、提交 `uv.lock`。
 （`pytorch.org/get-started/locally/` 的頁面曾回傳疑似快取的舊值，
 比較可靠的做法是直接看 <https://download.pytorch.org/whl/cu130/torch/> 的檔名清單。）
 
@@ -90,8 +90,11 @@ uv run python -c "import diffusers, peft, cv2, imagehash, sklearn, cleanfid; pri
 | diffusers | 0.39.0（2026-07-03，requires Python ≥3.10） | [PyPI](https://pypi.org/project/diffusers/) |
 | peft | 0.19.1（2026-04-16） | [PyPI](https://pypi.org/project/peft/) |
 | transformers | **5.14.1**（2026-07-16） | [PyPI](https://pypi.org/project/transformers/) |
+| timm | 1.0.28（2026-07-11） | [PyPI](https://pypi.org/project/timm/) |
+| accelerate | 1.14.0（2026-06-11） | [PyPI](https://pypi.org/project/accelerate/) |
+| clean-fid | 0.1.35 | [PyPI](https://pypi.org/project/clean-fid/) |
 
-### ⚠️ M1 必須先確認的相容性問題：transformers 已進入 v5
+### transformers v5 相容性驗證結果
 
 `transformers` v5.0.0 於 2026-01-26 發佈，目前 5.14.1。v5 是**破壞性改版**：
 
@@ -104,8 +107,8 @@ uv run python -c "import diffusers, peft, cv2, imagehash, sklearn, cleanfid; pri
 
 **本專案同時用 `diffusers` 0.39 ＋ `peft` ＋ `transformers`**（DINOv2 特徵抽取）。
 
-**2026-07-27 實測：依賴解析沒有衝突。** 用本檔的 `pyproject.toml` 在暫存區跑 `uv lock`，
-175 個套件成功解析，得到：
+**2026-07-27 實測：依賴解析與 runtime import 都通過。** `uv lock` 成功解析
+175 個套件，得到：
 
 | 套件 | 解析結果 |
 |---|---|
@@ -116,18 +119,23 @@ uv run python -c "import diffusers, peft, cv2, imagehash, sklearn, cleanfid; pri
 | peft | 0.19.1 |
 | accelerate | 1.14.0 |
 
-⚠️ **但「解析成功」不等於「執行期相容」。**
-解析只證明沒有宣告層級的版本衝突（diffusers 0.39 沒有把 `transformers<5` 釘死）。
-它**不保證** diffusers 內部沒有呼叫只存在於 v4 的 API。
-M1 除了 `uv lock`，還要**實際 import 並跑一次最小推論**才算驗證通過：
+解析只證明沒有宣告層級的版本衝突，因此 M1 另外實際載入全部核心套件與
+Diffusers inpainting pipeline API：
 
 ```powershell
 uv run python -c "import diffusers, peft, transformers; from diffusers import AutoPipelineForInpainting; print('ok', transformers.__version__, diffusers.__version__)"
 ```
 
-真的踩到執行期不相容時的取捨（降 transformers 還是等 diffusers 更新）要記成一則 ADR。
+結果成功。Transformers 會印出 `Siglip2ImageProcessorFast` 已棄用的警告，但沒有例外；
+這是上游相容層訊息，不影響目前使用的 DINOv2 或 inpainting API。未來若變成錯誤，
+再依實際堆疊決定是否降版並追加 ADR。
 
-M1 要**重新查證一次**再鎖版，並把 `uv.lock` 提交進 git。
+### `noise` 1.2.2 為何不納入
+
+最初骨架曾使用 `noise` 產生 Perlin noise，但該套件最後發布於 2015 年，Windows wheel
+只到 CPython 3.4。Python 3.12 會被迫現場編譯 C extension，而本機未安裝 Windows SDK
+headers。M8 的程序噪聲因此改由 NumPy/scikit-image 實作，避免為非核心功能修改整台
+電腦的 C++ 系統工具鏈；方法與 CLI 契約不變。
 
 ---
 
@@ -165,6 +173,7 @@ M1 要**重新查證一次**再鎖版，並把 `uv.lock` 提交進 git。
 | `bitsandbytes` 8-bit optimizer | Windows 支援不穩 | 本機 4090 24GB 不需要；Colab（Linux）才用 |
 | `xformers` | Windows 輪子常對不上 torch 版本 | **不裝**，用 torch 內建 SDPA |
 | conda 的 python 混進來 | 匯入到錯誤環境的套件 | 一律用 `uv run python`，不要直接打 `python` |
+| `noise==1.2.2` 在 Python 3.12 編譯失敗 | 找不到 Windows SDK `io.h`；PyPI 無現代 Windows wheel | 不使用該套件；程序噪聲以 NumPy/scikit-image 實作 |
 | 檔名大小寫 | VisA 影像是 `.JPG`（大寫），Windows 不分大小寫但 Linux/Colab 分 | glob 時同時比對 `.JPG`/`.jpg`，寫進 manifest 的路徑用原始大小寫 |
 
 ---

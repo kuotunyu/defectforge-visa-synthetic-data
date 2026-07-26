@@ -76,14 +76,16 @@ Colab 產出由使用者放回 `results/colab/` 後，Claude Code 才接手分�
 - commit message **不准**加 `Co-Authored-By:` trailer（任何人都不行，包含 Claude）
 - commit message **不准**出現 `🤖 Generated with Claude Code` 之類的署名
 - PR 內文同樣不加任何 Claude 署名或產生器標記
-- commit 的 author 與 committer 一律是 `kuotunyu <[redacted-school-email]>`
+- commit 的 author 與 committer 一律是
+  `kuotunyu <61350295+kuotunyu@users.noreply.github.com>`
 - 已設 repo-local `user.name` / `user.email` 鎖住身分，不依賴 global 設定
 
 commit 前自檢：
 ```powershell
 git log -1 --format="%an <%ae>"; git log -1 --format="%B" | Select-String "Co-[Aa]uthored-[Bb]y|Generated with"
 ```
-第一行必須是 `kuotunyu <[redacted-school-email]>`，第二行必須沒有任何輸出。
+第一行必須是 `kuotunyu <61350295+kuotunyu@users.noreply.github.com>`，
+第二行必須沒有任何輸出。
 
 ---
 

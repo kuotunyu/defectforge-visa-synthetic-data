@@ -20,7 +20,9 @@ commit 不得含 `Co-Authored-By`，PR 內文不得含任何 Claude／產生器�
 git shortlog -sne --all
 git log --format="%(trailers:key=Co-authored-by,valueonly)" | Select-String "\S"
 ```
-第一個指令必須只有 `kuotunyu <[redacted-school-email]>` 一列；第二個必須沒有輸出。
+第一個指令必須只有
+`kuotunyu <61350295+kuotunyu@users.noreply.github.com>` 一列；
+第二個必須沒有輸出。
 
 ---
 

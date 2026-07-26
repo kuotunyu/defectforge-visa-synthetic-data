@@ -54,7 +54,7 @@
 | ~~Colab L4 費率~~ | ~~L4 未查到確切值~~ → **L4 約 2.5–5.0 CU/hr（中位約 4.0）**，T4 約 1.5–2.0、A100 約 13–15。來源是第三方彙整、Colab 官方不公佈費率，**M15 仍要實測校正** | 部分解決 2026-07-27 |
 | ~~套件版本 / CUDA index~~ | ~~torch 2.13.0 但文件寫 cu128~~ → **已修正為 cu130**。實測 cu128 index 最高只到 torch 2.11.0，原本「cu128 ＋ 2.13.0」的組合不存在 | ✅ 2026-07-27 |
 | **transformers v5 相容性** | transformers 已進入 v5（5.14.1），是破壞性改版（image processor 改名、預設 dtype 改為 `"auto"`）。**依賴解析已實測無衝突**（暫存區 `uv lock` 得 transformers 5.14.1 ＋ diffusers 0.39.0 ＋ peft 0.19.1 ＋ torch 2.13.0+cu130，175 套件）。但解析成功 ≠ 執行期相容 | M1 除了 `uv lock` 還要實際 import 並跑最小推論 |
-| 🔴 **commit 信箱洩漏學校信箱** | 前 3 筆 commit（`9a3038c`／`bf2c89f`／`1867b7c`）的 author 與 committer 都是 `[redacted-school-email]`。**全域 `git config user.email` 就是這個值**，所以任何沒有覆寫的 repo 都會中招。`publish-repo` 第 1 關要求只能出現 `61350295+kuotunyu@...`。repo-local 身分已於 2026-07-27 修正，之後的 commit 乾淨；**但既有 3 筆需要 `git filter-repo --email-callback` 改寫歷史，這屬於使用者親自執行的動作** | 發佈前必須解決 |
+| 🔴 **commit 信箱洩漏學校信箱** | 前 3 筆 commit（`9a3038c`／`bf2c89f`／`1867b7c`）的 author 與 committer 都是 `[redacted-school-email]`。**全域 `git config user.email` 當時也是這個值**，所以任何沒有覆寫的 repo 都會中招。`publish-repo` 第 1 關要求只能出現 `61350295+kuotunyu@...`。repo-local 身分已於 2026-07-27 修正，之後的 commit 乾淨；**但既有 3 筆需要 `git filter-repo --email-callback` 改寫歷史，這屬於使用者親自執行的動作** | 發佈前必須解決 |
 | 分型可用性 | 10 張 seed 分群後每型可能只剩 2–4 個元件，trigger token 可能學不起來 | M6 看實際分群結果決定是否啟動 fallback |
 | SD2 vs SDXL 額度 | 兩個底模都做會吃掉較多 Colab units | M15 估算後回報，必要時把 SDXL 排到下個月 |
 
@@ -93,7 +93,7 @@
 **舊快取名稱**（帳號改過名）。以 `gh api user` 為準。
 
 **稽核結果**：M0 那筆 commit 本來就乾淨——
-author/committer 都是 `kuotunyu <[redacted-school-email]>`，且無 `Co-Authored-By` trailer。
+author/committer 當時都是 `kuotunyu <[redacted-school-email]>`，且無 `Co-Authored-By` trailer。
 
 **已落實的防護**：
 1. [CLAUDE.md](../CLAUDE.md) 新增「Git 署名規則（不可違反）」一節：禁止 `Co-Authored-By`、
@@ -178,3 +178,49 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 3. 我開始 M1 之前會先問你要不要下載 VisA（1.80 GB）；
    如果你想讓我今晚就一路跑到 M14，**現在就可以先授權下載**，我會照 🤖/👀 標記跑到 M10，
    停在 M11（SDXL 需要你上 Colab）
+
+---
+
+## 2026-07-27 — Session 03：M1 環境鎖版與 Git 歷史清理
+
+### 做了什麼
+- 稽核本機 repository：無 remote、工作樹原本乾淨、repo-local 身分已鎖為
+  `kuotunyu <61350295+kuotunyu@users.noreply.github.com>`
+- 改寫既有 commit metadata，author / committer 統一為 `kuotunyu` 的 GitHub noreply；
+  沒有加入 `Co-Authored-By:` 或工具署名
+- 重新查證官方 cu130 index 與 PyPI 最新版本，補上遺漏的 `timm` 直接相依
+- 產生 `uv.lock`，建立 uv 管理的 CPython 3.12.13 `.venv`
+- 移除無現代 Windows wheel 的 `noise` 1.2.2；程序噪聲改由 NumPy/scikit-image 實作
+- 更新 `CLAUDE.md`、環境、發佈與 troubleshooting 文件的實測資訊
+
+### 決策
+- 沒有新增 ADR：移除 `noise` 是實作相依調整，不改方法、資料、CLI 或實驗契約
+- 不修改 global Git 設定，以免干擾同時進行的 `2_SafeSynth` / `3_FormosaNLU`；
+  本 repo 的 local 設定已足以保證 Contributor 歸屬
+- `df-setup` 同時涵蓋 M1–M2，依 skills roadmap 等 M2 真正跑通後再建立，避免先寫未驗證 SOP
+
+### 驗證
+- `uv lock --python 3.12`：175 packages 解析成功
+- Python：3.12.13
+- torch：`2.13.0+cu130`；CUDA runtime 13.0；`torch.cuda.is_available() == True`
+- GPU：`NVIDIA GeForce RTX 4090`；capability `(8, 9)`
+- `diffusers` 0.39.0、`transformers` 5.14.1、`peft` 0.19.1、`timm` 1.0.28、
+  `accelerate` 1.14.0、OpenCV 5.0.0 與其餘 M1 套件全部 import 成功
+- `from diffusers import AutoPipelineForInpainting` 成功；只有上游 Siglip2 Fast 名稱的
+  deprecation warning，沒有 runtime 例外
+
+### 未決與風險
+| 項目 | 說明 | 何時解決 |
+|---|---|---|
+| M2 下載授權 | VisA tar 為 1,929,840,640 bytes；M2 明確標記 🙋，無人值守不可自行下載 | 使用者醒來後授權 |
+| `df-setup` skill | M1 已驗證，M2 尚未實跑，因此不先把未驗證下載流程寫成 SOP | M2 完成時 |
+| Transformers 棄用警告 | 目前僅 warning；若日後升級變成錯誤再評估版本取捨 | 首次 DINOv2 實跑 |
+
+### 下一步
+**M2** — 使用者明確同意後，下載 VisA 1.80 GB 到 D:、核對精確 bytes / SHA256，
+解壓並驗證 pcb1 / capsules 的 normal / anomaly 張數。
+
+### 換你做
+1. 回覆是否授權執行 M2 的 VisA 1.80 GB 下載。
+2. 不需要建立 GitHub repo；目前仍保持純本機，等你醒來再決定。
+3. Hugging Face 帳號 `steven0226` 與 Colab Secrets 可留到 M10/M15 前再確認。
