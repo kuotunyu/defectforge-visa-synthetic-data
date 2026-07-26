@@ -1,0 +1,43 @@
+# Single source of truth for every path in this project.
+# NO script may hardcode an absolute path — always load this file.
+# Rationale: docs/decisions.md ADR-005.
+
+# ---------------------------------------------------------------------------
+# Big data lives on D: (1.7 TB free). The project folder on C: stays clean so
+# the git repo only ever contains code, configs, docs, manifests and small figures.
+# ---------------------------------------------------------------------------
+data_root: "D:/sdg-data/01-defectforge"
+
+paths:
+  # --- under data_root ---
+  raw: "${data_root}/raw"                              # VisA_20220922.tar + extracted VisA/
+  visa_tar: "${data_root}/raw/VisA_20220922.tar"
+  visa_raw: "${data_root}/raw/VisA"
+  visa_fewshot: "${data_root}/prepared/VisA_pytorch_2cls_fewshot"
+  visa_highshot: "${data_root}/prepared/VisA_pytorch_2cls_highshot"
+  synthetic: "${data_root}/synthetic"                  # stageA_copypaste / stageA_procedural / stageB_sd2 / stageB_sdxl
+  runs: "${data_root}/runs"                            # local training + generation runs
+  cache: "${data_root}/cache"                          # DINOv2 embeddings, pHash tables
+
+  # --- under project_root (tracked by git) ---
+  splits: "splits"                                     # split_manifest.json, defect_types.json, checksums
+  reports: "reports"                                   # markdown reports
+  figures: "reports/figures"                           # contact sheets, grids, curves
+  configs: "configs"
+  notebooks: "notebooks"
+  colab_results: "results/colab"                       # where Colab artefacts are placed back
+
+# ---------------------------------------------------------------------------
+# Hugging Face cache stays on C: default (C:/Users/3Hml/.cache/huggingface).
+# Set hf_home to a path here only if C: gets tight; leave null to use the default.
+# ---------------------------------------------------------------------------
+hf_home: null
+
+# Secrets file lives OUTSIDE the repo (parent folder), loaded with python-dotenv.
+dotenv: "../.env"
+
+objects:
+  - pcb1
+  - capsules
+
+seed: 42

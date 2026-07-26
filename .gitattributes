@@ -1,0 +1,21 @@
+# Normalise line endings: this repo is authored on Windows but runs on Colab (Linux).
+# Text files are stored with LF in the repo and checked out with the platform default.
+* text=auto
+
+# Always LF — these are executed or parsed on Linux.
+*.py      text eol=lf
+*.ipynb   text eol=lf
+*.sh      text eol=lf
+*.yaml    text eol=lf
+*.yml     text eol=lf
+*.toml    text eol=lf
+*.json    text eol=lf
+*.md      text eol=lf
+
+# Binary
+*.png     binary
+*.jpg     binary
+*.JPG     binary
+*.gif     binary
+*.pdf     binary
+*.pptx    binary

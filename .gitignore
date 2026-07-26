@@ -1,0 +1,52 @@
+# --- Secrets (never commit) ---
+.env
+.env.*
+!.env.example
+*credentials*
+*secret*
+*.pem
+kaggle.json
+
+# --- Large data & outputs ---
+# Bulk data actually lives on D:\sdg-data\01-defectforge (see configs/paths.yaml);
+# these rules exist so an accidental local copy never reaches git.
+# Leading "/" anchors them to the repo root — an unanchored "data/" would also
+# swallow src/data/, which is source code.
+/data/
+/runs/
+# results/ must stay tracked as a directory so results/colab/.gitkeep survives:
+# ignore its CONTENTS, not the directory itself.
+/results/*
+!/results/colab/
+/results/colab/*
+!/results/colab/.gitkeep
+
+*.tar
+*.tar.gz
+*.zip
+
+# --- Model weights ---
+*.ckpt
+*.safetensors
+*.pt
+*.pth
+*.onnx
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+
+# --- Tooling / OS ---
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

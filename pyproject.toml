@@ -1,0 +1,54 @@
+[project]
+name = "defectforge-visa"
+version = "0.1.0"
+description = "Few-shot industrial defect synthesis on VisA: an open-source replication of the NVIDIA GTC 2026 Cosmos AnomalyGen methodology."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12,<3.13"
+
+# NOTE: versions below are the SKELETON only. Milestone M1 must re-verify each
+# latest version online, then pin them with `uv lock` and commit uv.lock.
+# Versions checked on 2026-07-27: torch 2.13.0, diffusers 0.39.0, peft 0.19.1.
+dependencies = [
+    # core
+    "numpy",
+    "pyyaml",
+    "python-dotenv",
+    "tqdm",
+    "pandas",
+    # imaging
+    "pillow",
+    "opencv-python",          # cv2.seamlessClone for Poisson blending
+    "scikit-image",
+    "imagehash",              # pHash near-duplicate grouping
+    "noise",                  # Perlin noise for procedural anomalies
+    # ml
+    "torch",                  # installed from the cu128 index, see docs/environment.md
+    "torchvision",
+    "transformers",           # DINOv2 feature extractor
+    "diffusers",
+    "peft",
+    "accelerate",
+    "safetensors",
+    "scikit-learn",           # agglomerative clustering + silhouette
+    # metrics
+    "clean-fid",
+    # reporting
+    "matplotlib",
+]
+
+[dependency-groups]
+dev = [
+    "ruff",
+    "pytest",
+    "jupyter",
+]
+
+[tool.uv]
+# torch must come from the CUDA 12.8 index, not PyPI. See docs/environment.md.
+# The concrete [[tool.uv.index]] / [tool.uv.sources] block is added in M1 after
+# confirming the current index URL on https://pytorch.org/get-started/locally/
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
