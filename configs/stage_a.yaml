@@ -1,0 +1,35 @@
+# Stage A synthesis parameters. Paths remain in configs/paths.yaml.
+copy_paste:
+  rotation_deg: [-180.0, 180.0]
+  scale: [0.7, 1.4]
+  flip_probability: 0.5
+  brightness: [0.90, 1.10]
+  contrast: [0.90, 1.10]
+  saturation: [0.90, 1.10]
+  hue_shift: [-0.03, 0.03]
+  opacity: [0.75, 1.0]
+  feather_radius: [1.0, 3.0]
+  poisson_probability: 0.5
+  max_transform_tries: 64
+  max_place_tries: 100
+  max_background_tries: 20
+
+roi:
+  default:
+    mode: union
+    min_component_area_ratio: 0.0002
+    close_kernel: 17
+    open_kernel: 5
+    erosion_px: 3
+    border_fraction: 0.04
+  objects:
+    pcb1:
+      mode: saturation_bbox
+    capsules:
+      mode: saturation
+      close_kernel: 9
+      erosion_px: 4
+
+report:
+  contact_sheet_n: 24
+  contact_sheet_columns: 6

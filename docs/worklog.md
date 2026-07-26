@@ -310,6 +310,42 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 09：M7 copy-paste Stage A 完整生成與獨立驗證
+
+### 做了什麼
+- 新增 `src/synthetic/copy_paste.py` 與共用 `src/common/imaging.py`：從 M6 frozen
+  components 決定性抽樣，做旋轉／縮放／翻轉／色彩擾動，再以 Poisson 或 feather-alpha
+  混合到 frozen train-good 背景
+- PCB 使用最大飽和前景的內縮 bbox；膠囊使用清理後的飽和區域，放置以
+  `cv2.matchTemplate` 精確找出能讓非零 mask 100% 位於 legal ROI 的座標
+- 以 largest-remainder 配額生成 pcb1 500 張（type0 348 / type1 152）與 capsules
+  500 張（type0 375 / type1 125），輸出到
+  `D:/sdg-data/01-defectforge/synthetic/stageA_copypaste`
+- 新增 exact-field metadata schema 與每張來源、仿射、blend、mask geometry、seed provenance
+- 新增 `scripts/validate_synthetic.py`，獨立重新開啟全輸出、重建 ROI、核對 frozen
+  background/component、blocklist、tree inventory 與 metadata
+
+### 驗證結果
+- 正式輸出：1,000 images + 1,000 binary masks + 1,000 metadata records
+- 獨立驗證重建 594 個 background ROI、雜湊 634 個來源檔與全部輸出；
+  2,000 個輸出 SHA256 全部唯一，test blocklist hits = 0
+- Blend：Poisson 493、feather-alpha 507；每種物件／型別皆達到精確配額
+- 兩個獨立 `n=2` 同 seed 行程比較全部 8 個 image/mask PNG：0 mismatch，
+  byte-for-byte 可重現
+- `--resume` 對正式 1,000 筆重驗成功，沒有重寫既有成功樣本
+- 實際開啟兩張 24 格正式 grid：PCB mask 全在板體，膠囊 mask 全在綠色膠囊；
+  兩者均未見矩形接縫或貼到桌布／背景的瑕疵
+- pytest 9 passed；完整 Ruff 與最終 contributors audit 於提交前執行
+
+### 下一步
+**M8** — 程序化生成每物件 500 張，另做完全不讀 real statistics 的
+`--no-real-stats` 對照；逐張驗證並目視正式 grids。
+
+### 換你做
+目前沒有；GitHub repo 尚未建立不影響本機推進，remote／push 仍留待你醒來。
+
+---
+
 ## 2026-07-27 — Session 07：M5 決定性 few-shot／validation 與 mask 統計
 
 ### 做了什麼

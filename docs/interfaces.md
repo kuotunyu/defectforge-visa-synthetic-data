@@ -126,6 +126,18 @@ SHA256）、`splits/FEWSHOT_SELECTION.sha256`、`reports/fewshot_stats.md`、
 ```
 斷言：`--no-real-stats` 時執行過程中**從未開啟** `real_mask_stats.json`（用檔案存取記錄驗證）
 
+### Stage A independent validation `scripts/validate_synthetic.py`
+```
+--paths --config configs/stage_a.yaml
+--out-name STR             # default: stageA_copypaste
+--n INT                    # expected samples per object, default: 500
+--report PATH              # optional JSON validation summary
+```
+Reopens every image/mask and checks the exact inventory, metadata schema, frozen
+train-good backgrounds, frozen defect components, SHA256 test blocklist, binary
+mask/size/bbox/area, then rebuilds each legal ROI from the source background and
+asserts that every mask is 100% contained.
+
 ### M9 `src/synthetic/mask_placement.py`
 ```
 --paths --config configs/placement.yaml --object --seed --resume --dry-run

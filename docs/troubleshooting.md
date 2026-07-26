@@ -66,3 +66,40 @@ member 佈局。第一次誤解壓的重複副本因刪除護欄拒絕而暫時�
 
 **預防**：看到這個 warning 時先確認 cache 空間與模型 checksum/revision；不要把它誤判成
 下載失敗，也不要在無人值守時自行開啟 Developer Mode。
+
+---
+
+## 2026-07-27 — 通用前景 ROI 把膠囊桌布與 PCB 陰影誤判為合法區域
+
+**里程碑**：M7
+
+**症狀**：早期 smoke grid 有膠囊瑕疵落在淺色桌布，PCB 則可能落到板體外的陰影；
+單靠 border-color distance 與 saturation 聯集會把兩者都納入。
+
+**根因**：兩個物件的可貼區幾何不同。PCB 是單一大致矩形的高飽和板體；膠囊是多個分離的
+綠色前景。通用 union ROI 無法同時安全描述兩者。
+
+**解法**：在 `configs/stage_a.yaml` 明確鎖定 object-specific ROI：PCB 取最大 saturation
+component 的 bbox 再 erosion；膠囊保留清理後的 saturation components 並 erosion。
+正式 1,000 筆由獨立 validator 從 594 張來源背景重建 ROI，逐張確認 100% containment。
+
+**預防**：每個新 object 必須先用 smoke grid 校準 ROI mode；正式輸出同時保留
+`roi_bbox`，但不可只信 metadata，必須從原始背景獨立重算。
+
+---
+
+## 2026-07-27 — 大型瑕疵 mask 用隨機中心點放置容易耗盡重試
+
+**里程碑**：M7
+
+**症狀**：大面積或細長 component 即使 legal ROI 內實際存在可放位置，隨機抽中心點仍可能
+在最大重試數內全部失敗；提高重試只會讓正式生成變慢且不保證找到。
+
+**根因**：中心點位於 ROI 不代表整個不規則 mask 位於 ROI；合法 top-left 座標通常只占
+候選座標中的小部分。
+
+**解法**：以 `cv2.matchTemplate(~legal_roi, component_mask, TM_CCORR)` 一次算出所有與
+illegal pixels 零重疊的位置，再由 sample-local PCG64 從合法座標決定性選取。
+
+**預防**：placement 的硬條件永遠以所有非零 mask pixels 為準；生成後再用
+`np.all(legal_roi[placed_mask])` fail closed，且由獨立 validator 重驗。

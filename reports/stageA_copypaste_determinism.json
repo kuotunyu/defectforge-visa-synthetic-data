@@ -1,0 +1,9 @@
+{
+  "files_compared": 8,
+  "mismatches": 0,
+  "output_a": "D:/sdg-data/01-defectforge/synthetic/stageA_copypaste_determinism_a",
+  "output_b": "D:/sdg-data/01-defectforge/synthetic/stageA_copypaste_determinism_b",
+  "scope": "all image and mask PNG files from two independent n=2-per-object runs",
+  "seed": 42,
+  "status": "bit-identical"
+}

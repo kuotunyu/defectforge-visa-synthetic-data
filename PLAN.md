@@ -71,7 +71,7 @@
 
 ## M7–M8 — Stage A 合成（本機保底）
 
-- [ ] **M7** 👀 `src/synthetic/copy_paste.py` — **每物件 500 張**
+- [x] **M7** 👀 `src/synthetic/copy_paste.py` — **每物件 500 張**
   - **驗證**：每張都有配對 mask 與 `metadata.jsonl` 一行且通過 schema；mask 與影像同尺寸、非全零、
     貼上位置 100% 在 ROI 內；抽 24 張 grid **自己看**，確認無矩形接縫、瑕疵沒貼到背景
 
