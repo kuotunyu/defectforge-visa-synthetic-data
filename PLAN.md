@@ -56,7 +56,7 @@
     `splits/MANIFEST.sha256` 寫入；
     `reports/split_report.md` 記錄因 pHash 而移動的張數
 
-- [ ] **M5** 👀 few-shot 抽樣（seed=42、k=10／物件）＋ 統計表 ＋ contact sheet
+- [x] **M5** 👀 few-shot 抽樣（seed=42、k=10／物件）＋ 統計表 ＋ contact sheet
   - **驗證**：重跑兩次抽樣的檔名清單雜湊完全相同；`reports/fewshot_stats.md` 的數字能從 manifest 重新聚合；
     `reports/figures/fewshot_contact_sheet_{pcb1,capsules}.png` **自己用 Read 打開檢視**，
     確認每格都疊了 mask 輪廓、瑕疵肉眼可辨；`reports/real_mask_stats.json` 產出

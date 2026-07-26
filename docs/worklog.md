@@ -310,6 +310,48 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 07：M5 決定性 few-shot／validation 與 mask 統計
+
+### 做了什麼
+- 先執行 `df-guard`：frozen manifest checksum 與 blocklist 連結相符，
+  40 張 few-shot 候選 image + 40 張 mask 逐檔 SHA256 均未命中 test
+- 新增 `scripts/sample_fewshot.py`，以 `random.Random(42)` 從每物件官方 20 張
+  few-shot anomaly pool 決定性抽 k=10
+- 依 ADR-013 從 fewshot pool 之外抽固定 10% development validation：
+  pcb1 60 good / 6 bad；capsules 36 good / 6 bad
+- 產生 `splits/fewshot_selection.json` 與 checksum sidecar；未修改 frozen manifest
+- 產生 `reports/real_mask_stats.json`（raw values、bbox、面積比、長寬比、位置與百分位）
+  與 `reports/fewshot_stats.md`
+- 產生並實際開啟兩張 2×5 contact sheet；建立已驗證的 `.claude/skills/df-split/`
+
+### 凍結結果
+- Selection SHA256：`7021234d0bef51926832591d60c205fa7273e0cc32fd0ae5348740094b060ea2`
+- Manifest SHA256 前後皆為
+  `3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c`
+- 每物件 few-shot seed = 10，與 validation 完全互斥
+
+### Mask 統計摘要
+- pcb1 area ratio：median 0.00262168；p05–p95 0.00126741–0.0370321
+- capsules area ratio：median 0.00162967；p05–p95 0.000101167–0.0157801
+- pcb1 aspect ratio：median 1.25768；p05–p95 0.917172–3.61198
+- capsules aspect ratio：median 1.03947；p05–p95 0.66352–1.14792
+
+### 驗證與目視
+- 兩次獨立行程重跑，selection 檔案 SHA256 byte-for-byte 相同
+- 所有 seed / validation image 與 mask hash 均不在 test blocklist
+- 兩張 contact sheet 各 10 格都有紅色 GT 輪廓；mask 非空、與肉眼可辨瑕疵位置一致
+- pcb1 涵蓋接腳、板面／焊點與元件區；capsules 涵蓋小斑點、破損及較大區域缺陷
+- `ruff check` 全綠；pytest 5 passed；`df-split` validator 通過
+
+### 下一步
+**M6** — 只使用這 20 張 seed 的 GT 元件，抽 DINOv2 + morphology 特徵、
+以 silhouette / min-cluster-size 選群，輸出暫用 token 與 contact sheets。
+
+### 換你做
+目前沒有；M6 暫用型別 token 會依 ADR-012 自動命名，不等人工命名。
+
+---
+
 ## 2026-07-27 — Session 06：M4 pHash 分群、manifest 凍結與防洩漏 guard
 
 ### 做了什麼

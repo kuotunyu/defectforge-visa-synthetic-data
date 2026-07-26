@@ -1,0 +1,798 @@
+{
+  "k": 10,
+  "manifest_sha256": "3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c",
+  "objects": {
+    "capsules": {
+      "fewshot_seed": [
+        {
+          "image_path": "capsules/Data/Images/Anomaly/004.JPG",
+          "mask_path": "capsules/Data/Masks/Anomaly/004.png",
+          "mask_sha256": "80980eaf9947b745d9097e57ba45e379a0399cf34560acf23009539cbcdda549",
+          "sha256": "ef6c0b8b14447ca8e1ae5b1b51ff1543d406a8c80549f432c4b08a5dece865c2"
+        },
+        {
+          "image_path": "capsules/Data/Images/Anomaly/009.JPG",
+          "mask_path": "capsules/Data/Masks/Anomaly/009.png",
+          "mask_sha256": "878484630f12558ac24b198dddc064003aad30b1a3b778f03a4a6dace8297d42",
+          "sha256": "4375fdeea646b9587119cff1a0cd9418d83eaa33a703f93f07fc3d6955ce8501"
+        },
+        {
+          "image_path": "capsules/Data/Images/Anomaly/010.JPG",
+          "mask_path": "capsules/Data/Masks/Anomaly/010.png",
+          "mask_sha256": "2c20aead1668744497de678b657e2575090f81fbfcdb64682538e3f7b3e3af73",
+          "sha256": "23b383e42c111073db810a753681b898ee65a23629966e9caaafc0ab09a63175"
+        },
+        {
+          "image_path": "capsules/Data/Images/Anomaly/016.JPG",
+          "mask_path": "capsules/Data/Masks/Anomaly/016.png",
+          "mask_sha256": "bf1ed0cf29df93ce69c32f2bc00ae9c0b73417aa5e57380f8760fb34d8a29d49",
+          "sha256": "40f05bf3d8cc92d8407f179e431cfff67e0a8024be01deea2075795dffd4cfd2"
+        },
+        {
+          "image_path": "capsules/Data/Images/Anomaly/037.JPG",
+          "mask_path": "capsules/Data/Masks/Anomaly/037.png",
+          "mask_sha256": "cd7687ae5f16fbb368ee84046ee2d201e3e28bccdc5047d1404f76eab10defed",
+          "sha256": "477326dc4d161a22010c257bccf3354ce4ae63e6165c436708f2374821eabc6e"
+        },
+        {
+          "image_path": "capsules/Data/Images/Anomaly/038.JPG",
+          "mask_path": "capsules/Data/Masks/Anomaly/038.png",
+          "mask_sha256": "40cbcdb3e7c95fe8213e17c6c58923322aa764e04b1ad8a922ca95c00679bc93",
+          "sha256": "23110f3f90c401597b6d7e359a7752838384329020e749a3477e0f4c19674a25"
+        },
+        {
+          "image_path": "capsules/Data/Images/Anomaly/050.JPG",
+          "mask_path": "capsules/Data/Masks/Anomaly/050.png",
+          "mask_sha256": "0d3dd0b1abda62b9b446cf2d49b5632cf138fedabb11711698e61e3197ff948b",
+          "sha256": "6614ef2928b01223b464c239a93f4916b811705ba925b6f95ef4e0b8af5d0b25"
+        },
+        {
+          "image_path": "capsules/Data/Images/Anomaly/051.JPG",
+          "mask_path": "capsules/Data/Masks/Anomaly/051.png",
+          "mask_sha256": "f43507e195a4fbb460f2078e756ee6ab36f2cf493661c0209ca43570fba24a93",
+          "sha256": "4b5bc576fa6609ec503eb65e290426669eb09a5dcf41f0ca24118057b6fda38c"
+        },
+        {
+          "image_path": "capsules/Data/Images/Anomaly/081.JPG",
+          "mask_path": "capsules/Data/Masks/Anomaly/081.png",
+          "mask_sha256": "f43820ea2eda6f113a05d953addb95e39218d2cf6afab796e162a81619ddaea1",
+          "sha256": "4f22c697b3483a9344e5561816fc52411a6840095874ac29d8c03171de70352d"
+        },
+        {
+          "image_path": "capsules/Data/Images/Anomaly/084.JPG",
+          "mask_path": "capsules/Data/Masks/Anomaly/084.png",
+          "mask_sha256": "8f95bf378fc4caa5d9c13d0b1a623bd48be85f84ee6f83c49e7dc4e4a0d0d325",
+          "sha256": "15e81fff9b11c9956d404faa5bfd506a15b00ea6c7bf87d4be1cd79677240e3d"
+        }
+      ],
+      "validation": {
+        "bad": [
+          {
+            "image_path": "capsules/Data/Images/Anomaly/006.JPG",
+            "mask_path": "capsules/Data/Masks/Anomaly/006.png",
+            "mask_sha256": "53ff7ad03654bee249473737e11d46a79a1611d19d5b7d620ac02754b5922bfb",
+            "sha256": "1f6ec527fd0bfd2c7e3bf7777d631e27fa7859f4cb66289aa8c71579930c51ba"
+          },
+          {
+            "image_path": "capsules/Data/Images/Anomaly/023.JPG",
+            "mask_path": "capsules/Data/Masks/Anomaly/023.png",
+            "mask_sha256": "f81ef50207cab02997f710f70ef2754056893e28919c734daefe465fbd09f7e4",
+            "sha256": "9f6e79263e9be5b417221cd142d58377655fe4bcc2c97698d9e0167ad76340ea"
+          },
+          {
+            "image_path": "capsules/Data/Images/Anomaly/024.JPG",
+            "mask_path": "capsules/Data/Masks/Anomaly/024.png",
+            "mask_sha256": "a483de6cddc9e802811cbe25ace89ead52f900465e886f8916c32a4ab656ab41",
+            "sha256": "739ecf2c8cf2fd40a9df57d9186c8219b43c9881850bb76064f074b1b27d679c"
+          },
+          {
+            "image_path": "capsules/Data/Images/Anomaly/042.JPG",
+            "mask_path": "capsules/Data/Masks/Anomaly/042.png",
+            "mask_sha256": "11a65396cb3a021c3256cd2f4176d299ba87d68fbaec7c106c16ea8f19334c69",
+            "sha256": "5f9c75be1743300818db171ece0128c3a37b8d1ca2546f7bc603f5814e1d6beb"
+          },
+          {
+            "image_path": "capsules/Data/Images/Anomaly/043.JPG",
+            "mask_path": "capsules/Data/Masks/Anomaly/043.png",
+            "mask_sha256": "ac31e9eac9b863462d885713cfc4bad46c8b6c9197c6111376c052063b5c7a8f",
+            "sha256": "c767485985d70abe07c42d3aa49b7a31050e62f78f11b02d9155137b1cada759"
+          },
+          {
+            "image_path": "capsules/Data/Images/Anomaly/046.JPG",
+            "mask_path": "capsules/Data/Masks/Anomaly/046.png",
+            "mask_sha256": "ee911710e0fa8bdc85d2b40e13dfa0afddbbf6f50c148807f4dd1dd0aeb89d1a",
+            "sha256": "9462d9ad0e7ecbbca7d97a629e6d14d217cd743c967b32a0ceb0fb6197d776fa"
+          }
+        ],
+        "good": [
+          {
+            "image_path": "capsules/Data/Images/Normal/027.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "24b8c30b448d90427c8b52ece05b3c777ffbb48fb23e1904953aee87a042340a"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/032.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "77fd8f6164066129b3ceaabf05f1b3c8ea5c4b428661023eaae4b1748186b0a8"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/033.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "3f5b145df3410501d3c939a149c61fee56164476c1d67ca8c4a60220dde942da"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/063.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "1f5c29ef3205e84180aac5e02122127da44f4cbd27fa0ab2f6eef9e47a203336"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/068.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "c69d9ff4bbf1e1d851a8b746e67b36cb773dee454e404dddcbe68fd5f224319c"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/075.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "19a560a680868f762f2a3879a420288e7251d9545cad9d61c58c992121c91172"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/077.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "3ab0c1c0411433ddf43d44800bc7fb09f16e928c3aa9c5bb2c24740de205c731"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/100.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "ca5e203826164e0e7b8c2909c68ab3dea2c4af4162d97b482f0dcb6385530740"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/147.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "8720706a10dc424a2b07b64094b57050925d60119bab2495fba2fb2ce6e27c2f"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/163.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "b776ffb8aafbf9116b9f97d73d897aaccb846516a4252f08d7a4794685e1c8ca"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/165.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "3c38fcb535aaf16d4439b86dec9014bbd549b1fa805e63bfdaea19d046795c7d"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/166.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "f07b744c5be3bf249d496cf30bbf29b94cb84fa9c9efd4cbe9c7679c9175576d"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/171.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "58cc19738a5a0c8e398cc8bd32a9c8d82c69eaa48acb06f294746d79d4762231"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/180.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "7f8b272640bcf18e4cbd6e27d72c4721af0c2a17d1340e975eb0dab6dab45b6e"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/200.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "5ad8ab2c9854254d42c4482486e0a5f947f58961776943a15ba8b69254f9f70c"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/201.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "720e870d53a47ea0da4ea83785474d108742f0e7c2d5225ffc925c8d4b79b313"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/286.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "48c0486a26edc5280f2b1ba18721a5ee964101cd3e5cc59f356f50c8547c7a93"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/288.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "37cb113aa8827eea32926c3994ea1af8c57272278f8161a2689c211b37d8822c"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/302.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "6a4b0b1516c983930426e0ec67f3f88c64cdfb6a9479cff77b6cc48eba08463c"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/333.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "a666857b8914069cac611288dbbf49aca38c14fc1720dbae8a5b3505ee778e00"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/362.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "5c3a52bb41663d0df79ad77e0987b54f12ceea937ced6edd5721467a7643d70a"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/369.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "7dbe161881dd651d589263ff1a2c4275582c89d00f6a4b51d54e096e6c3078ff"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/391.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "38e5f430cac5731b23f0b16e38439f6573249e03924cff8db929f2b7e1eb8b90"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/392.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "8e1bbfaf035af024d5c5d2f82ff93a5ae5bf81e816cf4a198aa73b0ec87ad65f"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/397.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "4263e2ecfe22d9883054e1e3c1375f22b809062c63d7cd7f79808c8c91aa6342"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/425.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "067f4c1c53beb9f50692eafde0c51274edf222f8788c1eba27c443d4ed9b918f"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/429.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "0a9d2f20d38ed4942cbf4da32588df064b9e5896ae0e86caf973f002b74a93a1"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/452.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "46dc563bd2ccc940aca0ce8f4762baf79c33b80713c5a49949bf73fb953f945c"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/472.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "cb2f0055895c7aa9e7fe994a197cf8f808d7a6584fef91a7df5356697d170992"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/479.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "7d9415feb393cf52578e861d1bcf2b35a50eb76870c3d955904aab0f26e0a0bd"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/490.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "4f99fb08067e9b26930057d507b0e0ac0852a5fcdb35e041ad4d6503e3137204"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/492.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "9968ada0a90bce9dbac839150f995c755fc679e8b6523bda5fc2ece2f7839b64"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/571.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "6bbccf70f05449c0f1d5d4e984457aa88a3ae6ef1843e683217a143b78f4b52e"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/572.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "a784a7fa80cdaa4bbf99216c49c965a8389074c68aac39ee1c467cf7494f5721"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/593.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "0a56560060ca108e4ded3ad78f2b20b9a771298b8417c8456bb747e2e2438979"
+          },
+          {
+            "image_path": "capsules/Data/Images/Normal/594.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "eb5487c6445536537b7fd185cb177dbbfdc562e8224cab9547c5eb5026bb4dc2"
+          }
+        ]
+      }
+    },
+    "pcb1": {
+      "fewshot_seed": [
+        {
+          "image_path": "pcb1/Data/Images/Anomaly/004.JPG",
+          "mask_path": "pcb1/Data/Masks/Anomaly/004.png",
+          "mask_sha256": "c1f1bd039b539ed56697bbeafef4f2701687372a2dabd6355503c8af1f4f2299",
+          "sha256": "cf562b8b172b50417487d0640885c1d89b930492b4524b68c9fd4cc003dee643"
+        },
+        {
+          "image_path": "pcb1/Data/Images/Anomaly/009.JPG",
+          "mask_path": "pcb1/Data/Masks/Anomaly/009.png",
+          "mask_sha256": "5e6d3737d9c622691eaf48574ed90490d378fbe6b9e1b7d81b76d4859c39315f",
+          "sha256": "e05c40ca6a95bfcea04598dac35b13f6b7f41a45901168abcf0def187ebcf0e9"
+        },
+        {
+          "image_path": "pcb1/Data/Images/Anomaly/010.JPG",
+          "mask_path": "pcb1/Data/Masks/Anomaly/010.png",
+          "mask_sha256": "8e728bcf798f63a8cfe8f0b27a9bbfc930d98251c6d75c6b3f63a5303c47fdd1",
+          "sha256": "42a0ee0c7d9e46733d3c19521d00bed0b1bc702f3f53488289014f44dbf9b020"
+        },
+        {
+          "image_path": "pcb1/Data/Images/Anomaly/016.JPG",
+          "mask_path": "pcb1/Data/Masks/Anomaly/016.png",
+          "mask_sha256": "6ddb7117f2f27e66bae4b536fbe645aebff547c687250d762cfee7943e9d4bcd",
+          "sha256": "fc6bab01f74d13aee33855f5ab3a837404dff85ba0af0144e8a2154d2074beaf"
+        },
+        {
+          "image_path": "pcb1/Data/Images/Anomaly/037.JPG",
+          "mask_path": "pcb1/Data/Masks/Anomaly/037.png",
+          "mask_sha256": "75393bdd850f2ad7fde24ef5c1504e65b103163c0fbc6668d3284917d842007f",
+          "sha256": "fa2e269d8719dcbdf41598b72f9836de5413dc4ebffe9f419eb684a62a8aec56"
+        },
+        {
+          "image_path": "pcb1/Data/Images/Anomaly/038.JPG",
+          "mask_path": "pcb1/Data/Masks/Anomaly/038.png",
+          "mask_sha256": "1af853acf319b7d463412760dd8421f64db5e3d4de7117a8648656c41172892e",
+          "sha256": "20971e8c3bf13131530013ec3d7662c05f26a960ea0eb72d7cb67858cd53a9c2"
+        },
+        {
+          "image_path": "pcb1/Data/Images/Anomaly/050.JPG",
+          "mask_path": "pcb1/Data/Masks/Anomaly/050.png",
+          "mask_sha256": "5363f94fabbcefaeee213ec7fafb6dec192cba944db4e1558d36e5437861ffe7",
+          "sha256": "954e2bf18f7fc8d30a5bcee7220dba3e19ddd9b19fa9d5b38dc79ba775998e05"
+        },
+        {
+          "image_path": "pcb1/Data/Images/Anomaly/051.JPG",
+          "mask_path": "pcb1/Data/Masks/Anomaly/051.png",
+          "mask_sha256": "bc7720f3701abe5973da3d0aa87b2a298338e830da01a323bdfb00b0545df0d5",
+          "sha256": "fefb62dfe5ab6946104009aeb94d1261bd9f0b34026a4a7cd14add7b053ec1ef"
+        },
+        {
+          "image_path": "pcb1/Data/Images/Anomaly/081.JPG",
+          "mask_path": "pcb1/Data/Masks/Anomaly/081.png",
+          "mask_sha256": "3117875d8d274407480492d434e44242d2639a7ff45c24b6ff10fef3cdbfee2b",
+          "sha256": "4228dd7e627ec2096171dc95172960df34862ef9a878a48228009e8d8cdc637b"
+        },
+        {
+          "image_path": "pcb1/Data/Images/Anomaly/084.JPG",
+          "mask_path": "pcb1/Data/Masks/Anomaly/084.png",
+          "mask_sha256": "73f2f0635c0d6fc5d5b5275d6dc684bfff0a07cc34788da62477d34beb02c210",
+          "sha256": "6a8be28d02e63c3973905c59ac682b819ed61a7e08335c170cdeb27fb5161a74"
+        }
+      ],
+      "validation": {
+        "bad": [
+          {
+            "image_path": "pcb1/Data/Images/Anomaly/006.JPG",
+            "mask_path": "pcb1/Data/Masks/Anomaly/006.png",
+            "mask_sha256": "ee257792128656121e070f19638e3477d0bc563eda316d2543e72c06594437c2",
+            "sha256": "130738852d074373e18fcf9f610dbebbfeb92724b7ee9875912437322b53965f"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Anomaly/023.JPG",
+            "mask_path": "pcb1/Data/Masks/Anomaly/023.png",
+            "mask_sha256": "5ac7befc1919d63583c7479cda5c6301e24a7d0a377009bb882715f11b4b2076",
+            "sha256": "c5ce6868603ad03a545c458307978d78f6fe5d47898757868c85d73313b59932"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Anomaly/024.JPG",
+            "mask_path": "pcb1/Data/Masks/Anomaly/024.png",
+            "mask_sha256": "97e1f772ee42acbb1e6d8122d17e68f9d4c34ac87a3d08d9721534d63c63d277",
+            "sha256": "2b2f19d8bfbb2761a5f2b3afba2d73f04435eb68d5f10a590a2d9de74a3475c5"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Anomaly/042.JPG",
+            "mask_path": "pcb1/Data/Masks/Anomaly/042.png",
+            "mask_sha256": "64b311ffe9ea66ed9922997fcea26090e47600f3b68788faf75b2616f9b43a42",
+            "sha256": "54e5bceb2e20c09fc0c4634515111a6e581248966adf2dc4da89f4f234e80011"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Anomaly/043.JPG",
+            "mask_path": "pcb1/Data/Masks/Anomaly/043.png",
+            "mask_sha256": "b430c544895df14bab7b3e7d15f39ee078f3ba8f0cfa63b0def15654ae64464b",
+            "sha256": "dbc6b10eaacb7be78fd1ba20e5dc821297e3280be0b67d62ab0e95bdb307f877"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Anomaly/046.JPG",
+            "mask_path": "pcb1/Data/Masks/Anomaly/046.png",
+            "mask_sha256": "46d677ee5d349df1b429b190e35af61e1c575936b3de25b89ddca1a05ee3d4ba",
+            "sha256": "903f3e5f6ec4f5fbcd4f2472f688356ac6709bd2dd7e91237ce8c8ee32b528a7"
+          }
+        ],
+        "good": [
+          {
+            "image_path": "pcb1/Data/Images/Normal/0010.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "0233227275e9b9dc70e172c74facd88a09fa0988a695eb77b8e9dd0b64487b16"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0045.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "951523664a3867e6f5c3d29edce73c1528846e6ab6b7f4830da5b7550bed0312"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0050.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "a8cdfea523dc997cb1e513c5c539eed26e34f4792863b033a52dfdf6ed255119"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0054.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "dfd5d72ae69d9bac562157a3cccebf00f3541394cc9af423eb14ea03d1dcf8a6"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0055.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "cea2aaa64aca9479b3e83e4f9e1f6057bbf9af5c7d47b454213d1b3b110698b9"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0070.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "2a6eb2d7e6d61187386c16b1c26c78d9f442124a92f84c1d90a862c5e2d3bb3b"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0114.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "a31cedb7e6c3827ab648faaa4fff042f25c8db608b534c3210a82725314f78f5"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0122.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "a3e2ee52068a21e10728e9a660029a4810a4576d48d32346b4caccf1aa9b2b4c"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0127.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "3d2039af6e382f5496bcfedbd0ea5fabe2320253112c09eecf3cac75f41effd5"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0130.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "293c90d93967d468f831728633ecf8a47f65ffb49c93063249c15bf316b55e31"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0139.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "8ba3eea0062cb9adfc9e7b625cb0472fa30c884b1916f5f5fd116d968bc1076b"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0148.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "4cc01e50d529c9545386f3138b3feca460c027b92f254e779427ff447c63ee9b"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0158.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "7901e63013ffb43685fe1cd8c930e556bf57199c78729478a293f7f3e72c55af"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0184.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "dd6dd991c32eb83d82c9e6b08dba034418c4471cd8cc87d6462493dcb77d3258"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0201.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "5bd6fac58eafe6d08a520c13f559f6edd85d91a7e984a5e4456ae5d4d2d6d5e6"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0203.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "c5131361e1a6d7d59a73964547850dedaf725043352e9e2a47e9f5e084cbeae4"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0256.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "d613a73b912d2fea7ce1c75187b4c7bdb7113a5ac08a157806687d8f4339dfb6"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0277.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "e01c7f0bb7682b9b802c9b84ae92432cb5ac097a70cea89b187175ee3343042c"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0278.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "ce9dae876bd3b8198f00a39a5b836415e1481e2df24aaf3285565b9c874649cf"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0281.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "6a7b8024ffa5c0597ddf6c20016555e6190f4808073a4a6b49ae883e25ee9c5e"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0286.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "4663e6a67011879aaa9cc0ca22a9c5645751f6791b3d4df3a0d184fcc3760b8b"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0295.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "2ac03a63a4fd2eb8c447f2f2337553159ec4aab6dc162a35c857d1a8a8cbcc95"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0316.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "68ebd1ef9162def95c6e335a9d0dbecd39a5dad4025e92eeda392da1e7170ef6"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0332.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "19036a71f9eb88ada7a5ca48e0a1a69fe78c4ee885d71fc12a852005735d543f"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0344.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "735c3d45a95c83e17157fb30d0fcf27813d7cf12926f5e13ba81273c376741a4"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0358.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "76d97eaf4479c37e073460bef5ec7ce2a524cedc4e1b25b805f2afd26d494ff2"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0370.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "db75e1671ae08d560dd951c5d36a12c200b398b79d7ba2a97ea3f60ab166998f"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0433.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "c64daa832499b971374d420555cd853cb561b90511101a5bdde492cafcc3590f"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0438.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "6b7bd88a1d83138edbcc02f75901cb1f80b349c7abd23cfd394f1b213e24a10d"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0441.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "ba76d9862f7f9436087a45d792549d8a26a6bcc152ffabcc9b705cc3b24090d8"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0453.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "8d53cc35b4f8f7a860a1a4a3cba2b2e749bbc31b105acb9929de9bd7febd924c"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0455.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "a7df9b6135460407d715e7e31149aef8491fb3d9e36490aadc81a6646adf6d32"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0474.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "dc507aaee4fed55b43ca8cbebf4ced3e5c1fbfd03fcbb2095f45f72c9d75dd7e"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0475.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "594b3d3c2694d8343a9398fbb4906050cfbe6a23fc58fde98c4798d2dbabeb5a"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0527.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "7becfd8072cf96b249d80111c3ceee52d56f5538acf74d54718b8307b389f01c"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0530.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "b4b53ead05ec727d802d7c539ea6a234babfddd01c97214e3be0adbfeabc0530"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0562.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "cce74250f5da30fc3277cd7809e4fc1a3733625d8d70c31165ecc678232107c1"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0588.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "eff6188f8651b323a65101c9c0f4454aa714d9639bc55c319b1ccf93c84cb5ac"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0649.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "ee6b82a019c88c1c40439cb84567c0243143a041a65868dae04901ae758f9224"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0699.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "b9f5c16a671eb025d0594b02a466f5fe97148eed2d9730630ff4ff9d71b659a6"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0710.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "9e8c3f9aeb4e91f78860b07c48f199e25adb5748df9d5dd0df458c016ea25f64"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0722.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "bad0752f2c9a140598182be5149e31a99677f10bf34c9e1be4406341be48444c"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0730.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "7352fd49a58d166c51048cd1687c28e11f97bb974e44d14eee689ce7811e51d6"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0762.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "7044ed87927772466adfbead958fb73b3b1fc153cc47d64a1d560e9ebe5afa75"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0763.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "d8121a27a580a2adb53f5b7c9d2327c3f95140912491414cdf59944f55b6b93b"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0777.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "696c686981c86a2008bb1d62c31c31e8b9888672eed27bb40b7c86bd7fa1d870"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0778.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "2e605e6791e6b7b083253a7ac73fa6fceef66ab9436fa1b1d138650b54672458"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0791.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "18a0a082157b953c4dda4020c0d69d83b500ff8f2999357464f0d1d65bd67cfb"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0809.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "f7dbafead698fc3a9608990ed7272bf71c1cf85a9a08092ab793f7daca9c6426"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0824.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "9f7b34c08c70c717aac2918203858c1e3f57f37ef502c9791f03663d0cc4feec"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0837.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "8f6d3a0d9885e46465ff5c247ad1b201740655d6cec823da935973c210fa5e36"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0870.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "99ffddacdebf52b179e36d61de51e85a395141eb06581925370c7f61fd9a2ba7"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0900.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "11fc84543bf2fcdbc98cc0a54a989ad948ca184d868256f145748ab0c6ce65fa"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0906.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "a119aca3afafec22f24a8afd3e1b84e1896127eb45c25062d49a314f414f05c3"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0924.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "a88ee64b6dbfc9918b0849baa422101f54022e33950c6b1bf577de2f9653f5db"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0939.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "79e501761c548d844c27f5013b07713c6641f67cae296ba41ddc99cd5ce26716"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0945.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "2d475197a944b7557d29a3d7b382647c56712ce3e7cd26f438a2d3032602c425"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0948.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "d682a879736d2a6ac54f7bcf251ae816e0a6901642538139df57f7a0eacf686f"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0966.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "d3c789246bfa114b0d5c5e3e1e9a553cf34edf6d2ae06fbe808c53376b482839"
+          },
+          {
+            "image_path": "pcb1/Data/Images/Normal/0969.JPG",
+            "mask_path": null,
+            "mask_sha256": null,
+            "sha256": "355631d29e827737a93854b1b21ce07b75b73f0ca37a39f12f049688000cc684"
+          }
+        ]
+      }
+    }
+  },
+  "schema_version": 1,
+  "seed": 42,
+  "validation_fraction": 0.1,
+  "validation_policy": "floor(10% of highshot train per object/label), minimum 1; official fewshot train pool excluded; development only"
+}
