@@ -131,7 +131,7 @@ code only — data and model weights carry their own terms:
 | Asset | License | Note |
 |---|---|---|
 | VisA dataset | CC BY 4.0 | Attribution required; redistribution of derivatives permitted |
-| `stabilityai/stable-diffusion-2-inpainting` | CreativeML Open RAIL++-M | Use-based restrictions only; no output-ownership claim |
+| `sd2-community/stable-diffusion-2-inpainting` | CreativeML Open RAIL++-M | Immutable preservation mirror of the unavailable original; see ADR-014 |
 | `diffusers/stable-diffusion-xl-1.0-inpainting-0.1` | CreativeML Open RAIL++-M | Same |
 | `facebook/dinov2-base` | Apache-2.0 | Used for filtering and defect typing |
 | Synthetic images produced here | TBD — declared on the HF dataset card in Phase 2 | Derived from VisA, so CC BY 4.0 attribution carries through |

@@ -310,6 +310,53 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 12：M10 SD2 LoRA 正式訓練、resume 與獨立重載
+
+### 做了什麼
+- 重新查證 SD2 模型來源；原 `stabilityai` repo 已不可用，依 ADR-014 改用 preservation
+  mirror，鎖定 immutable revision 與 UNet／text encoder／VAE 三個 LFS SHA256
+- 新增 `configs/lora_sd2.yaml` 與單一訓練實作 `src/training/train_inpaint_lora.py`：
+  frozen component crop、9-channel inpainting loss、UNet attention LoRA、PEFT
+  TrainableTokens、FP16、checkpoint、resume、held-out sample 與 Drive sync
+- one-step smoke 先發現 Diffusers 0.39 的 PNDM final latent dtype promotion；修正後兩物件
+  smoke 均完成訓練、sample、save 與 fresh reload，峰值 3.18 GiB
+- 新增受控 `--stop-after-steps`，以 max=2 在 step 1 中斷，再從 `latest` 恢復 optimizer、
+  scheduler、LoRA、token rows 與 micro-step，完成 step 2
+- 正式訓練 pcb1 / capsules 各 400 steps；每 100 steps 存完整 checkpoint 與 20-step sample
+- sample 依序輪替兩個 frozen trigger token，並寫 prompt、placement、crop、seed、model
+  revision、背景與 panel SHA256 sidecar
+- 新增 `scripts/validate_lora_run.py`，獨立重驗 checkpoint inventory、PEFT config、
+  adapter/sample/background hash、blocklist、frozen checksum 與兩物件 `PeftModel` 重載
+- 新增並驗證 `.claude/skills/df-finetune/SKILL.md`，把模型／資料 hash、GPU preflight、
+  smoke、受控 resume、正式訓練、重載、目視退件條件與 Git 歸屬封成 fail-closed SOP
+- 完整回歸為 Ruff 通過、24 個 pytest 通過，正式 validator 再次含 fresh reload 通過
+
+### 正式結果
+- pcb1：10 source images / 23 components / type 16+7；400 steps；訓練 128.66 秒；
+  wall 134.82 秒；峰值 3.203 GiB
+- capsules：10 source images / 12 components / type 9+3；400 steps；訓練 125.65 秒；
+  wall 131.66 秒；峰值 3.203 GiB
+- 兩者都遠低於 ADR-008 的 30 分鐘門檻，不啟動 Colab fallback
+- validator 含 fresh PeftModel reload 最終 `status=passed`；
+  詳見 `reports/lora_sd2_report.md` 與 `reports/lora_sd2_validation.json`
+
+### 目視結論
+- 所有 raw samples 都不是某張 few-shot seed 的逐張複製，M10 overfit 退回條件未觸發
+- pcb1 type1 能產生局部板面／焊點變化；capsules type0 能產生斑點／色變
+- pcb1 type0 受 placement 語意相容性影響，capsules type1 會出現文字／浮雕 artifact；
+  binary mask raw patch 也可能有接縫
+- 不把 raw patch 宣稱成最終品質；M12 必須做 guidance×crop refine 與全解析度 blend，
+  M13 必須刷掉文字、語意錯位、接縫與 near-copy
+
+### 下一步
+**M11** — 準備 SDXL Colab L4 薄封裝 notebook 與本機 1-step smoke；實際 Colab 訓練等
+使用者醒來操作。可平行先實作不依賴 SDXL 權重的 **M12 SD2 generation**。
+
+### 換你做
+目前沒有；M10 已全本機完成。GitHub repo／remote／push 仍等你醒來。
+
+---
+
 ## 2026-07-27 — Session 10：M8 程序化 Stage A 與 no-real-stats 對照
 
 ### 做了什麼

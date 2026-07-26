@@ -1,0 +1,48 @@
+model:
+  id: sd2-community/stable-diffusion-2-inpainting
+  revision: 5f74973cbb64c8568780732c17f43eb269d63a0d
+  family: sd2
+  resolution: 512
+  license: CreativeML Open RAIL++-M
+  mirror_of: stabilityai/stable-diffusion-2-inpainting
+  expected_files:
+    text_encoder/model.safetensors: cce6febb0b6d876ee5eb24af35e27e764eb4f9b1d0b7c026c8c3333d4cfc916c
+    unet/diffusion_pytorch_model.safetensors: 9bcbb17f54b039f58bf78677fab8cd8a35dd686f6c9dd553e3646a8b0aaff41a
+    vae/diffusion_pytorch_model.safetensors: a1d993488569e928462932c8c38a0760b874d166399b14414135bd9c42df5815
+
+objects:
+  pcb1:
+    description: a printed circuit board
+  capsules:
+    description: green capsules on inspection cloth
+
+training:
+  rank: 4
+  alpha: 4
+  lora_dropout: 0.0
+  max_train_steps: 400
+  train_batch_size: 1
+  gradient_accumulation_steps: 1
+  learning_rate: 0.0001
+  token_learning_rate: 0.0005
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_weight_decay: 0.01
+  adam_epsilon: 0.00000001
+  max_grad_norm: 1.0
+  lr_scheduler: constant
+  lr_warmup_steps: 0
+  mixed_precision: fp16
+  gradient_checkpointing: true
+  allow_tf32: true
+  horizontal_flip_probability: 0.5
+  mask_loss_weight: 5.0
+  checkpoint_every: 100
+  sample_every: 100
+  sample_inference_steps: 20
+  sample_guidance_scale: 7.5
+  sample_crop_ratio: 2.5
+  report_every: 10
+
+output:
+  name: lora_sd2

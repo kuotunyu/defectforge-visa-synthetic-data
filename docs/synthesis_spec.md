@@ -57,8 +57,8 @@
 
   "generation": {
     "seed": 1234567,
-    "base_model": "stabilityai/stable-diffusion-2-inpainting",
-    "lora_path": "runs/lora_sd2/pcb1/seed_42/adapter",
+    "base_model": "sd2-community/stable-diffusion-2-inpainting",
+    "lora_path": "runs/lora_sd2/pcb1/seed_42/final",
     "prompt": "a photo of <pcb1-scratch> defect on a printed circuit board",
     "negative_prompt": "...",
     "guidance_scale": 7.5,
@@ -204,7 +204,7 @@ mask 的**面積 / 位置 / 長寬比分布**由真實 few-shot mask 的統計�
 | 型別區分 | 每**瑕疵型**一個 trigger token，嵌在 prompt 內；token embedding 與 LoRA 一起訓 |
 | prompt 模板 | `a photo of <obj-type> defect on <object description>` |
 | 輸出目錄 | `runs/lora_<model>/<object>/seed_42/` |
-| **SD2 平台** | **本機 4090**（估 20–30 分鐘，在 CLAUDE.md 的 30 分鐘門檻內）。**實測若超過 30 分鐘就改回 Colab 並更新 ADR-008** |
+| **SD2 平台** | **本機 4090**（M10 實測每物件約 126–129 秒、峰值 3.203 GiB）。**若未來實測超過 30 分鐘就改回 Colab 並更新 ADR-008** |
 | **SDXL 平台** | **Colab L4**（2.6B UNet @1024，超過本機門檻） |
 | 斷點續跑 | 兩邊都要支援；Colab 版偵測 Drive 上既有 checkpoint 自動接續 |
 

@@ -90,10 +90,13 @@
     DINOv2/Otsu intersection ROI 全數重建，0 越界、0 重疊、0 分布 outlier、
     0 test-blocklist hit；兩次獨立小跑 8/8 PNG SHA256 相同
 
-- [ ] **M10** 👀 **SD2 LoRA 本機 4090 訓練**（[ADR-008](docs/decisions.md#adr-008)）
+- [x] **M10** 👀 **SD2 LoRA 本機 4090 訓練**（[ADR-008](docs/decisions.md#adr-008)）
   - **驗證**：訓練完成並存出可被 `PeftModel` 載回的權重；**記錄實際耗時**
     （>30 分鐘就回報並改回 Colab、更新 ADR-008）；`runs/.../samples/` 的樣本圖**自己看**，
     若每張都跟某張 seed 一模一樣＝ overfit，降 rank 或減 steps 重跑
+  - **完成證據**：pcb1 / capsules 各 400 steps、4 checkpoints、type0/type1 輪替 sample；
+    訓練 128.66 / 125.65 秒、峰值皆 3.203 GiB；受控中斷／resume 與兩物件
+    `PeftModel` 獨立重載通過，詳見 `reports/lora_sd2_report.md`
 
 - [ ] **M11** 🙋 `notebooks/01_train_inpaint_lora_sdxl.ipynb`（Colab L4）＋ 本機 smoke test
   - **無人值守**：notebook 與 `--smoke` 本機驗證可自動做完；**實際 Colab 訓練必須等人**

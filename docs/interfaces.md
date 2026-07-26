@@ -172,10 +172,21 @@ audit hook makes opening `real_mask_stats.json` a fatal error.
 --output-dir PATH          # 預設 ${runs}/lora_<model>/<object>/seed_<seed>
 --resume-from-checkpoint {latest,PATH}
 --sample-every INT         # 每 N steps 產一張 held-out 樣本圖到 output-dir/samples/
+--stop-after-steps INT     # 受控中斷；只供 checkpoint/resume 驗證，不進 run signature
 --smoke                    # 1 step、極小 batch，只驗證流程能跑通並存權重
 --drive-sync PATH          # Colab 專用：checkpoint 定期同步目的地
+--dry-run                  # 只驗 frozen inputs、模型鎖與 run signature，不載權重
 ```
-斷言：存出的權重能被 `PeftModel` 載回；`--smoke` 模式下不覆寫正式 checkpoint
+斷言：存出的權重能被 `PeftModel` 載回；`--smoke` 模式下不覆寫正式 checkpoint；
+每個 sample 同時寫 prompt／token／placement／seed／SHA256 sidecar。
+
+正式 M10 產物重驗：
+```text
+scripts/validate_lora_run.py
+--paths --config --run-root PATH --reload --output PATH
+```
+斷言：兩物件 checkpoint inventory、PEFT config、adapter hash、兩型 sample 輪替、
+背景 blocklist、凍結 checksum 與 fresh `PeftModel` reload 全部通過。
 
 ### M12 `src/synthetic/generate_diffusion.py`
 ```

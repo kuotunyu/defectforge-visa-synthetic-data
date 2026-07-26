@@ -1,0 +1,111 @@
+{
+  "base_model": "sd2-community/stable-diffusion-2-inpainting",
+  "base_model_revision": "5f74973cbb64c8568780732c17f43eb269d63a0d",
+  "frozen_sha256": {
+    "defect_types_sha256": "0c7669287fb1b8f48b3f6aff202eaefc914e8bfc1d892b9e63f88b20996cb41a",
+    "manifest_sha256": "3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c",
+    "selection_sha256": "7021234d0bef51926832591d60c205fa7273e0cc32fd0ae5348740094b060ea2"
+  },
+  "objects": {
+    "capsules": {
+      "adapter_hashes": {
+        "text_token_adapter_sha256": "c4b3ef4c64c2ac1cdca726d85318e246393b8447f3f678329e2a1169fe79af26",
+        "unet_adapter_sha256": "3025b8753df9d27015a4a257b72092d4abfbadcfe14a45a5a6e6e41bde7ef64f"
+      },
+      "checkpoint_names": [
+        "checkpoint-000100",
+        "checkpoint-000200",
+        "checkpoint-000300",
+        "checkpoint-000400"
+      ],
+      "component_samples": 12,
+      "peak_vram_gib": 3.202733039855957,
+      "reload_class": "PeftModel",
+      "samples": [
+        {
+          "file": "samples/step_000100.png",
+          "panel_sha256": "43c635b405aa8dc42676f869c4ec77c24185cdf4261c5bfd4bb70f31fcc76a1b",
+          "placement_id": "capsules__type0__001__00",
+          "trigger_token": "<capsules-type0>"
+        },
+        {
+          "file": "samples/step_000200.png",
+          "panel_sha256": "2d27505de1a98b55577146d4de39569e9ab60c61dc1be5971bd4d35a85be8ff9",
+          "placement_id": "capsules__type1__001__01",
+          "trigger_token": "<capsules-type1>"
+        },
+        {
+          "file": "samples/step_000300.png",
+          "panel_sha256": "c7ffa4d619b616eb804414fad20a0eda5eef5093c4579bedce398dd5b198f495",
+          "placement_id": "capsules__type0__001__00",
+          "trigger_token": "<capsules-type0>"
+        },
+        {
+          "file": "samples/step_000400.png",
+          "panel_sha256": "132d37a58cfcbbe18e38c9cc202863a91a8ba00255863bc2e0b238b5505781ed",
+          "placement_id": "capsules__type1__001__01",
+          "trigger_token": "<capsules-type1>"
+        }
+      ],
+      "source_images": 10,
+      "steps": 400,
+      "training_elapsed_seconds": 125.65328810000028,
+      "type_counts": {
+        "<capsules-type0>": 9,
+        "<capsules-type1>": 3
+      }
+    },
+    "pcb1": {
+      "adapter_hashes": {
+        "text_token_adapter_sha256": "68b8af46a35c4a5666ddd8f8c3f019d3f847daf5b240d04641a3e92cf3e441e0",
+        "unet_adapter_sha256": "471cc2e38a4bdb7024919f46c9469b5c60c328d8756a11ae7b88b6ba9dab1770"
+      },
+      "checkpoint_names": [
+        "checkpoint-000100",
+        "checkpoint-000200",
+        "checkpoint-000300",
+        "checkpoint-000400"
+      ],
+      "component_samples": 23,
+      "peak_vram_gib": 3.202733039855957,
+      "reload_class": "PeftModel",
+      "samples": [
+        {
+          "file": "samples/step_000100.png",
+          "panel_sha256": "0fd7d42a38c51d42873387a8e27ec36be31b145c829919da95684b476b47a50c",
+          "placement_id": "pcb1__type0__0000__00",
+          "trigger_token": "<pcb1-type0>"
+        },
+        {
+          "file": "samples/step_000200.png",
+          "panel_sha256": "4dd50ab2639654906f835951fc9a5da01793cbca57a900000d800d6af90a202e",
+          "placement_id": "pcb1__type1__0000__01",
+          "trigger_token": "<pcb1-type1>"
+        },
+        {
+          "file": "samples/step_000300.png",
+          "panel_sha256": "83ccf3fd7610a65c64a5ca50b6cc0c0d8240bf65426f77ce73b615cc78f72175",
+          "placement_id": "pcb1__type0__0000__00",
+          "trigger_token": "<pcb1-type0>"
+        },
+        {
+          "file": "samples/step_000400.png",
+          "panel_sha256": "3b704cefde608c00121c91cf91c8accea8e83b658adb12f8e4eaab63a07339f4",
+          "placement_id": "pcb1__type1__0000__01",
+          "trigger_token": "<pcb1-type1>"
+        }
+      ],
+      "source_images": 10,
+      "steps": 400,
+      "training_elapsed_seconds": 128.6613465999999,
+      "type_counts": {
+        "<pcb1-type0>": 16,
+        "<pcb1-type1>": 7
+      }
+    }
+  },
+  "pipeline_version": "0.2.0",
+  "run_root": "D:\\sdg-data\\01-defectforge\\runs\\lora_sd2",
+  "status": "passed",
+  "validated_at": "2026-07-26T23:21:51.042925+00:00"
+}

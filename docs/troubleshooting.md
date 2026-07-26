@@ -160,3 +160,59 @@ binary component；仿射仍為每個 sample 獨立執行。正式 2,889 筆因�
 
 **預防**：只快取 checksum 已由 frozen manifest 鎖定的不可變輸入；不可快取 placement
 座標、亂數狀態或輸出，避免破壞 sample-local determinism 與 resume 語意。
+
+---
+
+## 2026-07-27 — SD2 原 repo 404，不能把社群 mirror 的 `main` 當成替代品
+
+**里程碑**：M10
+
+**症狀**：`stabilityai/stable-diffusion-2-inpainting` API 與權重請求回傳 404，本機也沒有
+可回退的舊 cache。
+
+**根因**：ADR-001 記錄的託管 repo 已下架；模型選擇仍合理，但來源位置不再可取得。
+
+**解法**：依 ADR-014 採 `sd2-community/stable-diffusion-2-inpainting` preservation mirror，
+鎖定 revision `5f74973...`，並在載入前核對 UNet、text encoder、VAE 三個 LFS SHA256。
+
+**預防**：不可只換 repo ID 或跟隨 `main`；模型 mirror 必須同時鎖 revision、權重 hash、
+license 與 mirror provenance。
+
+---
+
+## 2026-07-27 — Diffusers 0.39 inpainting 最後一步把 latent 升成 FP32
+
+**里程碑**：M10
+
+**症狀**：訓練步成功，但 held-out inference 在最後 VAE decode 出現
+`Input type (float) and bias type (Half) should be the same`；直接把 VAE 改 FP32 又會讓
+encode 端變成 `Half` input 對 `float` bias。
+
+**根因**：PNDM scheduler 可在最後一步把 latent 升成 FP32；Diffusers 0.39 的
+`StableDiffusionInpaintPipeline` 以 prompt dtype 編碼 mask/image，decode 前卻沒有再把
+final latent cast 回 VAE dtype。
+
+**解法**：使用官方 `callback_on_step_end` 介面，只取回 `latents`，每一步結束明確 cast
+成 VAE dtype；不 monkeypatch site-packages，也不改模型權重 dtype。兩物件 smoke、20-step
+samples 與正式 400-step runs 均通過。
+
+**預防**：混合精度 smoke 必須包含完整 inference/decode，不能只測 backward/save；
+升級 Diffusers 後保留這個測試，確認上游若已修正也不會造成 dtype regression。
+
+---
+
+## 2026-07-27 — LoRA 訓練通過不代表 raw inpaint patch 可直接發佈
+
+**里程碑**：M10
+
+**症狀**：adapter 可正常學習與重載，樣本也未複製 seed，但部分 raw panel 仍有硬 mask
+接縫、錯位元件或文字／浮雕 artifact。
+
+**根因**：M9 保證幾何上落在 legal ROI，不保證每個 unsupervised type 和局部結構語意相容；
+M10 panel 又刻意顯示尚未做 ADR-004 全解析度 blend 的原始 inpaint patch。
+
+**解法**：保留問題樣本與 SHA sidecar，不用挑圖掩蓋；M12 搜尋 guidance/crop 並以 dilation
+加羽化或 Poisson blend 回原圖，M13 以 seam、OCR/text artifact、semantic/reference 距離與
+near-copy 規則過濾。
+
+**預防**：里程碑驗收分開記錄「訓練／重載正確」與「最終合成品質」；不得用前者替代後者。

@@ -501,3 +501,42 @@ Full-real 上限仍使用 60 張 anomaly。若沒有分開開發與 final refit�
 - blocklist 即使遇到相同內容檔案仍可正確驗證
 - validation 不接觸 test、不侵蝕 few-shot seed，又能避免為 Filtered 組單獨調參
 - 訓練腳本必須明確區分 `development` 與 `final_refit` 模式，結果表也要記錄該欄
+
+---
+
+<a id="adr-014"></a>
+## ADR-014 — SD2 原 repo 不可用，改採鎖定 revision 與 LFS hash 的保存 mirror
+
+**狀態**：Accepted ｜ **日期**：2026-07-27
+
+### 脈絡
+M10 開工時重新查證 ADR-001 指定的
+`stabilityai/stable-diffusion-2-inpainting`，Hugging Face API 回傳 404，且本機沒有可用 cache。
+直接讓 `from_pretrained` 跟隨任意社群 repo 的 `main` 會失去供應鏈可重現性；放棄 SD2 又會
+推翻已完成的 512 crop 主線與 SD2/SDXL 消融。
+
+### 決策
+採用 `sd2-community/stable-diffusion-2-inpainting`，它的 model card 明確說明是已下架原模型
+的 preservation mirror。所有 M10/M12 行程固定：
+
+- revision：`5f74973cbb64c8568780732c17f43eb269d63a0d`
+- `text_encoder/model.safetensors`：
+  `cce6febb0b6d876ee5eb24af35e27e764eb4f9b1d0b7c026c8c3333d4cfc916c`
+- `unet/diffusion_pytorch_model.safetensors`：
+  `9bcbb17f54b039f58bf78677fab8cd8a35dd686f6c9dd553e3646a8b0aaff41a`
+- `vae/diffusion_pytorch_model.safetensors`：
+  `a1d993488569e928462932c8c38a0760b874d166399b14414135bd9c42df5815`
+
+訓練器在載權重前用 Hugging Face API 驗證 immutable revision 與以上三個 LFS SHA256；
+任一不符即 fail closed。模型授權仍為 CreativeML Open RAIL++-M。
+
+### 後果
+- ADR-001 的「SD2 作為主線」不變，只替換不可取得的託管來源
+- README、publish spec、訓練 config 與 metadata 一律使用 mirror ID + exact revision
+- 已下載的 Windows degraded cache 不是信任根；revision 與 LFS hash 才是
+- 如果 mirror 消失，可從任何內容相同的來源恢復，但三個權重 hash 不得改
+
+### 來源
+- [Preservation mirror model card](https://huggingface.co/sd2-community/stable-diffusion-2-inpainting)
+- [Diffusers Stable Diffusion inpainting API](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint)
+- [Diffusers LoRA training guide](https://github.com/huggingface/diffusers/blob/main/docs/source/en/training/lora.md)

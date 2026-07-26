@@ -31,7 +31,7 @@ git log --format="%(trailers:key=Co-authored-by,valueonly)" | Select-String "\S"
 | 資產 | 授權 | 我們的義務 |
 |---|---|---|
 | VisA 原始資料 | CC BY 4.0 | 標註來源與論文引用；衍生物可公開發佈 |
-| `stabilityai/stable-diffusion-2-inpainting` | CreativeML Open RAIL++-M | 遵守 use-based restrictions；無營收上限；不主張輸出所有權 |
+| `sd2-community/stable-diffusion-2-inpainting` | CreativeML Open RAIL++-M | 原 repo 不可用後採鎖版保存 mirror；遵守 use-based restrictions |
 | `diffusers/stable-diffusion-xl-1.0-inpainting-0.1` | 同上 | 同上 |
 | `facebook/dinov2-base` | Apache-2.0 | 標註 |
 | **我們生成的合成影像** | **CC BY 4.0**（衍生自 VisA） | 標註 VisA；同時揭露底模授權 |
