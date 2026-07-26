@@ -310,6 +310,42 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 10：M8 程序化 Stage A 與 no-real-stats 對照
+
+### 做了什麼
+- 新增 `src/synthetic/procedural.py`，用 NumPy/OpenCV 實作 perlin、crack、scratch、
+  spot 四類決定性 mask 與羽化色彩／明暗效果，不讀任何真實瑕疵像素
+- 正式 real-stats 版只讀 10 張 few-shot training masks 的 aggregate p05/p95
+  area-ratio / aspect-ratio；先驗證 manifest 與 selection checksum 鏈
+- 依 ADR-011 實作 `--no-real-stats`：只用 `configs/stage_a.yaml` 的手訂圓整範圍，
+  並安裝 Python audit hook，任何開啟 `real_mask_stats.json` 的嘗試都會致命失敗
+- 兩版皆各生成 pcb1 500 + capsules 500；每物件四類形狀精確各 125
+- 新增 `scripts/validate_procedural.py`，獨立重建 ROI、核對 frozen train-good
+  provenance、零真實瑕疵來源欄位、mask geometry、統計範圍、blocklist 與輸出 hash
+- 依 roadmap 建立 `.claude/skills/df-stage-a/`，skill validator 通過
+
+### 正式輸出與驗證
+- real-stats：1,000 images + 1,000 masks + 1,000 metadata；610 個背景 ROI 重建，
+  2,000 unique output SHA256，area/aspect outlier rate 全部 0%，blocklist hits = 0
+- no-real-stats：同樣 1,000 + 1,000 + 1,000；612 個背景 ROI 重建，
+  2,000 unique output SHA256，outlier rate 全部 0%，blocklist hits = 0；
+  生成、resume 與獨立驗證全程 audit guard 未觸發
+- 兩個獨立 no-real-stats `n=4` 行程比較 16 個 image/mask PNG：0 mismatch，
+  byte-for-byte 可重現
+- 兩版都用 `--resume` 重驗 1,000 筆，沒有重寫成功樣本
+- 實際開啟四張正式 24 格 grid：四類形狀皆出現；PCB mask 全在板體，
+  capsule mask 全在綠色膠囊；未見桌布／陰影誤貼或矩形接縫
+- pytest 12 passed；完整 Ruff、skill validator 與 contributors audit 於提交前執行
+
+### 下一步
+**M9** — 依真實 mask 元件數比例產生 SDG-ready legal ROI placement 清單，
+驗證不重疊、面積範圍與 24 格視覺化。
+
+### 換你做
+目前沒有；GitHub repo／remote／push 仍等你醒來，本機可直接繼續 M9。
+
+---
+
 ## 2026-07-27 — Session 09：M7 copy-paste Stage A 完整生成與獨立驗證
 
 ### 做了什麼

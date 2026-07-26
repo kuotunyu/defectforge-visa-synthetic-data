@@ -75,7 +75,7 @@
   - **驗證**：每張都有配對 mask 與 `metadata.jsonl` 一行且通過 schema；mask 與影像同尺寸、非全零、
     貼上位置 100% 在 ROI 內；抽 24 張 grid **自己看**，確認無矩形接縫、瑕疵沒貼到背景
 
-- [ ] **M8** 👀 `src/synthetic/procedural.py` — **每物件 500 張**，另跑 `--no-real-stats` 版
+- [x] **M8** 👀 `src/synthetic/procedural.py` — **每物件 500 張**，另跑 `--no-real-stats` 版
   - **驗證**：同 M7 的自動斷言；預設版 mask 面積／長寬比落在真實 5–95 百分位內、超出比例 <10%；
     `--no-real-stats` 版斷言**從未開啟** `real_mask_stats.json`（[ADR-011](docs/decisions.md#adr-011)）；grid 自己看
 

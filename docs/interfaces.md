@@ -138,6 +138,16 @@ train-good backgrounds, frozen defect components, SHA256 test blocklist, binary
 mask/size/bbox/area, then rebuilds each legal ROI from the source background and
 asserts that every mask is 100% contained.
 
+### M8 independent validation `scripts/validate_procedural.py`
+```
+--paths --config configs/stage_a.yaml --n INT --shapes CSV
+--out-name STR --no-real-stats --report PATH
+```
+Rebuilds every ROI, verifies frozen train-good provenance and zero real-defect
+source fields, checks exact balanced shape quotas and blocklist exclusion, then
+requires area/aspect outlier rates below 10%. In `--no-real-stats` mode a Python
+audit hook makes opening `real_mask_stats.json` a fatal error.
+
 ### M9 `src/synthetic/mask_placement.py`
 ```
 --paths --config configs/placement.yaml --object --seed --resume --dry-run

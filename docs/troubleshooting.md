@@ -103,3 +103,22 @@ illegal pixels 零重疊的位置，再由 sample-local PCG64 從合法座標決
 
 **預防**：placement 的硬條件永遠以所有非零 mask pixels 為準；生成後再用
 `np.all(legal_roi[placed_mask])` fail closed，且由獨立 validator 重驗。
+
+---
+
+## 2026-07-27 — `--no-real-stats` 不能只靠報告欄位自證沒有讀檔
+
+**里程碑**：M8
+
+**症狀**：單純在 metadata 寫 `no_real_stats=true` 無法證明深層 helper、resume 或 validator
+未來不會意外開啟 `reports/real_mask_stats.json`，也無法滿足 ADR-011 的可稽核性。
+
+**根因**：旗標與報告是程式自己的宣告，不是檔案存取證據；重構時仍可能把 real-stat
+loader 放到兩個 branch 共用的初始化路徑。
+
+**解法**：no-real-stats 行程在分支確定後安裝 Python audit hook，攔截 `open` event；
+只要目標是 `real_mask_stats.json` 就 raise `StatsLeakageError`。生成、`--resume` 與獨立
+validator 都在這個 guard 下完整跑過；單元測試另 monkeypatch loader，確認固定分布分支不呼叫它。
+
+**預防**：任何新增的 no-real-stats code path 都必須沿用同一 audit guard；不得改成
+「執行完寫一個 false」的弱證據，也不得在安裝 guard 前預載統計檔。

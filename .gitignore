@@ -18,6 +18,8 @@ kaggle.json
 # Local M7 smoke/determinism contact sheets. The canonical 1,000-sample grids
 # are named stageA_copypaste_grid_<object>.png and remain tracked.
 /reports/figures/stageA_copypaste_*_grid_*.png
+/reports/figures/stageA_procedural*_smoke*_grid_*.png
+/reports/stageA_procedural*_smoke*_report.md
 # results/ must stay tracked as a directory so results/colab/.gitkeep survives:
 # ignore its CONTENTS, not the directory itself.
 /results/*

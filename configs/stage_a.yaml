@@ -33,3 +33,21 @@ roi:
 report:
   contact_sheet_n: 24
   contact_sheet_columns: 6
+
+procedural:
+  shapes: [perlin, crack, scratch, spot]
+  max_shape_tries: 64
+  max_place_tries: 100
+  max_background_tries: 20
+  opacity: [0.45, 0.85]
+  blur_sigma: [0.6, 1.8]
+  dark_probability: 0.65
+  # Hand-tuned, deliberately round bounds for the ADR-011 no-real-stats control.
+  # They are not copied from reports/real_mask_stats.json.
+  fixed_bounds:
+    pcb1:
+      area_ratio: [0.001, 0.03]
+      aspect_ratio: [0.75, 4.0]
+    capsules:
+      area_ratio: [0.0001, 0.012]
+      aspect_ratio: [0.6, 1.25]
