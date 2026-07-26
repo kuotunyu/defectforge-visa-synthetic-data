@@ -25,9 +25,12 @@
 
 ## M1–M2 — 環境與資料落地
 
-- [ ] **M1** 🤖 建立 uv 虛擬環境並鎖版（Python 3.12、torch cu128）
-  - **驗證**：`uv run python -c "import torch; ..."` 印出 CUDA 可用且裝置為 RTX 4090；
+- [ ] **M1** 🤖 建立 uv 虛擬環境並鎖版（Python 3.12、torch **2.13.0+cu130**）
+  - **驗證**：`uv run python -c "import torch; ..."` 印出 `2.13.0+cu130`、CUDA 可用、裝置為 RTX 4090
+    （**版本字串必須含 `+cu130` 後綴**——沒有就是裝到 PyPI 的 CPU-only 輪子，見 `docs/environment.md`）；
     `uv run python -c "import diffusers, peft, timm, cv2, imagehash, sklearn, cleanfid"` 全數匯入成功；
+    **確認 `diffusers` 0.39 與 `transformers` v5 的相容性**（`uv lock` 的解析結果會直接顯現；
+    若不相容，取捨要記成一則 ADR）；
     `uv.lock` 存在並進 git；開工前已重新查證各套件當時最新版並記進 `docs/environment.md`
 
 - [ ] **M2** 🙋 下載 VisA（**1.80 GB，下載前必須先問使用者**），解壓到 `${data_root}/raw/VisA`

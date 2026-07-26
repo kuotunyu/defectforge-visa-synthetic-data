@@ -36,14 +36,44 @@ Python 選 **3.12** 是為了與 Colab runtime 對齊（M1 開工時要先確認
 不一致就改成一致的）。
 
 ### PyTorch 要走 CUDA index，不能從 PyPI 裝
-RTX 4090 是 Ada (sm_89)，用 **cu128** 輪子：
 
-```powershell
-uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+**為什麼**：PyPI 上的 `win_amd64` 輪子是 **CPU-only**（約 122 MB，對比 Linux CUDA 輪子的
+約 527 MB——PyPI 的檔案大小限制使得 Windows 的 CUDA 版本從來不上傳 PyPI）。
+裸的 `pip install torch` 會安裝成功、不報錯，然後 `torch.cuda.is_available()` 回 `False`，
+4090 整場閒置。**這是本專案最容易安靜出錯的一步。**
+
+**用 cu130，不是 cu128。**（2026-07-27 實地確認）
+
+- **cu128 index 最高只到 torch 2.11.0**，沒有 2.12／2.13——CUDA 12.8 自 torch 2.12 起
+  已從標準發佈矩陣移除。原本這份文件同時寫著「用 cu128」與「torch 2.13.0」，那個組合不存在
+- cu130 index 上已確認存在：`torch-2.13.0+cu130-cp312-cp312-win_amd64.whl`、
+  `torchvision-0.28.0+cu130-cp312-cp312-win_amd64.whl`
+- 本機驅動 591.86 ≥ cu130 要求的 580.88，過關
+
+> 附帶更正一個常見誤解：選 index 的依據**不是** sm_89。RTX 4090 的 sm_89 其實
+> 不在任何官方輪子的公開 arch 清單裡；它能跑是因為 CUDA 保證 cubin 在同一 major
+> compute capability 內前向相容（sm_86 的二進位可在 sm_89 上執行）。
+> 只有在自己編譯第三方 CUDA extension 時才需要顯式設 `TORCH_CUDA_ARCH_LIST="8.9"`。
+
+`pyproject.toml` 用 `explicit = true`，讓這個 index **只**服務 torch 與 torchvision，
+其餘套件仍走 PyPI：
+
+```toml
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu130" }]
+torchvision = [{ index = "pytorch-cu130" }]
 ```
 
-M1 執行時**先上 <https://pytorch.org/get-started/locally/> 確認當時的指令與 CUDA 版本**，
-確認後把對應的 `[[tool.uv.index]]` / `[tool.uv.sources]` 區塊寫進 `pyproject.toml` 並 `uv lock`。
+然後 `uv sync` 即可，**不要用 `pip install torch`**。
+
+M1 執行時仍**重新確認一次**當時的 CUDA 版本與可用輪子，確認後 `uv lock` 並提交 `uv.lock`。
+（`pytorch.org/get-started/locally/` 的頁面曾回傳疑似快取的舊值，
+比較可靠的做法是直接看 <https://download.pytorch.org/whl/cu130/torch/> 的檔名清單。）
 
 ### 驗證
 ```powershell
@@ -55,9 +85,47 @@ uv run python -c "import diffusers, peft, cv2, imagehash, sklearn, cleanfid; pri
 ### 版本查證紀錄（2026-07-27）
 | 套件 | 當時最新 | 來源 |
 |---|---|---|
-| torch | 2.13.0（2026-07-08） | [PyPI](https://pypi.org/project/torch/) |
+| torch | 2.13.0（2026-07-08），**要用 `+cu130` 變體** | [cu130 index](https://download.pytorch.org/whl/cu130/torch/) |
+| torchvision | 0.28.0（`+cu130`） | 同上 |
 | diffusers | 0.39.0（2026-07-03，requires Python ≥3.10） | [PyPI](https://pypi.org/project/diffusers/) |
 | peft | 0.19.1（2026-04-16） | [PyPI](https://pypi.org/project/peft/) |
+| transformers | **5.14.1**（2026-07-16） | [PyPI](https://pypi.org/project/transformers/) |
+
+### ⚠️ M1 必須先確認的相容性問題：transformers 已進入 v5
+
+`transformers` v5.0.0 於 2026-01-26 發佈，目前 5.14.1。v5 是**破壞性改版**：
+
+- **image processor 的快慢版合併並改名**（例如 `XxxImageProcessorFast` 不再存在，
+  原本的快版直接佔用 `XxxImageProcessor` 這個名字）。任何 2025 年寫的教學抄下來
+  會 ImportError 或行為悄悄不同
+- **`from_pretrained` 的預設 dtype 從 `float32` 改為 `"auto"`**，模型會以存檔時的精度載入，
+  可能造成與 v4 的**靜默數值差異**。一律明確傳 `dtype=`（注意 `torch_dtype=` 已棄用）
+- TF / Flax 類別全部移除；量化的捷徑 kwargs 移除
+
+**本專案同時用 `diffusers` 0.39 ＋ `peft` ＋ `transformers`**（DINOv2 特徵抽取）。
+
+**2026-07-27 實測：依賴解析沒有衝突。** 用本檔的 `pyproject.toml` 在暫存區跑 `uv lock`，
+175 個套件成功解析，得到：
+
+| 套件 | 解析結果 |
+|---|---|
+| torch | **2.13.0+cu130**（來源 registry 確認是 `https://download.pytorch.org/whl/cu130`） |
+| torchvision | 0.28.0+cu130 |
+| transformers | 5.14.1 |
+| diffusers | 0.39.0 |
+| peft | 0.19.1 |
+| accelerate | 1.14.0 |
+
+⚠️ **但「解析成功」不等於「執行期相容」。**
+解析只證明沒有宣告層級的版本衝突（diffusers 0.39 沒有把 `transformers<5` 釘死）。
+它**不保證** diffusers 內部沒有呼叫只存在於 v4 的 API。
+M1 除了 `uv lock`，還要**實際 import 並跑一次最小推論**才算驗證通過：
+
+```powershell
+uv run python -c "import diffusers, peft, transformers; from diffusers import AutoPipelineForInpainting; print('ok', transformers.__version__, diffusers.__version__)"
+```
+
+真的踩到執行期不相容時的取捨（降 transformers 還是等 diffusers 更新）要記成一則 ADR。
 
 M1 要**重新查證一次**再鎖版，並把 `uv.lock` 提交進 git。
 

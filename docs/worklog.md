@@ -51,14 +51,15 @@
 | 項目 | 說明 | 何時解決 |
 |---|---|---|
 | ~~GitHub 帳號~~ | ~~`gh` 登入的是 `tun0000`，但發佈流程文件寫 `kuotunyu`~~ → **已解決，見下方補充 1**（就是 `kuotunyu`，我誤讀了 gh 的快取名稱） | ✅ 2026-07-27 |
-| Colab L4 費率 | 只查到 T4 約 1.76–1.96 CU/hr、A100 約 10–15 CU/hr，**L4 未查到確切值** | M15 到 Colab 頁面實測 |
-| 套件版本 | 2026-07-27 查到 torch 2.13.0 / diffusers 0.39.0 / peft 0.19.1，但 pytorch.org 的頁面回傳疑似快取的舊值 | M1 重新查證後 `uv lock` |
+| ~~Colab L4 費率~~ | ~~L4 未查到確切值~~ → **L4 約 2.5–5.0 CU/hr（中位約 4.0）**，T4 約 1.5–2.0、A100 約 13–15。來源是第三方彙整、Colab 官方不公佈費率，**M15 仍要實測校正** | 部分解決 2026-07-27 |
+| ~~套件版本 / CUDA index~~ | ~~torch 2.13.0 但文件寫 cu128~~ → **已修正為 cu130**。實測 cu128 index 最高只到 torch 2.11.0，原本「cu128 ＋ 2.13.0」的組合不存在 | ✅ 2026-07-27 |
+| **transformers v5 相容性** | transformers 已進入 v5（5.14.1），是破壞性改版（image processor 改名、預設 dtype 改為 `"auto"`）。**依賴解析已實測無衝突**（暫存區 `uv lock` 得 transformers 5.14.1 ＋ diffusers 0.39.0 ＋ peft 0.19.1 ＋ torch 2.13.0+cu130，175 套件）。但解析成功 ≠ 執行期相容 | M1 除了 `uv lock` 還要實際 import 並跑最小推論 |
 | 分型可用性 | 10 張 seed 分群後每型可能只剩 2–4 個元件，trigger token 可能學不起來 | M6 看實際分群結果決定是否啟動 fallback |
 | SD2 vs SDXL 額度 | 兩個底模都做會吃掉較多 Colab units | M15 估算後回報，必要時把 SDXL 排到下個月 |
 
 ### 下一步
-**M1** — 建立 uv 虛擬環境並鎖版（Python 3.12、torch cu128）。
-開工前先重新查證各套件當時最新版本。
+**M1** — 建立 uv 虛擬環境並鎖版（Python 3.12、torch **2.13.0+cu130**）。
+開工前先重新查證各套件當時最新版本，並確認 `diffusers` 0.39 與 `transformers` v5 能否共存。
 
 ### 換你做
 1. ~~確認 GitHub 帳號~~ → ✅ 已確認是 `kuotunyu`（見補充 1）

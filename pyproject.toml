@@ -23,7 +23,7 @@ dependencies = [
     "imagehash",              # pHash near-duplicate grouping
     "noise",                  # Perlin noise for procedural anomalies
     # ml
-    "torch",                  # installed from the cu128 index, see docs/environment.md
+    "torch",                  # installed from the cu130 index below, see docs/environment.md
     "torchvision",
     "transformers",           # DINOv2 feature extractor
     "diffusers",
@@ -44,10 +44,31 @@ dev = [
     "jupyter",
 ]
 
-[tool.uv]
-# torch must come from the CUDA 12.8 index, not PyPI. See docs/environment.md.
-# The concrete [[tool.uv.index]] / [tool.uv.sources] block is added in M1 after
-# confirming the current index URL on https://pytorch.org/get-started/locally/
+# ---------------------------------------------------------------------------
+# PyTorch on native Windows.
+#
+# The win_amd64 wheels on PyPI are CPU-ONLY (~122 MB, versus ~527 MB for the Linux
+# CUDA wheel). A bare `pip install torch` therefore installs a build that cannot
+# see the RTX 4090 — and it fails silently, at runtime, as
+# `torch.cuda.is_available() == False`.
+#
+# `explicit = true` means this index is used ONLY for the packages mapped to it
+# below; everything else still resolves from PyPI.
+#
+# cu128 is NOT an option: that index tops out at torch 2.11.0 (verified
+# 2026-07-27). CUDA 12.8 was dropped from the standard release matrix in 2.12.
+# Confirmed present on cu130: torch-2.13.0+cu130-cp312-cp312-win_amd64.whl and
+# torchvision-0.28.0+cu130-cp312-cp312-win_amd64.whl. Local driver 591.86 clears
+# the 580.88 requirement.
+# ---------------------------------------------------------------------------
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu130" }]
+torchvision = [{ index = "pytorch-cu130" }]
 
 [tool.ruff]
 line-length = 100
