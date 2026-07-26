@@ -42,7 +42,7 @@
 
 ## M3–M6 — Split 與分型凍結（**這四項全綠之前，一張合成圖都不准生**）
 
-- [ ] **M3** 🤖 跑 spot-diff `prepare_data.py` 產生 `2cls_highshot`（基底）與 `2cls_fewshot`（取 k=10 用）
+- [x] **M3** 🤖 跑 spot-diff `prepare_data.py` 產生 `2cls_highshot`（基底）與 `2cls_fewshot`（取 k=10 用）
   - **驗證**（[ADR-007](docs/decisions.md#adr-007)，任一不符即停）：
     ① 八格張數與 [data_protocol.md §3.1](docs/data_protocol.md) 逐格相符
     ② `highshot_train ∩ highshot_test == ∅`

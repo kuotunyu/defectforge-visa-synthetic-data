@@ -13,8 +13,9 @@ paths:
   raw: "${data_root}/raw"                              # VisA_20220922.tar + extracted VisA/
   visa_tar: "${data_root}/raw/VisA_20220922.tar"
   visa_raw: "${data_root}/raw/VisA"
-  visa_fewshot: "${data_root}/prepared/VisA_pytorch_2cls_fewshot"
-  visa_highshot: "${data_root}/prepared/VisA_pytorch_2cls_highshot"
+  # The official spot-diff utility always appends the split type to save-folder.
+  visa_fewshot: "${data_root}/prepared/VisA_pytorch/2cls_fewshot"
+  visa_highshot: "${data_root}/prepared/VisA_pytorch/2cls_highshot"
   synthetic: "${data_root}/synthetic"                  # stageA_copypaste / stageA_procedural / stageB_sd2 / stageB_sdxl
   runs: "${data_root}/runs"                            # local training + generation runs
   cache: "${data_root}/cache"                          # DINOv2 embeddings, pHash tables

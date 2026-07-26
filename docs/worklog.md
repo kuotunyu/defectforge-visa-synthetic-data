@@ -264,3 +264,46 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ### 換你做
 目前沒有；我會直接繼續 M3。GitHub repo、remote、push 仍等你醒來。
+
+---
+
+## 2026-07-27 — Session 05：M3 官方 split 產生與獨立驗證
+
+### 做了什麼
+- 新增 `scripts/prepare_splits.py`，只包裝官方 spot-diff `prepare_data.py`，不重寫上游切分邏輯
+- 依官方行為修正 prepared 路徑：`save-folder` 下由上游自動附加
+  `2cls_fewshot/` 與 `2cls_highshot/`
+- 完整產生兩套 12 類 VisA PyTorch 目錄；DefectForge 對 pcb1 / capsules 執行鎖定驗證
+- 新增 `reports/split_preparation.json`，記錄上游 commit、三個來源檔 SHA256、八格計數與斷言
+- 新增缺檔負向測試，確保 CSV 指向不存在的原圖時會立即失敗
+
+### 上游凍結
+- spot-diff commit：`2a692ab575001cbde74d402d897a7286086c6199`
+- `split_csv/2cls_fewshot.csv`：
+  `5ca490e84cd7664f9d93ba3d82399d991edb5a6cbcc41359452ad7ec24be354d`
+- `split_csv/2cls_highshot.csv`：
+  `c3331eede15f2da8a75b380d4fbfb24f75ee036ec9a25147eca898da6e972f09`
+- `utils/prepare_data.py`：
+  `6e70f97b16b589dc3cf6eab55e104bf13bbd7949909dc2279ebad5cb9f4c1c40`
+
+### 驗證
+- few-shot pcb1：train 201 normal / 20 anomaly；test 803 normal / 80 anomaly
+- few-shot capsules：train 120 normal / 20 anomaly；test 482 normal / 80 anomaly
+- high-shot pcb1：train 602 normal / 60 anomaly；test 402 normal / 40 anomaly
+- high-shot capsules：train 361 normal / 60 anomaly；test 241 normal / 40 anomaly
+- `highshot_train ∩ highshot_test == ∅`
+- `fewshot_train ⊆ highshot_train`
+- 所有 anomaly image 與 mask 的 stem 一一相符
+- 兩套輸出各 12,021 files / 1,917,965,564 bytes
+- `ruff check` 全綠；pytest 3 passed
+
+### 決策
+- 保留官方工具的全 12 類輸出以確保可追溯性；訓練與 manifest 仍只納入 pcb1 / capsules
+- `configs/paths.yaml` 指向官方真實輸出層級，避免用另一套自訂資料夾命名掩蓋上游行為
+
+### 下一步
+**M4** — 以 high-shot 為基底計算 SHA256 / pHash、處理跨 split 近重複群，
+凍結 manifest 並建立 test blocklist。
+
+### 換你做
+目前沒有；GitHub repo、remote、push 仍等你醒來。

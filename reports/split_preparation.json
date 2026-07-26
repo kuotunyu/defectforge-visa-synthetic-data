@@ -1,0 +1,48 @@
+{
+  "assertions": {
+    "all_anomaly_images_have_masks": "passed",
+    "eight_expected_counts": "passed",
+    "fewshot_train_subset_highshot_train": "passed",
+    "highshot_train_test_disjoint": "passed",
+    "prepared_tree_matches_csv": "passed"
+  },
+  "counts": {
+    "2cls_fewshot": {
+      "capsules": {
+        "test_anomaly": 80,
+        "test_normal": 482,
+        "train_anomaly": 20,
+        "train_normal": 120
+      },
+      "pcb1": {
+        "test_anomaly": 80,
+        "test_normal": 803,
+        "train_anomaly": 20,
+        "train_normal": 201
+      }
+    },
+    "2cls_highshot": {
+      "capsules": {
+        "test_anomaly": 40,
+        "test_normal": 241,
+        "train_anomaly": 60,
+        "train_normal": 361
+      },
+      "pcb1": {
+        "test_anomaly": 40,
+        "test_normal": 402,
+        "train_anomaly": 60,
+        "train_normal": 602
+      }
+    }
+  },
+  "upstream": {
+    "commit": "2a692ab575001cbde74d402d897a7286086c6199",
+    "repository": "https://github.com/amazon-science/spot-diff",
+    "sha256": {
+      "split_csv/2cls_fewshot.csv": "5ca490e84cd7664f9d93ba3d82399d991edb5a6cbcc41359452ad7ec24be354d",
+      "split_csv/2cls_highshot.csv": "c3331eede15f2da8a75b380d4fbfb24f75ee036ec9a25147eca898da6e972f09",
+      "utils/prepare_data.py": "6e70f97b16b589dc3cf6eab55e104bf13bbd7949909dc2279ebad5cb9f4c1c40"
+    }
+  }
+}
