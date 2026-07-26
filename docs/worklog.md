@@ -346,6 +346,47 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 11：M9 SDG testcase placement 全量生成與獨立驗證
+
+### 做了什麼
+- 新增 `src/synthetic/mask_placement.py` 與 `configs/placement.yaml`：鎖定
+  `facebook/dinov2-base` revision
+  `f9e44c814b77203eaa57a6bdbbd535f21ede1415`，以 patch-token 局部／全域 cosine
+  heterogeneity 建結構 ROI，再與 object-specific Otsu／saturation 前景取 intersection
+- 從 M6 frozen components 按元件數比例精確排 type 配額；旋轉、縮放、翻轉後只接受
+  面積比與長寬比落在 training-mask p05–p95 的候選，使用 sample-local PCG64 決定性放置
+- 每個 train-good 背景產生 3 個 sibling placement；後一個 placement 會避開前面的 mask
+  與 5px clearance，metadata 記錄完整背景／component／affine／ROI／geometry／seed provenance
+- DINOv2 score cache key 納入 frozen manifest、model id/revision/config、每張背景路徑與
+  SHA256；支援 fail-closed resume，已用 48 筆 smoke output 實際驗過
+- 新增 `scripts/validate_placements.py`，獨立核對 exact inventory/type schedule、所有來源
+  checksum、test blocklist、二值 PNG、重建 ROI、mask geometry、real-stat bounds 與 sibling overlap
+- 新增 4 個 placement 單元測試與 `.claude/skills/df-prep-testcase/`；skill quick validator 通過
+
+### 正式輸出與驗證
+- pcb1：602 個背景、1,806 個 placements；type0 1,256 / type1 550
+- capsules：361 個背景、1,083 個 placements；type0 812 / type1 271
+- 合計：963 個背景、2,889 個 placements、2,889 個 unique mask SHA256
+- 獨立 validator 重建 963 個 legal ROI、hash 963 個背景與 40 個實際使用的來源檔；
+  area/aspect outliers = 0、sibling overlaps = 0、test blocklist hits = 0
+- frozen manifest SHA256 仍為
+  `3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c`；
+  defect-types SHA256 仍為
+  `0c7669287fb1b8f48b3f6aff202eaefc914e8bfc1d892b9e63f88b20996cb41a`
+- 實際開啟兩張正式 24 格圖：PCB red masks 全在板體、capsules red masks 全在膠囊；
+  未見灰色背景落點，所有 red mask 都位於 cyan intersection ROI
+- 兩個獨立 `limit-backgrounds=4, n-per-image=1` 行程比較 8 個 PNG：0 mismatch，
+  byte-for-byte 可重現
+
+### 下一步
+**M10** — 建立 SD2 inpainting LoRA 本機訓練資料封裝、訓練／resume／載回驗證與樣本圖；
+先做 one-step smoke 和 VRAM／耗時量測，再決定正式 steps。
+
+### 換你做
+目前沒有；GitHub repo／remote／push 仍等你醒來。本機會直接繼續 M10。
+
+---
+
 ## 2026-07-27 — Session 09：M7 copy-paste Stage A 完整生成與獨立驗證
 
 ### 做了什麼

@@ -1,0 +1,47 @@
+model:
+  id: facebook/dinov2-base
+  revision: f9e44c814b77203eaa57a6bdbbd535f21ede1415
+  input_size: 518
+  patch_size: 14
+  batch_size: 4
+
+transform:
+  rotation_deg: [-180.0, 180.0]
+  scale: [0.2, 8.0]
+  flip_probability: 0.5
+  max_transform_tries: 64
+  occupied_clearance_px: 5
+
+roi:
+  foreground:
+    default:
+      mode: union
+      min_component_area_ratio: 0.0002
+      close_kernel: 17
+      open_kernel: 5
+      erosion_px: 3
+      border_fraction: 0.04
+    objects:
+      pcb1:
+        mode: saturation_bbox
+      capsules:
+        mode: saturation
+        close_kernel: 9
+        erosion_px: 4
+  dinov2:
+    default:
+      score_quantile: 0.25
+      close_kernel: 41
+      open_kernel: 7
+      dilation_px: 12
+      border_fraction: 0.03
+      min_component_area_ratio: 0.0002
+    objects:
+      capsules:
+        score_quantile: 0.30
+        close_kernel: 31
+        dilation_px: 9
+
+report:
+  viz_n: 24
+  columns: 6

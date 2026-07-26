@@ -20,6 +20,11 @@ kaggle.json
 /reports/figures/stageA_copypaste_*_grid_*.png
 /reports/figures/stageA_procedural*_smoke*_grid_*.png
 /reports/stageA_procedural*_smoke*_report.md
+/reports/figures/placements_smoke*_check_*.png
+/reports/placements_smoke*_report.md
+/reports/placements_smoke*_validation.json
+/reports/figures/placements_det_*_check_*.png
+/reports/placements_det_*_report.md
 # results/ must stay tracked as a directory so results/colab/.gitkeep survives:
 # ignore its CONTENTS, not the directory itself.
 /results/*

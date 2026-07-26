@@ -83,9 +83,12 @@
 
 ## M9–M12 — Stage B 合成（課程復刻主秀）
 
-- [ ] **M9** 👀 `src/synthetic/mask_placement.py` — ROI 偵測 → 仿射 → 放置 + 視覺化檢查圖
+- [x] **M9** 👀 `src/synthetic/mask_placement.py` — ROI 偵測 → 仿射 → 放置 + 視覺化檢查圖
   - **驗證**：放置 mask 100% 在合法 ROI 內、不與其他 mask 重疊、面積在真實分布範圍內；
     抽 24 張視覺化圖 **自己看**，ROI 明顯抓錯就換方法（例如改以 DINOv2 前景分割為主）
+  - **完成證據**：963 個 train-good 背景 × 每張 3 個互斥 placement＝2,889 筆；
+    DINOv2/Otsu intersection ROI 全數重建，0 越界、0 重疊、0 分布 outlier、
+    0 test-blocklist hit；兩次獨立小跑 8/8 PNG SHA256 相同
 
 - [ ] **M10** 👀 **SD2 LoRA 本機 4090 訓練**（[ADR-008](docs/decisions.md#adr-008)）
   - **驗證**：訓練完成並存出可被 `PeftModel` 載回的權重；**記錄實際耗時**

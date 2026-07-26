@@ -1,0 +1,34 @@
+{
+  "area_aspect_outliers": 0,
+  "backgrounds": 963,
+  "defect_types_sha256": "0c7669287fb1b8f48b3f6aff202eaefc914e8bfc1d892b9e63f88b20996cb41a",
+  "dino_cache_file": "D:\\sdg-data\\01-defectforge\\cache\\m9_dinov2_scores_72ee477974a1b99b8b47.npz",
+  "dino_revision": "f9e44c814b77203eaa57a6bdbbd535f21ede1415",
+  "manifest_sha256": "3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c",
+  "n_per_image": 3,
+  "objects": [
+    "pcb1",
+    "capsules"
+  ],
+  "output": "D:\\sdg-data\\01-defectforge\\synthetic\\placements",
+  "overlapping_sibling_pairs": 0,
+  "records": 2889,
+  "roi_method": "intersect",
+  "seed": 42,
+  "status": "passed",
+  "test_blocklist_hits": 0,
+  "type_quotas": {
+    "capsules": {
+      "type0": 812,
+      "type1": 271
+    },
+    "pcb1": {
+      "type0": 1256,
+      "type1": 550
+    }
+  },
+  "unique_background_files_hashed": 963,
+  "unique_background_rois_rebuilt": 963,
+  "unique_output_mask_hashes": 2889,
+  "unique_source_files_hashed": 40
+}
