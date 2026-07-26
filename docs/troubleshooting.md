@@ -31,3 +31,21 @@ Python 3.12 只能從 source build。本機有 MSVC Build Tools，但沒有 Wind
 
 **預防**：已寫進 [environment.md §2](environment.md#noise-122-為何不納入) 與 Windows
 踩雷清單。不要為這個非核心功能替整台電腦安裝系統 SDK。
+
+---
+
+## 2026-07-27 — VisA tar 沒有外層 `VisA/` 目錄
+
+**里程碑**：M2
+
+**症狀**：第一次把 tar 解到 `${raw}` 後，驗證找不到
+`${raw}/VisA/pcb1/Data/Images/Normal`；實際物件目錄出現在 `${raw}/pcb1`。
+
+**根因**：官方 tar 的 12,122 個 members 直接以 `pcb1/`、`capsules/` 等物件目錄開頭，
+沒有規格原先假設的外層 `VisA/`。
+
+**解法**：讓 `scripts/download_visa.py` 解壓到設定的 `${visa_raw}`，而不是其父層
+`${raw}`。重跑後 pcb1 1,004/100、capsules 602/100 與 mask 數全部通過。
+
+**預防**：下載器的 dry-run 現在明確印出 `${visa_raw}`；資料協定也記錄官方 tar
+member 佈局。第一次誤解壓的重複副本因刪除護欄拒絕而暫時保留在 D:，不影響正確資料。

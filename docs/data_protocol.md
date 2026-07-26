@@ -12,7 +12,7 @@
 | 授權 | **CC BY 4.0**（允許衍生物公開發佈，需標註來源） | [spot-diff README](https://github.com/amazon-science/spot-diff) |
 | 下載 URL | `https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar` | [AWS Open Data Registry](https://registry.opendata.aws/visa/) |
 | **tar 大小** | **1,929,840,640 bytes = 1.80 GB**（2026-07-27 HTTP HEAD 實測，回 200） | 本機實測 |
-| 解壓後 | 約 3.5–4 GB | 估算，M2 實測後回填 |
+| 解壓後 | **1,920,559,633 bytes（12,037 files）** | M2 實測 |
 | 總量 | 10,821 張（9,621 normal / 1,200 anomaly）、12 物件、3 domain | [arXiv:2207.14315](https://arxiv.org/abs/2207.14315) |
 | 影像解析度 | 約 1500 × 1000 px | 同上 |
 | 瑕疵尺寸 | **明顯小於 MVTec AD** | 同上 → [ADR-004](decisions.md#adr-004) |
@@ -21,6 +21,10 @@
 | 每型張數 | 5–20 張，**一張圖可能含多個瑕疵** | 同上 |
 
 ### 原始目錄結構
+
+官方 tar 的 members **沒有**外層 `VisA/`；`scripts/download_visa.py` 因此直接解壓到
+設定的 `${visa_raw}`，由本專案補上這層目錄：
+
 ```
 VisA/
   <object>/
@@ -50,6 +54,9 @@ spot-diff 的 split CSV 欄位是 `object, set, label, image_path, mask_path`，
 4. 計算 SHA256 寫進 `splits/source_checksums.json`
 5. 解壓到 `${data_root}/raw/VisA/`
 6. 逐項比對第 1 節的事實表（pcb1 1004/100、capsules 602/100）；**不符就停下來報告，不要自行調整**
+
+2026-07-27 實測 SHA256：
+`2eb8690c803ab37de0324772964100169ec8ba1fa3f7e94291c9ca673f40f362`。
 
 `source_checksums.json` schema：
 ```json

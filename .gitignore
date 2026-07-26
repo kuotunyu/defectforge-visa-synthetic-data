@@ -14,6 +14,7 @@ kaggle.json
 # swallow src/data/, which is source code.
 /data/
 /runs/
+/logs/
 # results/ must stay tracked as a directory so results/colab/.gitkeep survives:
 # ignore its CONTENTS, not the directory itself.
 /results/*

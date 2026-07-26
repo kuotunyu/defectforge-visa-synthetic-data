@@ -224,3 +224,43 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 1. 回覆是否授權執行 M2 的 VisA 1.80 GB 下載。
 2. 不需要建立 GitHub repo；目前仍保持純本機，等你醒來再決定。
 3. Hugging Face 帳號 `steven0226` 與 Colab Secrets 可留到 M10/M15 前再確認。
+
+---
+
+## 2026-07-27 — Session 04：M2 VisA 落地與可重跑 setup
+
+### 做了什麼
+- 使用者明確要求不要因保守授權邊界停下，視為 M2 下載授權並恢復持續執行
+- 從 AWS 官方 URL 下載 VisA tar 到 D:，精確大小 1,929,840,640 bytes
+- 新增 `src/common/paths.py`，讓所有腳本從 `configs/paths.yaml` 解析絕對路徑
+- 新增 `scripts/download_visa.py`：續傳、bytes/SHA256、安全解壓、inventory 斷言與 JSONL log
+- 新增 tar path traversal 與 path loader 測試
+- 建立並通過 validator 的 `.claude/skills/df-setup/` 已驗證 SOP
+- 把官方 spot-diff commit `2a692ab575001cbde74d402d897a7286086c6199` clone 到 D: 上游快取，
+  供 M3 直接執行官方 `prepare_data.py`
+
+### 決策
+- 原始資料固定放在 `D:\sdg-data\01-defectforge`；repo 只提交 checksum 與程式碼
+- 官方 tar 沒有外層 `VisA/`，下載器直接以 `${visa_raw}` 為 extraction root
+- 刪除第一次誤解壓的重複副本被破壞性操作護欄拒絕；D: 空間充足，因此保留而不繞過護欄
+
+### 驗證
+- tar bytes：`1,929,840,640`（精確相符）
+- SHA256：`2eb8690c803ab37de0324772964100169ec8ba1fa3f7e94291c9ca673f40f362`
+- 解壓：12,122 tar members；正確資料 12,037 files / 1,920,559,633 bytes
+- pcb1：1,004 normal / 100 anomaly / 100 masks
+- capsules：602 normal / 100 anomaly / 100 masks
+- `ruff check` 全綠；pytest 2 passed；`df-setup` skill validator 通過
+
+### 未決與風險
+| 項目 | 說明 | 何時解決 |
+|---|---|---|
+| D: 重複副本 | 首次誤解壓約多佔 1.92 GB；路徑明確但刪除被環境護欄拒絕 | 使用者醒來後可手動刪除，非阻塞 |
+| upstream 固定 | M3 必須記錄 spot-diff commit 與兩份 split CSV SHA256 | M3 |
+
+### 下一步
+**M3** — 執行官方 spot-diff `prepare_data.py` 產生 highshot/fewshot，並跑八格張數、
+集合關係與 mask 對應四類斷言。
+
+### 換你做
+目前沒有；我會直接繼續 M3。GitHub repo、remote、push 仍等你醒來。

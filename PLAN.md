@@ -33,7 +33,7 @@
     若不相容，取捨要記成一則 ADR）；
     `uv.lock` 存在並進 git；開工前已重新查證各套件當時最新版並記進 `docs/environment.md`
 
-- [ ] **M2** 🙋 下載 VisA（**1.80 GB，下載前必須先問使用者**），解壓到 `${data_root}/raw/VisA`
+- [x] **M2** 🙋 下載 VisA（**1.80 GB，下載前必須先問使用者**），解壓到 `${data_root}/raw/VisA`
   - **驗證**：tar 大小 == `1929840640` bytes；SHA256 寫進 `splits/source_checksums.json`；
     解壓後 pcb1 = 1004 normal + 100 anomaly、capsules = 602 normal + 100 anomaly
     （對照 [data_protocol.md §1](docs/data_protocol.md)，**不符即停，不要自行調整**）

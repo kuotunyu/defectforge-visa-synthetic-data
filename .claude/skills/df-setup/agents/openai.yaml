@@ -1,0 +1,4 @@
+interface:
+  display_name: "DefectForge Setup"
+  short_description: "Verify CUDA and prepare the VisA dataset"
+  default_prompt: "Use $df-setup to verify the DefectForge environment and prepare VisA."
