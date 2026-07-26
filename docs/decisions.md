@@ -468,3 +468,36 @@ Phase 2 的 prompt 寫「合成量 0.5x/1x/2x（相對真實正樣本數）」�
 - [PLAN.md](../PLAN.md) 每個里程碑要標註「無人值守可跑 / 需要你在場」
 - 需要 `docs/interfaces.md` 把每支腳本的 CLI 契約寫死，agent 才不會自己發明參數
 - 每晚的執行結果落在 `reports/handoff/<date>.md`，早上一看就知道跑到哪、為什麼停
+
+---
+
+<a id="adr-013"></a>
+## ADR-013 — Manifest 真正不可變；抽樣 sidecar 與 validation 開發／refit 契約
+
+**狀態**：Accepted ｜ **日期**：2026-07-27
+
+### 脈絡
+M4 契約說 `split_manifest.json` 寫入 checksum 後「凍結不得修改」，舊 M5 契約卻要求把
+`in_fewshot_seed` / `in_val` 回寫同一份 manifest，兩者無法同時成立。blocklist 舊驗證又把
+「檔案數」當成「unique SHA256 數」；byte-identical 檔案會讓這個等式失效。
+
+此外協定同時要求 validation 從 train pool 切出、early stopping 看 validation，以及正式
+Full-real 上限仍使用 60 張 anomaly。若沒有分開開發與 final refit，這三項也互相矛盾。
+
+### 決策
+1. M4 manifest 只放不可變的來源、partition、hash、pHash group 與官方 fewshot pool membership。
+   M5 選擇另存 `splits/fewshot_selection.json`，內含 manifest SHA256；manifest 永不回寫。
+2. blocklist 的 `sha256` 是所有 test image 與 bad mask 的 unique hash 集合，另記
+   `image_count`、`mask_count`、`unique_sha256_count`。驗證逐檔確認 membership，不假設三者相加
+   必等於 unique 數。
+3. validation 固定為每物件 × label 的 highshot train 10%（`floor`、至少 1 張），以 seed 42
+   從**不在官方 fewshot train pool**的候選抽出，確保 k=10 seed 完整可用。
+4. validation 只在 Real-only 開發階段用來凍結所有組共用的超參、early-stopping patience 與
+   final optimizer steps。正式比較使用這組凍結設定 refit 完整 train pool，再評估唯一 test；
+   因此 10 / 20 / 60 張真實 anomaly 的主實驗口徑保持不變。
+
+### 後果
+- M5 重跑不會破壞 `MANIFEST.sha256`，任何 selection 都能明確追溯到某一版 manifest
+- blocklist 即使遇到相同內容檔案仍可正確驗證
+- validation 不接觸 test、不侵蝕 few-shot seed，又能避免為 Filtered 組單獨調參
+- 訓練腳本必須明確區分 `development` 與 `final_refit` 模式，結果表也要記錄該欄

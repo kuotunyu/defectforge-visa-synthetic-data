@@ -307,3 +307,48 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ### 換你做
 目前沒有；GitHub repo、remote、push 仍等你醒來。
+
+---
+
+## 2026-07-27 — Session 06：M4 pHash 分群、manifest 凍結與防洩漏 guard
+
+### 做了什麼
+- 新增 `scripts/freeze_manifest.py`：讀 high-shot 基底、計算 image/mask SHA256、
+  `imagehash.phash(hash_size=16)`、union-find 傳遞閉包與 test blocklist
+- 先用 `--dry-run` 對 1,806 張影像校準，確認閾值後才第一次正式寫入，沒有使用 `--force`
+- 凍結 `splits/split_manifest.json`、`splits/MANIFEST.sha256`、
+  `splits/test_blocklist.json`，並輸出 `reports/split_report.md`
+- 新增 `src/common/integrity.py`，提供 manifest checksum 與 blocklist 的共用 fail-closed guard
+- 依已驗證流程建立 `.claude/skills/df-guard/`，官方 skill validator 通過
+- 新增 ADR-013，解決「M4 manifest 不可變」與「M5 回寫抽樣欄位」的規格衝突
+
+### pHash 校準
+- pcb1：1,104 images / 1,103 groups；最近鄰距離 min 6、median 20；只有 1 對 ≤6
+- capsules：702 images / 702 groups；最近鄰距離 min 34、median 92；0 對 ≤6
+- 閾值保留 6；跨 train/test group = 0，因此沒有影像需要移到 test
+
+### 凍結結果
+- manifest SHA256：`3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c`
+- manifest：1,806 images / 1,805 pHash groups
+- 最終 train：pcb1 602 good / 60 bad；capsules 361 good / 60 bad
+- 最終 test：pcb1 402 good / 40 bad；capsules 241 good / 40 bad
+- blocklist：723 test images + 80 test bad masks = 803 unique SHA256
+
+### 驗證
+- manifest checksum 由獨立 loader 重算相符
+- 每個 `group_id` 只屬於一個 final set
+- 每張 test image 與 bad mask 的 SHA256 都精確包含在 blocklist，集合完全相等
+- blocklist 的 manifest SHA256 反向連結相符
+- `ruff check` 全綠；pytest 4 passed；`df-guard` validator 通過
+
+### 決策
+- Manifest 只保存不可變的來源與 partition 事實；M5 抽樣寫 sidecar，不破壞凍結 checksum
+- Validation 為 train pool 每 object × label 的固定 10% 開發 holdout，排除官方 fewshot pool；
+  正式比較用凍結超參 refit 完整 pool，保留 10 / 20 / 60 口徑
+
+### 下一步
+**M5** — 決定性抽 k=10 與 validation sidecar、mask 統計、疊輪廓 contact sheets，
+並確認 manifest SHA256 前後完全不變。
+
+### 換你做
+目前沒有；GitHub repo、remote、push 仍等你醒來。

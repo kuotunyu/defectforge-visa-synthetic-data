@@ -49,10 +49,11 @@
     ③ `fewshot_train ⊆ highshot_train`
     ④ 每張 bad 影像都有對應 mask（數量相等、檔名可對上）
 
-- [ ] **M4** 🤖 pHash 近似分群 → 凍結 `splits/split_manifest.json` → 建 `splits/test_blocklist.json`
+- [x] **M4** 🤖 pHash 近似分群 → 凍結 `splits/split_manifest.json` → 建 `splits/test_blocklist.json`
   - **驗證**：manifest 含每張圖的 `{object,set,label,path,sha256,phash,group_id,...}`；
     斷言「同 `group_id` 必定同 `set`」通過（不通過就整群移到 test 側並重印）；
-    blocklist 的 SHA256 數量 == test 影像數；`splits/MANIFEST.sha256` 寫入；
+    blocklist 涵蓋每張 test 影像與其 bad mask，且 unique SHA256 計數自洽；
+    `splits/MANIFEST.sha256` 寫入；
     `reports/split_report.md` 記錄因 pHash 而移動的張數
 
 - [ ] **M5** 👀 few-shot 抽樣（seed=42、k=10／物件）＋ 統計表 ＋ contact sheet

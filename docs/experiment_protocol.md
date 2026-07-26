@@ -124,6 +124,9 @@ notebook 用 `--group` 參數切換，可平行開多本（各自唯一 `runs/` 
   **不准為 Filtered 組單獨調參**
 - **Early stopping**：以 validation（真實）指標為準，各組相同 patience
 - **Validation 集合**：所有組共用同一個，從 train pool 切、只含真實資料
+- **開發與 final refit**：validation 是 highshot train 每物件 × label 的固定 10% holdout，
+  且排除官方 fewshot train pool；只用 Real-only 決定共用超參與 final steps。正式五組比較
+  用凍結設定 refit 完整 train pool，維持 10 / 20 / 60 口徑（[ADR-013](decisions.md#adr-013)）
 
 ---
 

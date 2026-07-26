@@ -166,10 +166,12 @@ VisA 同一物件的影像高度相似，且可能存在近乎重複的拍攝。
       "image_path": "pcb1/Data/Images/Anomaly/000.JPG",   // relative to visa_raw
       "mask_path":  "pcb1/Data/Masks/Anomaly/000.png",    // null for good
       "sha256": "…",
+      "mask_sha256": "…",          // null for good
       "phash": "…",
       "group_id": 17,
-      "in_fewshot_seed": true,     // 是否被抽進 k=10 few-shot 瑕疵集
-      "in_val": false              // 是否被切為 validation
+      "in_fewshot_pool": true,     // 是否屬於官方 2cls_fewshot train
+      "original_set": "train",
+      "moved_to_test_by_phash": false
     }
   ]
 }
@@ -177,13 +179,24 @@ VisA 同一物件的影像高度相似，且可能存在近乎重複的拍攝。
 
 manifest 自身的 SHA256 寫進 `splits/MANIFEST.sha256`。
 **凍結後不得修改**；若必須修改，新增 `split_manifest_v2.json` 並寫一筆 ADR 說明原因。
+M5 的 `in_fewshot_seed` / `in_val` 選擇另存於 `splits/fewshot_selection.json`，
+並反向記錄 manifest SHA256，不回寫本檔（[ADR-013](decisions.md#adr-013)）。
 
 ### 4.3 Test blocklist（防洩漏）
 `splits/test_blocklist.json`：所有 test 影像與其 mask 的 SHA256 集合。
 
 ```json
-{ "count": 1234, "sha256": ["…", "…"] }
+{
+  "image_count": 1234,
+  "mask_count": 80,
+  "unique_sha256_count": 1314,
+  "sha256": ["…", "…"]
+}
 ```
+
+`sha256` 是集合，因此若兩個檔案 byte-identical，只計一個 unique hash；
+驗證條件是**每一個** test image / mask 的 hash 都能在集合中找到，而不是假設檔案數必等於
+unique hash 數（[ADR-013](decisions.md#adr-013)）。
 
 **所有**生成、過濾、分型、評測腳本在讀任何影像前，都要先把該檔的 SHA256 拿去比對；
 命中即 `raise` 並中止。這個檢查由 `df-guard` skill 在每個階段開始前跑一次，
@@ -208,6 +221,11 @@ manifest 自身的 SHA256 寫進 `splits/MANIFEST.sha256`。
 
 抽樣必須可重現：固定 `random.Random(42)`，對排序後的檔名清單抽樣。
 **驗證方式：重跑兩次，抽出的檔名清單雜湊必須相同。**
+
+Validation 以每物件 × label 的 highshot train pool 取 10%（向下取整、至少 1 張），
+候選必須排除官方 fewshot train pool，避免侵蝕 k=10 seed；它只用於 Real-only 開發階段
+凍結超參與 final training steps。正式比較再用凍結設定 refit 完整 train pool，
+所以 10 / 20 / 60 的實驗口徑不變（[ADR-013](decisions.md#adr-013)）。
 
 ### 5.2 樣本統計與 contact sheet
 - `reports/fewshot_stats.md`：每物件 × 每 split × 每 label 的張數、mask 面積分布

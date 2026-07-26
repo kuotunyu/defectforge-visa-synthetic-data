@@ -83,14 +83,16 @@
 ```
 產出：`splits/split_manifest.json`、`splits/MANIFEST.sha256`、`splits/test_blocklist.json`、
 `reports/split_report.md`
-斷言：同 `group_id` 必定同 `set`；blocklist 數量 == test 影像數
+斷言：同 `group_id` 必定同 `set`；每張 test image / bad mask 的 SHA256 都在 blocklist，
+且 unique 計數自洽
 
 ### M5 `scripts/sample_fewshot.py`
 ```
 --paths --object --seed
 --k INT                    # 預設 10
 ```
-產出：manifest 內的 `in_fewshot_seed` / `in_val` 欄位、`reports/fewshot_stats.md`、
+產出：`splits/fewshot_selection.json`（含 `in_fewshot_seed` / `in_val` 路徑集合與 manifest
+SHA256）、`splits/FEWSHOT_SELECTION.sha256`、`reports/fewshot_stats.md`、
 `reports/real_mask_stats.json`、`reports/figures/fewshot_contact_sheet_<object>.png`
 斷言：重跑兩次的檔名清單雜湊相同
 
