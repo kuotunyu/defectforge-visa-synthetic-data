@@ -56,6 +56,22 @@ Colab 產出由使用者放回 `results/colab/` 後，Claude Code 才接手分�
 - 踩到的坑寫進 [docs/troubleshooting.md](docs/troubleshooting.md)
 - **API key 絕不進 Git**
 
+### Git 署名規則（不可違反）
+
+**GitHub 的 Contributors 只能出現 `kuotunyu` 一個人。**
+
+- commit message **不准**加 `Co-Authored-By:` trailer（任何人都不行，包含 Claude）
+- commit message **不准**出現 `🤖 Generated with Claude Code` 之類的署名
+- PR 內文同樣不加任何 Claude 署名或產生器標記
+- commit 的 author 與 committer 一律是 `kuotunyu <[redacted-school-email]>`
+- 已設 repo-local `user.name` / `user.email` 鎖住身分，不依賴 global 設定
+
+commit 前自檢：
+```powershell
+git log -1 --format="%an <%ae>"; git log -1 --format="%B" | Select-String "Co-[Aa]uthored-[Bb]y|Generated with"
+```
+第一行必須是 `kuotunyu <[redacted-school-email]>`，第二行必須沒有任何輸出。
+
 ---
 
 ## 【本機環境】Windows-native，不使用 WSL

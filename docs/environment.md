@@ -14,7 +14,8 @@
 | Shell | PowerShell 5.1（另有 Git Bash 可用） |
 | uv | 0.11.18 |
 | git / git-lfs | 2.41.0.windows.1 / 已安裝 |
-| gh CLI | 已登入（帳號 `tun0000`，⚠️ 與發佈文件記載的 `kuotunyu` 不同，push 前需確認） |
+| gh CLI | 已登入 **`kuotunyu`**（`gh api user` 回傳 id 61350295）。注意 `gh auth status` 顯示的是舊快取名稱 `tun0000`（帳號改過名），**以 `gh api user` 為準** |
+| git 身分 | repo-local 已鎖 `user.name=kuotunyu` / `user.email=[redacted-school-email]`（見 [CLAUDE.md](../CLAUDE.md) 的 Git 署名規則） |
 | C: 可用 | 202 GB |
 | D: 可用 | 1728 GB |
 | Desktop | **未**被 OneDrive 接管（已查 `User Shell Folders`，OneDrive 程序未執行） |

@@ -50,7 +50,7 @@
 ### 未決與風險
 | 項目 | 說明 | 何時解決 |
 |---|---|---|
-| GitHub 帳號 | `gh` 登入的是 `tun0000`，但發佈流程文件寫 `kuotunyu`。`LICENSE` 目前寫 `kuotunyu` | push 前（Phase 2） |
+| ~~GitHub 帳號~~ | ~~`gh` 登入的是 `tun0000`，但發佈流程文件寫 `kuotunyu`~~ → **已解決，見下方補充 1**（就是 `kuotunyu`，我誤讀了 gh 的快取名稱） | ✅ 2026-07-27 |
 | Colab L4 費率 | 只查到 T4 約 1.76–1.96 CU/hr、A100 約 10–15 CU/hr，**L4 未查到確切值** | M15 到 Colab 頁面實測 |
 | 套件版本 | 2026-07-27 查到 torch 2.13.0 / diffusers 0.39.0 / peft 0.19.1，但 pytorch.org 的頁面回傳疑似快取的舊值 | M1 重新查證後 `uv lock` |
 | 分型可用性 | 10 張 seed 分群後每型可能只剩 2–4 個元件，trigger token 可能學不起來 | M6 看實際分群結果決定是否啟動 fallback |
@@ -61,7 +61,7 @@
 開工前先重新查證各套件當時最新版本。
 
 ### 換你做
-1. **確認 GitHub 帳號**：要用 `tun0000` 還是 `kuotunyu`？（影響 `LICENSE` 的著作權人與之後的 remote）
+1. ~~確認 GitHub 帳號~~ → ✅ 已確認是 `kuotunyu`（見補充 1）
 2. **確認 Hugging Face 帳號**：Phase 2 上傳合成資料集與 LoRA 權重要用哪個（文件記載 `steven0226`）
 3. **翻一下這幾份文件有沒有跟你想的不一樣**，尤其：
    - [`docs/decisions.md`](decisions.md) 的 ADR-002 與 ADR-003（我替你決定的兩題）
@@ -69,3 +69,25 @@
    - [`docs/methodology.md`](methodology.md) 的「刻意不復刻」那一節
 4. 準備好 Colab Secrets 裡的 `HF_TOKEN`（M10 才會用到，先確認存在即可）
 5. 我要開始 M1 之前，會先問你要不要下載 VisA（1.80 GB）
+
+---
+
+### 補充 1（同日）— Git 署名規則與 GitHub 帳號釐清
+
+**使用者要求**：GitHub 的 Contributors **只能出現 `kuotunyu` 一個人**，不要出現 Claude 或任何其他人。
+
+**釐清**：先前把 `gh auth status` 顯示的 `tun0000` 當成「另一個帳號」是**我誤判**。
+`gh api user` 回傳 `kuotunyu`（id 61350295）——那是同一個帳號，`tun0000` 只是 gh 設定檔裡的
+**舊快取名稱**（帳號改過名）。以 `gh api user` 為準。
+
+**稽核結果**：M0 那筆 commit 本來就乾淨——
+author/committer 都是 `kuotunyu <[redacted-school-email]>`，且無 `Co-Authored-By` trailer。
+
+**已落實的防護**：
+1. [CLAUDE.md](../CLAUDE.md) 新增「Git 署名規則（不可違反）」一節：禁止 `Co-Authored-By`、
+   禁止 `🤖 Generated with Claude Code` 之類署名（commit message 與 PR 內文都算），
+   並附 commit 前的自檢指令
+2. 設定 **repo-local** `user.name` / `user.email`，不依賴 global 設定，避免日後漂移
+3. [environment.md](environment.md) 的 gh 帳號欄位已更正
+
+**日後注意**：`publish-repo` 之類的發佈流程若預設會加產生器標記，要在執行前關掉。
