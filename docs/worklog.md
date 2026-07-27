@@ -445,6 +445,51 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 15：M13 全量六道 filtering、atomic views 與 verifier
+
+### 做了什麼
+- 實作 `scripts/filter_synthetic.py` 與 `src/filtering/{dataset,embeddings,pipeline}.py`
+- DINOv2 固定 `facebook/dinov2-base@f9e44c8...`，用 20 個 real few-shot
+  component context crops 校準每個 object 的 leave-one-out `tau_low` 與
+  centroid-distance `tau_outlier`
+- 三個 formal input 共 3,000 筆完整跑 ROI、area、aspect、pHash、DINOv2、seam；
+  generated embedding 以內容鍵控 NPZ 快取，背景 RGB LRU 限制 32 張
+- 第一次 full run 發現遮罩列表會常駐約 4.5 GB，立即停止未發布程序，改為每 128 張
+  重讀、用完釋放；修正版才從頭正式執行
+- 發布 `${synthetic}/unfiltered` 3,000 筆與 `${synthetic}/filtered` 1,770 筆；
+  image/mask 都是來源 hardlink，metadata 採暫存檔 fsync 後原子替換
+- 新增 exact embedded-summary verifier、漏斗報表與 deterministic 12 accepted /
+  12 rejected contact sheets；額外抽查 `pcb1/copy-paste/type1` 的 12 張 rejected
+
+### 正式結果
+- accepted 1,770 / 3,000；rejected 1,230
+- funnel survivors：ROI 3,000 → area 2,635 → aspect 2,579 → pHash 2,542 →
+  DINOv2 1,770 → seam 1,770
+- reason counts：AREA 365、ASPECT 103、pHash 37、NN_TOO_LOW 979、
+  EMBEDDING_OUTLIER 897；ROI / NN copy / seam 為 0
+- thresholds：
+  - capsules `tau_low=0.6304827929`、`tau_outlier=0.4422172606`
+  - pcb1 `tau_low=0.7391234636`、`tau_outlier=0.3955494761`
+- `pcb1/copy-paste/type1` 為 0/152 accepted；專項抽查顯示全部 area
+  (`median=1.085e-4`) 低於 real p05 (`1.267e-3`)，且 151/152 同時 NN 過低，
+  因此不為了非零覆蓋率而放寬門檻
+
+### 驗證
+- full verifier：3,000 records、1,770 accepted、9,540 published payload hardlinks 全通過
+- report summary SHA256：
+  `d306207ef5186bfff29aae0222ee1acd4eba17d7b3c48511c356ad52c920efb1`
+- accepted/rejected contact sheets 均已人工目視：輪廓對位、標籤可讀、無空白格
+- M13 tests 17 passed；全專案測試與 Ruff 另於提交前重跑
+
+### 下一步
+**M14** — 生成品質評估（mNN / KID 與 per-generator quality report）；
+**M11** SDXL Colab 仍需要使用者醒來後提供執行環境。
+
+### 換你做
+目前沒有。GitHub repo／remote／push 仍照要求等待使用者醒來。
+
+---
+
 ## 2026-07-27 — Session 10：M8 程序化 Stage A 與 no-real-stats 對照
 
 ### 做了什麼

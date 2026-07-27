@@ -1,0 +1,52 @@
+{
+  "counts": {
+    "accepted": 4,
+    "by_input": {
+      "stageA_copypaste": 2,
+      "stageA_procedural": 2,
+      "stageB_sd2/searched": 2
+    },
+    "by_object": {
+      "capsules": 2,
+      "pcb1": 4
+    },
+    "reject_reasons": {
+      "AREA_OUT_OF_RANGE": 1,
+      "EMBEDDING_OUTLIER": 1,
+      "NN_TOO_LOW": 1
+    },
+    "rejected": 2,
+    "total": 6
+  },
+  "disabled_rules": [],
+  "model_revision": "f9e44c814b77203eaa57a6bdbbd535f21ede1415",
+  "pipeline_version": "0.2.0",
+  "published": null,
+  "schema_version": 1,
+  "thresholds": {
+    "capsules": {
+      "area_p05": 0.00010116666666666667,
+      "area_p95": 0.015780066666666665,
+      "maximum_area_abs_zscore": 2.5,
+      "maximum_aspect_abs_zscore": 2.5,
+      "minimum_containment": 1.0,
+      "minimum_phash_distance": 5.0,
+      "minimum_seam_score": 0.85,
+      "tau_copy": 0.98,
+      "tau_low": 0.6304827928543091,
+      "tau_outlier": 0.44221726059913635
+    },
+    "pcb1": {
+      "area_p05": 0.0012674068748835103,
+      "area_p95": 0.037032144473733195,
+      "maximum_area_abs_zscore": 2.5,
+      "maximum_aspect_abs_zscore": 2.5,
+      "minimum_containment": 1.0,
+      "minimum_phash_distance": 5.0,
+      "minimum_seam_score": 0.85,
+      "tau_copy": 0.98,
+      "tau_low": 0.7391234636306763,
+      "tau_outlier": 0.395549476146698
+    }
+  }
+}

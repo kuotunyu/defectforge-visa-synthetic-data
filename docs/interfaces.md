@@ -228,15 +228,20 @@ scripts/compare_diffusion.py
 四欄固定為 clean / mask / original / searched，兩桶使用 union crop 的同一視野；
 抽樣在 defect type 間 round-robin，且背景 SHA 與兩桶 mask SHA 不同即失敗。
 
-### M13 `src/filtering/run_filters.py`
+### M13 `scripts/filter_synthetic.py`
 ```
---paths --config configs/filters.yaml --object --dry-run
---input PATH               # 可重複，指向一個 generator 的輸出目錄
+--paths --config configs/filters.yaml
+--stage-a-config configs/stage_a.yaml
+--placement-config configs/placement.yaml
+--real-mask-stats reports/real_mask_stats.json
+--object NAME              # 可重複；預設處理兩個 formal objects
 --disable RULE             # 可重複：roi|area|aspect|phash|dinov2|seam（做「哪道規則貢獻最大」分析用）
---tau-copy FLOAT           # 預設由 leave-one-out 自動校準，可覆寫
---recalibrate              # 重新校準門檻並寫進 reports/filter_report.md
+--limit-per-input INT      # smoke only
+--publish                  # 未指定時只評分，不建立 hardlink views
+--validation-out PATH
 ```
-產出：`${synthetic}/<gen>/filtered/`、`.../unfiltered/`（皆含 `metadata.jsonl`，
+正式輸入由 `configs/filters.yaml` 的 `inputs` 鎖定。產出：
+`${synthetic}/filtered/`、`${synthetic}/unfiltered/`（皆含 `metadata.jsonl`，
 `unfiltered` 保留所有樣本並標 `passed` 與 `reject_reasons`）、`reports/filter_report.md`
 
 ### M14 `src/evaluation/quality_metrics.py`

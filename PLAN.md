@@ -116,7 +116,7 @@
 
 ## M13–M15 — 過濾、指標與交接
 
-- [ ] **M13** 👀 `src/filtering/` — 六道過濾 → `filtered/` 與 `unfiltered/` 兩版
+- [x] **M13** 👀 `src/filtering/` — 六道過濾 → `filtered/` 與 `unfiltered/` 兩版
   - **驗證**：`reports/filter_report.md` 的漏斗表能從 `metadata.jsonl` 重新聚合出**完全相同**的數字
     （`scripts/verify_filter_report.py`）；每筆被拒樣本的 `reject_reason` 都在 enum 內；
     抽 12 張被拒 + 12 張通過做並排 grid **自己看**，若把明顯好的樣本刷掉就調門檻**並記錄調整過程**

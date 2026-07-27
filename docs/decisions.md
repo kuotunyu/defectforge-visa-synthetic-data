@@ -570,3 +570,36 @@ M12 最初的 deterministic stratified schedule 每筆抽四個不同的
 - 每筆少一個純探索候選，換取可解釋且可驗證的 baseline safety。
 - 問題排程產生的 formal prefix 移到 D: 的隔離目錄，不納入 canonical metadata；
   原始失敗數字保留在本 ADR 與 worklog，不用挑圖或改寫歷史掩蓋。
+
+---
+
+<a id="adr-016"></a>
+## ADR-016 — M13 以 real leave-one-out 校準 DINO 門檻並發布全域 hardlink views
+
+**狀態：Accepted**（2026-07-27）
+
+### 背景
+M13 同時過濾 copy-paste、procedural 與 searched SD2 三個來源。若每個來源各自校準，
+品質分數無法橫向比較；若複製 accepted payload，則 3,000 張 1500×1000 PNG 會重複佔用
+大量磁碟。正式規模測試也顯示，將所有 full-resolution masks 常駐 RAM 會與同機另外兩個
+專案競爭資源。
+
+### 決策
+- 所有來源共用同一組、按 object 校準的 real few-shot reference：
+  DINOv2 CLS embedding L2 normalize 後，以 real leave-one-out nearest cosine 的第 5
+  百分位作 `tau_low`，以 real-to-centroid cosine distance 的第 95 百分位作
+  `tau_outlier`；`tau_copy=0.98` 保持文件鎖值。
+- 六道規則順序固定為 ROI → area → aspect → pHash → DINOv2 → seam；
+  pHash 僅把前面所有規則與非 pHash 規則最終通過的 earlier sample 加入 accepted set。
+- `${synthetic}/unfiltered` 保存全部決策，`${synthetic}/filtered` 僅保存 accepted；
+  image/mask 以 NTFS hardlink 發布，metadata 以 atomic replace 發布。
+- generated embeddings 以 model revision、crop ratio、輸入 ID 與檔案大小組成內容鍵；
+  full RGB background LRU 限制 32 張，mask 每個 chunk 重讀後釋放。
+
+### 後果
+- 三個 generator 的門檻可直接比較，M14 可直接以同一 accepted/unfiltered membership
+  建立評估組。
+- hardlink 節省磁碟，但發布與驗證需在支援 hardlink 的同一 volume；跨 volume 時
+  fail closed，不自動退化成 copy。
+- strict real p05 與語意門檻可能讓個別 generator/type 為零；這是被保留並報告的品質
+  結果，不以覆蓋率為由事後放寬。

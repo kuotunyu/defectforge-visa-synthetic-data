@@ -30,6 +30,8 @@ rules:
     minimum_score: 0.85
 
 output:
+  filtered_name: filtered
+  unfiltered_name: unfiltered
   link_mode: hardlink
   report: reports/filter_report.md
   validation: reports/filter_validation.json
