@@ -361,6 +361,20 @@ Colab 交接與三支獨立 validator。另逐 commit 檢查 author／committer 
 `kuotunyu <61350295+kuotunyu@users.noreply.github.com>`，且歷史中不得出現
 `Co-Authored-By` trailer。SegFormer 的五項具體交接依 ADR-019 由 M18 負責。
 
+### M17 `scripts/analyze_quality_downstream.py`
+```text
+--classification results/classification.csv
+--quality results/generation_quality.csv
+--figure reports/figures/quality_vs_downstream.png
+--report reports/quality_vs_downstream.md
+--output reports/quality_vs_downstream.json
+```
+只連接事前指定的六個點：兩物件 × `src_copypaste`／`src_procedural`／
+`src_diffusion` seed-42 source ablation；品質側固定使用 M14 `unfiltered`、
+`defect_type=__all__` 對應來源的 KID／NN mean，下游提升固定減同物件 seed-42
+`real_only` Macro-F1。每一點保存兩個 run name 與兩份輸入 CSV SHA256；不因相關性
+方向或強度不理想而換來源、換 metric 或刪點。
+
 ### M18 `src/training/train_segmenter.py`
 ```
 --paths configs/paths.yaml
