@@ -462,6 +462,18 @@ Macro-F1 上分段內插；低於／高於觀察範圍只報 `≤10`／`≥60`�
 保存兩份輸入 CSV 與四張圖的 SHA256，且 `visual_inspection_required=true`；M21 勾選前
 仍必須逐張實際開圖。
 
+### M21 `scripts/build_sample_grids.py`
+```text
+--paths configs/paths.yaml
+--object pcb1 --object capsules
+--count 3
+--output-dir reports/figures
+--validation-out reports/sample_grids_validation.json
+```
+以 frozen few-shot、filtered copy-paste、filtered procedural、filtered SD2 searched、
+SDXL searched 各列 deterministic 樣本，疊上真實／生成 mask。validation 保存每張
+image、mask 與成圖 SHA256，並標記 `visual_inspection_required=true`。
+
 ### M22 `src/inference/demo_gradio.py`
 ```
 --paths --cls-ckpt PATH --seg-ckpt PATH --port INT --share   # --share 預設 off，不對外開放
