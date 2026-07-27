@@ -143,7 +143,7 @@ def _embed_sample_crops(
     return np.concatenate(batches, axis=0)
 
 
-def _embedding_cache_key(
+def embedding_cache_key(
     samples: Sequence[FilterSample],
     *,
     model_id: str,
@@ -336,7 +336,7 @@ def run_filter_pipeline(
         model_id = str(semantic_config["model_id"])
         revision = str(semantic_config["revision"])
         crop_ratio = float(semantic_config["crop_ratio"])
-        cache_key = _embedding_cache_key(
+        cache_key = embedding_cache_key(
             samples,
             model_id=model_id,
             revision=revision,

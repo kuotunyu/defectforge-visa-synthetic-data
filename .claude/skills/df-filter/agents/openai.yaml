@@ -1,0 +1,4 @@
+interface:
+  display_name: "DefectForge Quality Filter"
+  short_description: "Run and verify the six-stage synthetic filter"
+  default_prompt: "Use $df-filter to run, audit, or verify DefectForge M13 filtering."

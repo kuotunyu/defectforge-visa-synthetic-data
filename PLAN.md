@@ -121,7 +121,7 @@
     （`scripts/verify_filter_report.py`）；每筆被拒樣本的 `reject_reason` 都在 enum 內；
     抽 12 張被拒 + 12 張通過做並排 grid **自己看**，若把明顯好的樣本刷掉就調門檻**並記錄調整過程**
 
-- [ ] **M14** 🤖 `src/evaluation/` — `nn_score` / `mnn_score` / FID / KID
+- [x] **M14** 🤖 `src/evaluation/` — `nn_score` / `mnn_score` / FID / KID
   - **驗證（健全性檢查不過就不准往下走）**：真實 crop 自餵 → `nn_score ≈ 1`、KID ≈ 0；
     純雜訊 crop → `nn_score` 明顯低於 τ_low、KID 很大；所有輸入 crop 路徑不在 test blocklist 內；
     `reports/generation_quality.md` 分瑕疵型列出四項指標

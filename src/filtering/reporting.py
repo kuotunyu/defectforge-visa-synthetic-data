@@ -56,6 +56,7 @@ def summarize(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 
     valid_reasons = {str(reason) for reason in RejectReason}
     reason_counts: Counter[str] = Counter()
+    first_reason_counts: Counter[str] = Counter()
     groups: dict[tuple[str, str, str, str], list[Mapping[str, Any]]] = defaultdict(list)
     accepted = 0
     for record in records:
@@ -69,6 +70,8 @@ def summarize(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             raise FilterReportError(f"passed/reasons disagree for {record['sample_id']}")
         accepted += int(passed)
         reason_counts.update(reasons)
+        if reasons:
+            first_reason_counts[reasons[0]] += 1
         groups[
             (
                 str(decision["input_name"]),
@@ -85,6 +88,14 @@ def summarize(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             for record in group
             for reason in record["filter"]["reject_reasons"]
         )
+        accumulated: set[str] = set()
+        group_funnel: dict[str, int] = {}
+        for rule in RULE_ORDER:
+            accumulated.update(str(reason) for reason in REASONS_BY_RULE[rule])
+            group_funnel[f"after_{rule}"] = sum(
+                not (set(record["filter"]["reject_reasons"]) & accumulated)
+                for record in group
+            )
         rows.append(
             {
                 "input": input_name,
@@ -93,6 +104,7 @@ def summarize(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
                 "defect_type": defect_type,
                 "total": len(group),
                 "accepted": sum(bool(record["filter"]["passed"]) for record in group),
+                **group_funnel,
                 **{str(reason): counts[str(reason)] for reason in RejectReason},
             }
         )
@@ -119,6 +131,7 @@ def summarize(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "total": len(records),
         "accepted": accepted,
         "rejected": len(records) - accepted,
+        "first_reason_counts": dict(sorted(first_reason_counts.items())),
         "reason_counts": dict(sorted(reason_counts.items())),
         "funnel": funnel,
         "thresholds": dict(sorted(thresholds.items())),
@@ -174,13 +187,21 @@ def render_markdown(summary: Mapping[str, Any]) -> str:
             "",
             "## Reject reasons",
             "",
-            "| Reason | Count |",
-            "|---|---:|",
+            (
+                "A sample may trigger multiple rules. `First rejects` classifies each rejected "
+                "sample once by the locked funnel order; `All triggers` counts every triggered "
+                "rule and can therefore exceed the rejected total."
+            ),
+            "",
+            "| Reason | First rejects | All triggers |",
+            "|---|---:|---:|",
         ]
     )
     reason_counts = summary["reason_counts"]
+    first_reason_counts = summary["first_reason_counts"]
     lines.extend(
-        f"| {reason} | {reason_counts.get(str(reason), 0)} |"
+        f"| {reason} | {first_reason_counts.get(str(reason), 0)} | "
+        f"{reason_counts.get(str(reason), 0)} |"
         for reason in RejectReason
     )
     lines.extend(
@@ -189,25 +210,31 @@ def render_markdown(summary: Mapping[str, Any]) -> str:
             "## Generator and defect-type detail",
             "",
             (
-                "| Input | Object | Generator | Type | Total | Accepted | ROI | Area | "
-                "Aspect | pHash | NN low | NN copy | Outlier | Seam |"
+                "| Input | Object | Generator | Type | Generated | ROI | Area | "
+                "Aspect | pHash | DINOv2 | Seam | Final | Pass rate |"
             ),
-            "|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+            "|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
         ]
     )
     for row in summary["rows"]:
+        pass_rate = row["accepted"] / row["total"]
         lines.append(
             f"| {row['input']} | {row['object']} | {row['generator']} | "
-            f"{row['defect_type']} | {row['total']} | {row['accepted']} | "
-            f"{row[RejectReason.ROI_OVERFLOW]} | "
-            f"{row[RejectReason.AREA_OUT_OF_RANGE]} | "
-            f"{row[RejectReason.ASPECT_OUT_OF_RANGE]} | "
-            f"{row[RejectReason.PHASH_DUPLICATE]} | "
-            f"{row[RejectReason.NN_TOO_LOW]} | "
-            f"{row[RejectReason.NN_TOO_HIGH_COPY]} | "
-            f"{row[RejectReason.EMBEDDING_OUTLIER]} | "
-            f"{row[RejectReason.SEAM_POOR]} |"
+            f"{row['defect_type']} | {row['total']} | {row['after_roi']} | "
+            f"{row['after_area']} | {row['after_aspect']} | {row['after_phash']} | "
+            f"{row['after_dinov2']} | {row['after_seam']} | {row['accepted']} | "
+            f"{pass_rate:.2%} |"
         )
+    lines.extend(
+        [
+            "",
+            (
+                "The table above contains survivors after each rule. Exact per-group all-trigger "
+                "counts remain embedded in the machine-readable summary and are checked by "
+                "`scripts/verify_filter_report.py`."
+            ),
+        ]
+    )
     lines.extend(["", "## Locked thresholds", ""])
     for object_name, thresholds in summary["thresholds"].items():
         lines.append(f"### {object_name}")

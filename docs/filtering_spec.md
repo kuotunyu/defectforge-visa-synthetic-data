@@ -79,6 +79,11 @@ mnn_score = |{ r ∈ R : ∃ g ∈ G, NN_G(r) = g ∧ NN_R(g) = r }| / |R|
 `clean-fid` 在 crop 上計算。樣本數只有數百，**FID 不可靠，主報 KID**，FID 僅列出供參考。
 報表中要明寫這一點。
 
+正式 generated-vs-real 表使用 degree-3 polynomial kernel 的**未偏 KID**。real-self
+健全性檢查則使用包含對角線的 biased polynomial MMD：同一有限集合對自身必為 0；
+未偏 U-statistic 排除 self-kernel 對角線，拿同一集合對自身計算時會因小樣本而呈現負值，
+不適合拿來做 identity implementation check。noise sanity 使用相同 biased estimator。
+
 ### 健全性檢查（M14 必做，不通過不准往下走）
 | 檢查 | 期望 |
 |---|---|

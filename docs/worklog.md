@@ -303,6 +303,49 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 16：M14 mask-centered 生成品質評估與 sanity gate
+
+### 做了什麼
+- 新增 `src/evaluation/`、`scripts/evaluate_generation_quality.py`、
+  `scripts/verify_generation_quality.py` 與 `configs/quality.yaml`
+- 對 3,000 筆合成樣本、35 個 real components、35 個 deterministic noise controls
+  建立 ratio 2.5 mask-centered crop；逐一雜湊 generated payload 與完整 provenance
+- DINOv2 CLS 計算 nearest-real cosine 與 mutual-NN coverage；clean-fid 0.1.35
+  clean-mode Inception features 計算未偏 KID與低秩精確 FID
+- copy-paste / SD2 以 frozen `type0/type1` real group 對照；procedural 四類明列
+  `real_scope=object_all`，不把兩套 taxonomy 假裝成等價
+- 建立 `df-filter` 與 `df-eval` 兩個已驗證專案 skill
+
+### 校準與決策
+- 第一次 sanity run 的 NN、mNN、FID、noise control 全正常，但未偏 KID 用同一
+  real set 對自身比較時為 `-0.0399` 到 `-0.1270`
+- 沒有放寬門檻；改正 estimator 定義：formal rows 維持未偏 KID，identity/noise
+  sanity 改用包含對角線的 biased polynomial MMD，同一集合對自身精確為 0
+- clean-fid FID wrapper 因 SciPy 1.17 移除 `sqrtm(disp=...)` 無法使用；
+  以 covariance factor nuclear norm 實作數學等價 FID，並與標準公式單元比對
+
+### 正式結果與驗證
+- source audit：6,909 paths / 6,909 hashes，test blocklist hits = 0；
+  audit SHA256 `1056d0e5e19238af84fe523c54b6e5a4c7649764408cff8c21fa26e361d94b67`
+- immutable crop cache：3,070 張（real 35 / generated 3,000 / noise 35）
+- sanity 4/4：self NN min ≈ 1、self mNN = 1、biased KID = 0、FID ≈ 0；
+  noise NN mean 0.0003–0.4240，均低於各 object `tau_low`；noise KID 0.4364–0.7402
+- 正式表 44 列，唯一 empty 為已知的 filtered `pcb1/copy-paste/type1`
+- 獨立 verifier 通過；report summary SHA256
+  `906f768b65654e96d2e41c724b019d613d48760934f395017f0cf24f2a626a07`
+- 兩張正式圖均已人工目視，標籤、分布、real/generated 對照與 EMPTY 格正確
+- 提交前完整回歸：Ruff 全綠、pytest 66 passed、M13/M14 verifier 與兩個 skill
+  官方 validator 全部通過
+
+### 下一步
+M11 SDXL notebook／Colab L4 執行與 M15 交接仍需使用者醒來後接續；
+本機先完成可離線準備與紙上驗證。
+
+### 換你做
+目前沒有。GitHub repo、remote、push 仍依要求不建立、不操作。
+
+---
+
 ## 2026-07-27 — Session 12：M10 SD2 LoRA 正式訓練、resume 與獨立重載
 
 ### 做了什麼
@@ -470,7 +513,7 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 ### 驗證
 - full verifier：3,000 records、1,770 accepted、9,540 published payload hardlinks 全通過
 - report summary SHA256：
-  `d306207ef5186bfff29aae0222ee1acd4eba17d7b3c48511c356ad52c920efb1`
+  `831ec0936a7e3068c30f46f5fac1240634ae0de23aa8dc3e8ad9db87dd88a8a0`
 - accepted/rejected contact sheets 均已人工目視：輪廓對位、標籤可讀、無空白格
 - M13 tests 17 passed；全專案測試與 Ruff 另於提交前重跑
 

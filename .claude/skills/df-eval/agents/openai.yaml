@@ -1,0 +1,4 @@
+interface:
+  display_name: "DefectForge Quality Evaluation"
+  short_description: "Evaluate DINO correspondence, KID, and FID metrics"
+  default_prompt: "Use $df-eval to run or verify DefectForge M14 generation quality metrics."

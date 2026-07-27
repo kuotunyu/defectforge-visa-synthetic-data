@@ -1,0 +1,40 @@
+schema_version: 1
+
+input_metadata: unfiltered/metadata.jsonl
+views:
+  - unfiltered
+  - filtered
+
+crop:
+  ratio: 2.5
+  algorithm: square-mask-context-v1
+
+dinov2:
+  model_id: facebook/dinov2-base
+  revision: f9e44c814b77203eaa57a6bdbbd535f21ede1415
+  batch_size: 8
+
+clean_fid:
+  package_version: 0.1.35
+  mode: clean
+  batch_size: 32
+  num_workers: 0
+  use_dataparallel: false
+
+resources:
+  maximum_existing_vram_gib: 6.0
+
+sanity:
+  self_nn_minimum: 0.999999
+  self_mnn_minimum: 0.999999
+  self_fid_maximum: 0.000001
+  self_kid_abs_maximum: 0.0000000001
+  noise_nn_margin: 0.05
+  noise_kid_minimum_gap: 0.01
+
+output:
+  report: reports/generation_quality.md
+  validation: reports/generation_quality_validation.json
+  csv: results/generation_quality.csv
+  nn_figure: reports/figures/generation_quality_nn.png
+  comparison_figure: reports/figures/generation_quality_real_vs_generated.png

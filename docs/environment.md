@@ -94,6 +94,16 @@ uv run python -c "import diffusers, peft, cv2, imagehash, sklearn, cleanfid; pri
 | accelerate | 1.14.0（2026-06-11） | [PyPI](https://pypi.org/project/accelerate/) |
 | clean-fid | 0.1.35 | [PyPI](https://pypi.org/project/clean-fid/) |
 
+### clean-fid 0.1.35 與 SciPy 1.17 的 FID 相容性
+
+M14 實測發現 clean-fid 0.1.35 的直接 FID 路徑仍呼叫
+`scipy.linalg.sqrtm(..., disp=False)`，但目前鎖定的 SciPy 1.17 已移除 `disp` 參數。
+本專案仍使用 clean-fid 的 clean-mode Inception feature extractor；FID 本身改用低秩
+恆等式精確計算：若 centered covariance factors 為 `A`、`B`，則 covariance
+square-root trace 等於 `A.T @ B` 的 nuclear norm。單元測試已在小維度與標準
+covariance `sqrtm` 公式逐值比對。這也避免在每類只有 3–23 張 real crop 時建立
+2048×2048 奇異 covariance。
+
 ### transformers v5 相容性驗證結果
 
 `transformers` v5.0.0 於 2026-01-26 發佈，目前 5.14.1。v5 是**破壞性改版**：

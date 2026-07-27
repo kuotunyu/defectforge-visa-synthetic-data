@@ -244,14 +244,21 @@ scripts/compare_diffusion.py
 `${synthetic}/filtered/`、`${synthetic}/unfiltered/`（皆含 `metadata.jsonl`，
 `unfiltered` 保留所有樣本並標 `passed` 與 `reject_reasons`）、`reports/filter_report.md`
 
-### M14 `src/evaluation/quality_metrics.py`
+### M14 `scripts/evaluate_generation_quality.py`
 ```
---paths --object
---input PATH               # 可重複
---sanity-check             # 真實 crop 自餵 + 純雜訊 crop，驗證指標實作正確
+--paths --config configs/quality.yaml
+--filter-config configs/filters.yaml
+--defect-types splits/defect_types.json
+--blocklist splits/test_blocklist.json
+--filter-validation reports/filter_validation.json
+--prepare-only             # CPU-only source audit + immutable crop cache，不載模型
+--sanity-check             # 跑必做 sanity gate，通過後停止，不發布正式報表
 ```
+模型載入前另依 `configs/quality.yaml` 檢查 existing shared VRAM；超過上限以 exit 4
+停止，避免與同機其他專案爭用 GPU。
 產出：`reports/generation_quality.md`、`results/generation_quality.csv`
-斷言：`--sanity-check` 下真實 crop 的 `nn_score ≈ 1`、KID ≈ 0；不成立 `exit 2`
+斷言：`--sanity-check` 下真實 crop 的 `nn_score ≈ 1`、biased polynomial MMD = 0；
+正式表仍用未偏 KID。不成立 `exit 2`
 
 ### M16 `src/training/train_classifier.py`
 ```
@@ -286,6 +293,7 @@ scripts/compare_diffusion.py
 | 腳本 | 用途 |
 |---|---|
 | `scripts/verify_filter_report.py` | 從 `metadata.jsonl` 重算漏斗表，與 `reports/filter_report.md` 逐格比對 |
+| `scripts/verify_generation_quality.py` | 核對 M14 CSV／Markdown／validation、sanity gate、圖與 feature-cache SHA256 |
 | `scripts/verify_readme.py` | 從 `results/*.csv` 重算 README 每張表的數字並比對 |
 | `scripts/verify_splits.py` | 重跑 [ADR-007](decisions.md#adr-007) 的四項斷言 |
 | `scripts/upload_hf.py` | 見 [publish_spec.md](publish_spec.md)；**預設 `--dry-run`，上傳要顯式加 `--confirm`** |

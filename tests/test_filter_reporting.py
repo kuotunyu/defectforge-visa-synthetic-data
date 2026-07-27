@@ -36,6 +36,9 @@ def test_summary_roundtrips_through_markdown() -> None:
     assert len(summary_sha256(summary)) == 64
     assert summary["accepted"] == 1
     assert summary["reason_counts"]["NN_TOO_LOW"] == 1
+    assert summary["first_reason_counts"]["AREA_OUT_OF_RANGE"] == 1
+    assert summary["rows"][0]["after_area"] == 1
+    assert summary["rows"][0]["after_dinov2"] == 1
 
 
 def test_summary_rejects_inconsistent_pass_flag() -> None:

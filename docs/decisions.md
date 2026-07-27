@@ -603,3 +603,39 @@ M13 同時過濾 copy-paste、procedural 與 searched SD2 三個來源。若每�
   fail closed，不自動退化成 copy。
 - strict real p05 與語意門檻可能讓個別 generator/type 為零；這是被保留並報告的品質
   結果，不以覆蓋率為由事後放寬。
+
+---
+
+<a id="adr-017"></a>
+## ADR-017 — M14 以 mask-centered crop、未偏 KID 主報與 biased identity sanity
+
+**狀態：Accepted**（2026-07-27）
+
+### 背景
+M14 必須在 35 張 real component crops 對 3,000 張 generated crops 的小樣本條件下，
+同時衡量單張相似度、流形覆蓋與集合分布。clean-fid 0.1.35 的直接 FID 實作又與
+SciPy 1.17 的 `sqrtm` API 不相容。第一次正式 sanity run 也證明：未偏 KID
+U-statistic 用同一有限集合對自身比較時，會因排除 kernel 對角線而得到
+`-0.0399` 到 `-0.1270`，不是應為 0 的 identity check。
+
+### 決策
+- 所有指標只看 ratio 2.5 的 mask-centered defect crop，不看 whole image。
+- DINOv2 CLS 固定既有 revision；`nn_score` 取 generated-to-real 最大 cosine，
+  `mnn_score` 報 real references 參與 mutual-NN pair 的比例。
+- 正式 generated-vs-real 表以 clean-fid clean-mode Inception feature 計算
+  deterministic unbiased degree-3 polynomial KID；KID 為主，FID 僅參考。
+- real-self / noise sanity 使用包含 kernel 對角線的 biased polynomial MMD；
+  同一有限集合對自身精確為 0。正式 KID estimator 不因 sanity 修正而變更。
+- FID 用 centered low-rank factors 的 nuclear-norm 恆等式精確計算；單元測試與
+  標準 covariance sqrtm 公式相符，不呼叫已失效的 clean-fid FID wrapper。
+- copy-paste / SD2 的 `type0/type1` 對應 frozen real type；procedural 的
+  `crack/perlin/scratch/spot` 沒有等價 real taxonomy，只能標
+  `real_scope=object_all`。空群組照實列出。
+
+### 後果
+- sanity 4/4 通過：real-self NN/mNN 為 1、biased KID 為 0、FID 約 0；
+  deterministic noise 的 NN 均低於 `tau_low` 且 KID/FID 大幅增加。
+- 44 列正式結果可比較 filtered/unfiltered，但不能把 FID 當小樣本主結論。
+- `pcb1/copy-paste/type1` filtered 為空仍保留 `status=empty`，不補樣本、不改 taxonomy。
+- 每次 run 先雜湊全部 provenance，且在模型載入前檢查同機 existing VRAM；
+  test blocklist 命中或資源上限超標皆 fail closed。

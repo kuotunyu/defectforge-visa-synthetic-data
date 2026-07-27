@@ -36,6 +36,7 @@ kaggle.json
 # results/ must stay tracked as a directory so results/colab/.gitkeep survives:
 # ignore its CONTENTS, not the directory itself.
 /results/*
+!/results/generation_quality.csv
 !/results/colab/
 /results/colab/*
 !/results/colab/.gitkeep
