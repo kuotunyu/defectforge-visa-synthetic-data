@@ -103,7 +103,29 @@ Full protocol: [docs/experiment_protocol.md](docs/experiment_protocol.md).
 
 ## Results
 
-TBD — Phase 2.
+The tables below are populated only by `scripts/verify_readme.py --write` after the
+formal classification and segmentation artefacts pass their independent validators.
+
+### Classification
+
+<!-- BEGIN VERIFIED CLASSIFICATION_MAIN -->
+TBD — generated from `results/classification.csv`.
+<!-- END VERIFIED CLASSIFICATION_MAIN -->
+
+### Segmentation
+
+<!-- BEGIN VERIFIED SEGMENTATION_MAIN -->
+TBD — generated from `results/segmentation.csv`.
+<!-- END VERIFIED SEGMENTATION_MAIN -->
+
+## Limitations
+
+The outcome block is deliberately generated under Limitations so a flat or negative
+synthetic-data result cannot be silently omitted from the final narrative.
+
+<!-- BEGIN VERIFIED RESULT_OUTCOME -->
+TBD — generated from both downstream result files.
+<!-- END VERIFIED RESULT_OUTCOME -->
 
 ## Reproduce
 
