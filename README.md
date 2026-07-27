@@ -129,8 +129,47 @@ TBD — generated from both downstream result files.
 
 ## Reproduce
 
-TBD — filled in at the end of Phase 1 (environment) and Phase 2 (experiments).
-See [docs/environment.md](docs/environment.md) for the current setup notes.
+DefectForge is developed and fully tested on native Windows 11 with Python 3.12 and an
+RTX 4090. The data root is configured once in `configs/paths.yaml`; code never embeds a
+machine-specific user path.
+
+```powershell
+git clone https://github.com/kuotunyu/01-defectforge-visa.git
+Set-Location 01-defectforge-visa
+uv sync --frozen --python 3.12
+
+# Confirm the locked CUDA environment.
+uv run python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+
+# Download/check VisA, prepare both official layouts, and independently recheck ADR-007.
+uv run python scripts/download_visa.py
+uv run python scripts/prepare_splits.py
+uv run python scripts/verify_splits.py
+
+# Fast repository verification. Training commands remain dry-run here.
+uv run ruff check .
+uv run pytest -q
+uv run python scripts/run_classifier_matrix.py --dry-run
+uv run python scripts/package_m18_colab.py --dry-run
+```
+
+The full ordered pipeline, immutable checkpoints, expected sample counts, and validator
+for every milestone are in [PLAN.md](PLAN.md). Configuration and CLI contracts are in
+[docs/interfaces.md](docs/interfaces.md); the preregistered downstream protocol is in
+[docs/experiment_protocol.md](docs/experiment_protocol.md).
+
+GPU work is deliberately split:
+
+- SD2 generation, SDXL inference, classification, and one-step SegFormer smoke tests run
+  locally.
+- SDXL LoRA training uses `notebooks/01_train_inpaint_lora_sdxl.ipynb`.
+- The 16 physical SegFormer runs use `notebooks/02_train_segformer.ipynb`; `all_mixed`
+  cites `filtered_syn` and is not rerun.
+
+Both notebooks are thin wrappers around the same tracked Python trainers. They download
+no test data outside the frozen manifest, save resumable checkpoints, and return raw
+reports that are independently aggregated. See [instructions_for_me.md](instructions_for_me.md)
+for the exact Colab handoff.
 
 ## Repository map
 
