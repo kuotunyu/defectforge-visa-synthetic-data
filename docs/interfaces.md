@@ -338,6 +338,18 @@ scripts/verify_classifier_tuning.py
 validation 皆為真實資料、model lock 與固定搜尋預算；以兩物件 mean Macro-F1、mean AUROC、
 較低 learning rate 依序選擇，並要求 config 的 frozen setting 完全相符。
 
+正式矩陣的 CPU-only 獨立驗證：
+```text
+scripts/verify_classifier_matrix.py
+  --paths configs/paths.yaml
+  --config configs/classifier.yaml
+  --output reports/classifier_matrix_validation.json
+  --report reports/classifier_results.md
+```
+要求 38 個唯一 run／signature 與 CSV 精確對應，逐 run 重算 portable data manifest、
+run signature、model hash、凍結 test inventory 與 train/validation 對 test 的 SHA
+不相交；另驗證三個 alias 沒有被重跑，並彙整事前指定四組的三-seed mean ± sample std。
+
 ### M15 `scripts/verify_phase1.py`
 ```text
 --project-root PATH
