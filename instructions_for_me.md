@@ -1,8 +1,9 @@
 # 換你做：Colab 操作手冊
 
-> **狀態：部分完成。** M11 SDXL 的離線 bundle 與操作欄位已備妥，但 real-model
-> smoke、峰值 VRAM 與 Colab 正式 run 尚未執行；M10 SD2 欄位仍待 M15 補齊。
-> 在 M11 通過 real-model smoke 且跨專案 GPU 鎖解除前，請先不要執行 Notebook 2。
+> **狀態：部分完成。** Notebook 1（M11 SDXL）的離線 bundle 與操作欄位已備妥，
+> 但 real-model smoke、峰值 VRAM 與 Colab 正式 run 尚未執行；Notebook 2（M18
+> SegFormer）尚未建立。在 M11 通過 real-model smoke 且跨專案 GPU 鎖解除前，
+> 請先不要執行 Notebook 1。
 
 ## 通用流程（每本 notebook 都一樣）
 
@@ -22,17 +23,21 @@
 
 ---
 
-## Notebook 1 — `01_train_inpaint_lora_sd2.ipynb`
+## 已在本機完成、不需上 Colab — M10 SD2 LoRA
 
-| 項目 | 內容 |
-|---|---|
-| 1. 上 Colab 方式 | TBD (M15) |
-| 2. Runtime 選型 | TBD (M15) |
-| 3. 需要的 Colab Secrets | TBD (M15) |
-| 4. 預估時數與 compute units | TBD (M15) |
-| 5. 跑完要下載哪些檔案 / 放回哪個路徑 | TBD (M15) |
+ADR-008 已決定 SD2 使用本機 RTX 4090；兩物件各 400 steps 的正式訓練、checkpoint、
+fresh reload 與驗證都已通過，因此沒有 `01_train_inpaint_lora_sd2.ipynb`，也不需要
+建立假的 Colab 步驟。實測如下：
 
-## Notebook 2 — `01_train_inpaint_lora_sdxl.ipynb`
+| 物件 | 訓練秒數 | wall-clock 秒數 | peak VRAM |
+|---|---:|---:|---:|
+| pcb1 | 128.66 | 134.82 | 3.20 GiB |
+| capsules | 125.65 | 131.66 | 3.20 GiB |
+
+正式產物在 `D:\sdg-data\01-defectforge\runs\lora_sd2\`，獨立驗證報告是
+`reports/lora_sd2_validation.json`。
+
+## Notebook 1 — `01_train_inpaint_lora_sdxl.ipynb`
 
 | 項目 | 內容 |
 |---|---|
@@ -41,6 +46,16 @@
 | 3. 需要的 Colab Secrets | `HF_TOKEN`，只由 `google.colab.userdata` 讀取；notebook 無明文 token |
 | 4. 預估時數與 compute units | 400 steps × 2 objects；實際時數、峰值 VRAM 與 CU 差額待第一次 Colab 正式 run 填回，未實測前不猜數字 |
 | 5. 跑完要下載哪些檔案 / 放回哪個路徑 | Drive `results/lora_sdxl/` 內 validation JSON、兩物件 `training_report.json`、`final/`、`samples/`；下載到本機 `results/colab/lora_sdxl/` |
+
+## Notebook 2 — M18 SegFormer（尚未建立）
+
+| 項目 | 內容 |
+|---|---|
+| 1. 上 Colab 方式 | TBD (M18 / M15 最終驗收) |
+| 2. Runtime 選型 | TBD (M18 / M15 最終驗收) |
+| 3. 需要的 Colab Secrets | TBD (M18 / M15 最終驗收) |
+| 4. 預估時數與 compute units | TBD (M18 / M15 最終驗收) |
+| 5. 跑完要下載哪些檔案 / 放回哪個路徑 | TBD (M18 / M15 最終驗收) |
 
 ---
 
