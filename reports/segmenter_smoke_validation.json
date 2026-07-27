@@ -1,0 +1,44 @@
+{
+  "base_weight_sha256": "6ae39addd01de6b1b8bde2cf677d43a5cd733424b8d186de3f95d1c51fee23f9",
+  "model_repository": "nvidia/segformer-b0-finetuned-ade-512-512",
+  "model_revision": "489d5cd81a0b59fab9b7ea758d3548ebe99677da",
+  "objects": {
+    "capsules": {
+      "metrics": {
+        "aupro": 0.09443535976782746,
+        "dice": 0.00034840720023372545,
+        "miou": 0.00043231635649825174,
+        "pixel_auroc": 0.21620812769605213
+      },
+      "model_sha256": "bdbd9dfcfdf6e643ade2df7e5d10ab756787d58d43032b87577bd40e941099ae",
+      "peak_vram_gib": 0.9767155647277832,
+      "run_signature": "2a801dbce9d90573f4741d8ae3b229d4207d257719e9b9ede371aedcfeedd5b7",
+      "status": "passed",
+      "test": 0,
+      "train": 335,
+      "validation": 42,
+      "wall_clock_seconds": 4.814493600002606
+    },
+    "pcb1": {
+      "metrics": {
+        "aupro": 0.03542027319284979,
+        "dice": 0.00015738106265860934,
+        "miou": 0.1427397082526959,
+        "pixel_auroc": 0.02487563796582737
+      },
+      "model_sha256": "3ef3fb94d6050f8d3a697a00ef43bbe4b49f6bea3205842c30ee283221802bb1",
+      "peak_vram_gib": 0.9767155647277832,
+      "run_signature": "ae0d9a642a4acc74b0031ccef8824fd993f28f0175e935271f97a1a0ad3c4e30",
+      "status": "passed",
+      "test": 0,
+      "train": 552,
+      "validation": 66,
+      "wall_clock_seconds": 6.4591453000030015
+    }
+  },
+  "pipeline_version": "0.1.0",
+  "schema_version": 1,
+  "status": "passed",
+  "test_loaded": 0,
+  "validation_is_real_only": true
+}

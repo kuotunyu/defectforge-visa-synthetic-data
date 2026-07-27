@@ -73,9 +73,33 @@ append one unique long-format row to `results/classification.csv`.
 
 ## M18 and M20 boundary
 
-Do not invent SegFormer commands before `src/training/train_segmenter.py` and its notebook exist.
-At M18, extend this skill only after the local 1-step smoke passes. Require the notebook to call
-the shared trainer and fill all five concrete handoff fields in `instructions_for_me.md`.
+The M18 SegFormer-B0 local gate passed for both objects. Reproduce it with:
+
+```powershell
+uv run --frozen python src/training/train_segmenter.py --object pcb1 --group real_only --mode development --smoke --run-name m18_smoke_pcb1_v1 --output-dir D:\sdg-data\01-defectforge\runs\seg_smoke\m18_smoke_pcb1_v1
+uv run --frozen python src/training/train_segmenter.py --object capsules --group real_only --mode development --smoke --run-name m18_smoke_capsules_v1 --output-dir D:\sdg-data\01-defectforge\runs\seg_smoke\m18_smoke_capsules_v1
+uv run --frozen python scripts/verify_segmenter_smoke.py --run-root D:\sdg-data\01-defectforge\runs\seg_smoke --output reports/segmenter_smoke_validation.json
+```
+
+Require both one-step development runs to use only Real-only validation, load zero frozen test
+records, remain below the 14 GiB T4 budget, save SafeTensors, and pass a fresh
+`from_pretrained(local_dir)` reload. Raw SafeTensors keys are not loaded directly because current
+Transformers performs a SegFormer key-name conversion during `save_pretrained`/`from_pretrained`.
+
+Validate and package the thin shared-trainer notebook with:
+
+```powershell
+uv run --frozen python scripts/validate_m18_colab_notebook.py
+uv run --frozen python scripts/package_m18_colab.py
+```
+
+Upload `notebooks/02_train_segformer.ipynb` plus the source archive and one data archive per
+object named in `D:\sdg-data\01-defectforge\colab\m18\m18_colab_bundle.json`. Run exactly eight
+formal groups per object. `all_mixed` is a logical alias of `filtered_syn` and must never start a
+ninth physical run. The notebook must call the shared trainer, resume from isolated Drive
+checkpoint directories, independently validate raw run artifacts, and produce one result ZIP
+per object.
+
 At M20, rebuild `results/segmentation.csv` from raw metrics rather than notebook output text.
 
 ## Closeout

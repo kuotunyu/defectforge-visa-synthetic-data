@@ -397,7 +397,9 @@ formal final run 另 append `results/segmentation.csv`。模型鎖定
 `nvidia/segformer-b0-finetuned-ade-512-512@489d5cd...` SafeTensors、512 input、
 binary Dice+BCE、batch 4、500 optimizer steps。normal image 的 target 是動態建立的
 全零 mask；所有 anomaly mask 以 `>0` binary 化。development 只允許 `real_only` 且
-test list 必須為空。
+test list 必須為空。portable `data_manifest.json` 直接保存
+`split_manifest_sha256`，並由 `run_config.json` 與 `training_report.json` 保存其
+canonical SHA256，三者必須由獨立 verifier 重算相符。
 
 Colab 交接：
 ```text

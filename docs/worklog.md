@@ -411,6 +411,54 @@ formal groups。另需先用 M11 adapters 補齊 `stageB_sdxl/searched` 250 張�
 
 ---
 
+## 2026-07-28 — Session 24：M18 SegFormer smoke、Colab 封裝與精確交接
+
+### 本機 smoke 與相容性修正
+- `df-guard` 再次確認 manifest SHA、1,806 images／1,805 groups、0 crossing group、
+  blocklist 連結、Git clean／remote 0、D 槽 1,665 GiB free、RTX 4090 23,253 MiB free
+- 首次 PCB smoke 在 best-model fresh reload 抓到 Transformers SegFormer 參數 key
+  migration：`save_pretrained()` 的 SafeTensors 不能直接用 raw `load_file()` strict-load
+  回目前 class；改成官方對稱的 `from_pretrained(local_dir)` 做 key conversion，再將
+  current state dict strict-load 回訓練中的模型，checkpoint resume 同步採用相同路徑
+- 首次獨立 verifier 又抓到 portable data manifest 使用 `manifest_sha256`，而凍結契約
+  要求 `split_manifest_sha256`；修正 producer 與介面文件，沒有放寬 verifier
+- 兩個舊 smoke 目錄保留為
+  `D:\sdg-data\01-defectforge\runs\seg_smoke\obsolete_pre_contract_fix_*`，未刪除證據
+
+### 通過結果
+- pcb1：1 step、552 train／66 Real-only validation／0 test、peak VRAM 0.977 GiB、
+  wall 6.46 s
+- capsules：1 step、335 train／42 Real-only validation／0 test、peak VRAM
+  0.977 GiB、wall 4.81 s
+- `scripts/verify_segmenter_smoke.py` 重算 run signature、data manifest SHA、frozen
+  split SHA、model SHA 與 development inventory，兩物件 `status=passed`
+- `scripts/validate_m18_colab_notebook.py`：11 cells、5 sections、8 formal groups、
+  alias reruns 0、duplicated training loop false、literal credentials 0
+
+### Colab 包
+- `defectforge_m18_source.zip`：104,900,929 bytes，SHA256
+  `d6c9f71b25796c549eba0163f8f9911fccc2a8376ea967bd3258e1749f8a49f8`
+- `m18_seg_pcb1.zip`：3,764,604,320 bytes、5,206 files、training blocklist hits 0，
+  SHA256 `50a8ab3b7eaf927089d18a5f2c86612e77cb1226dfdd8b34485efbafde4c573c`
+- `m18_seg_capsules.zip`：3,948,056,619 bytes、4,804 files、training blocklist hits 0，
+  SHA256 `d2c0672f843b5daec2e7798495900faa4c26e25aca8a3f72ab8ec752a19f7688`
+- 三個 ZIP 均另跑完整 CRC `testzip()`，全部通過；manifest 在
+  `D:\sdg-data\01-defectforge\colab\m18\m18_colab_bundle.json`
+
+### 交接
+- `instructions_for_me.md` 已填 Notebook 2 的五項具體資料：C 槽 notebook、D 槽
+  三 ZIP、Drive 目的地、T4 ≥14 GiB、不需 Secret、6–12 小時／9–20 CU 規劃估計、
+  兩個結果 ZIP 名稱與本機回收路徑
+- `df-downstream` skill 只在本機 smoke 通過後才加入 M18 命令、fresh reload 規則、
+  8-group／alias 邊界與 Colab 封裝流程
+
+### 下一步／換你做
+**M19**：依 `instructions_for_me.md` 上傳 Notebook 2 與三個 ZIP，先跑 pcb1，再跑
+capsules；完成後把兩個未改名的結果 ZIP 放到 `results/colab/segmentation/`，並回報
+每個 group 的 timings 與實際 CU 差值。
+
+---
+
 ## 2026-07-27 — Session 20：M15 Phase 1 獨立驗收與交接邊界修正
 
 ### 做了什麼

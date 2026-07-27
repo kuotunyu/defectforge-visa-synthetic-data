@@ -155,7 +155,7 @@
   - **驗證**：散點圖的每個點都能對回 `results/classification.csv` 與 `reports/generation_quality.md` 的原始值；
     若兩者不相關，**如實寫進結論**而不是換指標重畫
 
-- [ ] **M18** 🤖 分割 notebook（SegFormer-B0）＋ 本機 smoke test ＋ 寫進 `instructions_for_me.md`
+- [x] **M18** 🤖 分割 notebook（SegFormer-B0）＋ 本機 smoke test ＋ 寫進 `instructions_for_me.md`
   - **驗證**：`--group` 參數能切換九組中的任一組；本機 1-step smoke 跑通；
     notebook 與 `instructions_for_me.md` 具備五節具體交接（上 Colab 方式／Runtime／
     Secrets／預估時數與 compute units／跑完抓哪些檔放回哪個路徑）；第 9 組在文件中

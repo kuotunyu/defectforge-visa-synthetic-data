@@ -69,7 +69,7 @@ class SegmentationGroup:
             "object": self.object_name,
             "mode": self.mode,
             "standard_augmentation": self.standard_augmentation,
-            "manifest_sha256": self.manifest_sha256,
+            "split_manifest_sha256": self.manifest_sha256,
             "selection_sha256": self.selection_sha256,
             "counts": {
                 "train": summarize_samples(self.train),

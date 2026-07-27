@@ -100,3 +100,4 @@ def test_group_payload_sha_is_stable() -> None:
     second = segmenter_data.group_payload_sha256(group)
     assert first == second
     assert len(first) == 64
+    assert group.payload()["split_manifest_sha256"] == "b" * 64

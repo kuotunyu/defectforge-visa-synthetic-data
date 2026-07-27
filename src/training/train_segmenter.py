@@ -23,7 +23,6 @@ import torch.nn.functional as nnf
 import yaml
 from huggingface_hub import hf_hub_download
 from PIL import Image
-from safetensors.torch import load_file
 from skimage.measure import label as connected_components
 from sklearn.metrics import roc_auc_score
 from torch import nn
@@ -598,6 +597,18 @@ def _save_model(model: nn.Module, output_dir: Path) -> str:
     return sha256_file(weight_path)
 
 
+def _load_saved_model_state(model: nn.Module, model_dir: Path) -> None:
+    """Reload a save_pretrained directory through Transformers' key conversion."""
+    require((model_dir / "config.json").is_file(), "Saved SegFormer config is missing")
+    require((model_dir / "model.safetensors").is_file(), "Saved SegFormer weights are missing")
+    saved_model = SegformerForSemanticSegmentation.from_pretrained(
+        str(model_dir),
+        local_files_only=True,
+        use_safetensors=True,
+    )
+    model.load_state_dict(saved_model.state_dict(), strict=True)
+
+
 def _checkpoint_dirs(root: Path) -> list[Path]:
     candidates = []
     if root.is_dir():
@@ -666,7 +677,7 @@ def _restore_checkpoint(
     require(metadata["run_signature"] == run_signature, "Checkpoint run signature changed")
     weight_path = checkpoint / "model" / "model.safetensors"
     require(sha256_file(weight_path) == metadata["model_sha256"], "Checkpoint model changed")
-    model.load_state_dict(load_file(str(weight_path), device="cpu"), strict=True)
+    _load_saved_model_state(model, checkpoint / "model")
     state = torch.load(checkpoint / "state.pt", map_location="cpu", weights_only=True)
     require(state["run_signature"] == run_signature, "Checkpoint state signature changed")
     optimizer.load_state_dict(state["optimizer"])
@@ -880,7 +891,7 @@ def train(
     if group.mode == "development":
         require(best_metrics is not None, "Development run produced no validation metrics")
         final_weight = output_dir / "final" / "model.safetensors"
-        model.load_state_dict(load_file(str(final_weight), device="cpu"), strict=True)
+        _load_saved_model_state(model, output_dir / "final")
         model.to(device)
         metrics = best_metrics
         model_sha256 = sha256_file(final_weight)
