@@ -304,6 +304,18 @@ formal 訓練集 ∩ highshot test == ∅。每個 run 保存 portable `data_man
 `run_config.json`、`training_report.json` 與 model safetensors；CSV 每個 run name 唯一。
 alias `real_60` / `syn_500` / `base_sd2` 只引用 canonical run，不重跑。
 
+正式 38-run 矩陣由可恢復 runner 啟動：
+```text
+scripts/run_classifier_matrix.py
+  --paths configs/paths.yaml
+  --config configs/classifier.yaml
+  [--dry-run]
+```
+runner 在配置 GPU 前先展開並防洩漏檢查全部 38 組。每個 run 先寫入
+`${runs}/cls/.<run-name>.working`，通過 report 與 `classification.csv` 雙重證據後才
+原子改名；中斷的 working directory 下次移到 `${runs}/cls/_incomplete/` 保留，不刪除。
+已完整驗證的 run 會跳過，alias 不會進入計畫。
+
 兩物件 smoke 的 CPU-only 重驗：
 ```text
 scripts/verify_classifier_smoke.py
