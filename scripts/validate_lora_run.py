@@ -1,4 +1,4 @@
-"""Validate M10 SD2 LoRA run bundles, checkpoints, samples, and frozen inputs."""
+"""Validate SD2 or SDXL LoRA run bundles, checkpoints, samples, and frozen inputs."""
 
 from __future__ import annotations
 
@@ -73,6 +73,17 @@ def validate_adapter_configs(final_dir: Path, config: dict[str, Any]) -> None:
         "Text adapter is not PEFT TrainableTokens",
     )
     require(len(text["token_indices"]) == 2, "Expected exactly two trainable tokens")
+    # Treat pre-family validation fixtures as the original SD2 contract.
+    if config.get("model", {}).get("family", "sd2") == "sdxl":
+        text_2 = load_json(final_dir / "text_token_adapter_2" / "adapter_config.json")
+        require(
+            text_2["peft_type"] == "TRAINABLE_TOKENS",
+            "Second text adapter is not PEFT TrainableTokens",
+        )
+        require(
+            len(text_2["token_indices"]) == 2,
+            "Expected exactly two trainable tokens in text encoder 2",
+        )
 
 
 def validate_object(
@@ -95,7 +106,13 @@ def validate_object(
     require(report["seed"] == seed, f"{object_name}: seed mismatch")
     require(report["global_step"] == max_steps, f"{object_name}: step mismatch")
     require(report["micro_step"] == max_steps, f"{object_name}: micro-step mismatch")
-    require(report["pipeline_version"] == "0.2.0", f"{object_name}: pipeline mismatch")
+    expected_pipeline = {"sd2": "0.2.0", "sdxl": "0.3.0"}[
+        str(config["model"]["family"])
+    ]
+    require(
+        report["pipeline_version"] == expected_pipeline,
+        f"{object_name}: pipeline mismatch",
+    )
     require(
         report["training_config_sha256"] == config_sha256,
         f"{object_name}: training config changed",
@@ -113,7 +130,7 @@ def validate_object(
         checkpoint_names == expected_checkpoint_names(max_steps, checkpoint_every),
         f"{object_name}: checkpoint set mismatch",
     )
-    required_bundle_files = (
+    required_bundle_files = [
         "trainer_state.json",
         "training_state.pt",
         "unet_adapter/adapter_config.json",
@@ -121,7 +138,15 @@ def validate_object(
         "text_token_adapter/adapter_config.json",
         "text_token_adapter/adapter_model.safetensors",
         "tokenizer/tokenizer.json",
-    )
+    ]
+    if config["model"]["family"] == "sdxl":
+        required_bundle_files.extend(
+            [
+                "text_token_adapter_2/adapter_config.json",
+                "text_token_adapter_2/adapter_model.safetensors",
+                "tokenizer_2/tokenizer.json",
+            ]
+        )
     for bundle_name in [*checkpoint_names, "final"]:
         bundle = object_root / bundle_name
         for relative in required_bundle_files:
@@ -137,6 +162,10 @@ def validate_object(
             final_dir / "text_token_adapter" / "adapter_model.safetensors"
         ),
     }
+    if config["model"]["family"] == "sdxl":
+        adapter_hashes["text_token_adapter_2_sha256"] = sha256_file(
+            final_dir / "text_token_adapter_2" / "adapter_model.safetensors"
+        )
     for key, actual in adapter_hashes.items():
         require(report[key] == actual, f"{object_name}: {key} mismatch")
 
@@ -188,6 +217,7 @@ def validate_object(
             final_dir,
             model_id=str(config["model"]["id"]),
             revision=str(config["model"]["revision"]),
+            family=str(config["model"]["family"]),
         )
         for key, expected in adapter_hashes.items():
             require(
@@ -240,7 +270,9 @@ def main() -> int:
             )
             for object_name in paths.objects
         },
-        "pipeline_version": "0.2.0",
+        "pipeline_version": {"sd2": "0.2.0", "sdxl": "0.3.0"}[
+            str(config["model"]["family"])
+        ],
         "run_root": str(run_root),
         "status": "passed",
         "validated_at": datetime.now(UTC).isoformat(),

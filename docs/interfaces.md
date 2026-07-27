@@ -179,6 +179,9 @@ audit hook makes opening `real_mask_stats.json` a fatal error.
 ```
 斷言：存出的權重能被 `PeftModel` 載回；`--smoke` 模式下不覆寫正式 checkpoint；
 每個 sample 同時寫 prompt／token／placement／seed／SHA256 sidecar。
+`family=sdxl` 時另要求 `tokenizer_2`／`text_encoder_2`，checkpoint 必含
+`text_token_adapter_2/` 與 `tokenizer_2/`；UNet forward 必帶 pooled text embedding
+與 time IDs。`family=sd2` 的 bundle schema 與 pipeline version 保持不變。
 
 正式 M10 產物重驗：
 ```text
@@ -187,6 +190,15 @@ scripts/validate_lora_run.py
 ```
 斷言：兩物件 checkpoint inventory、PEFT config、adapter hash、兩型 sample 輪替、
 背景 blocklist、凍結 checksum 與 fresh `PeftModel` reload 全部通過。
+
+M11 Colab 離線交接：
+```text
+scripts/validate_colab_notebook.py
+scripts/package_m11_colab.py --paths --output-dir PATH
+```
+前者驗五節、resume 分支、Secrets 與「notebook 不得複製訓練迴圈」；後者只封裝
+tracked source、20 張 frozen few-shot image/mask 與每型一個 held-out placement，
+產兩個 zip 與 SHA256 manifest。
 
 ### M12 `src/synthetic/generate_diffusion.py`
 ```

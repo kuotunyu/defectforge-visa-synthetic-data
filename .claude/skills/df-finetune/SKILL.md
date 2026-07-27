@@ -1,6 +1,6 @@
 ---
 name: df-finetune
-description: Train, smoke-test, resume, independently validate, or audit DefectForge per-object SD2 inpainting LoRA and learned trigger-token adapters. Use when working with train_inpaint_lora.py, validate_lora_run.py, lora_sd2.yaml, M10 checkpoints, held-out samples, or the runs/lora_sd2 output.
+description: Train, smoke-test, resume, independently validate, package, or audit DefectForge per-object SD2/SDXL inpainting LoRA and learned trigger-token adapters. Use for train_inpaint_lora.py, validate_lora_run.py, lora_sd2.yaml, lora_sdxl.yaml, M10/M11 checkpoints, the SDXL Colab notebook, held-out samples, or LoRA run outputs.
 ---
 
 # DefectForge Fine-Tune
@@ -37,6 +37,13 @@ Use the preservation mirror `sd2-community/stable-diffusion-2-inpainting` at rev
 Do not substitute another revision, source model, split, placement set, trigger-token mapping,
 or test-derived input. `--dry-run` performs these locks and run-signature checks without
 loading weights.
+
+For M11, use `diffusers/stable-diffusion-xl-1.0-inpainting-0.1` at revision
+`115134f363124c53c7d878647567d04daf26e41e`. Verify both text encoders, the UNet, and VAE
+against `configs/lora_sdxl.yaml`. SDXL requires both CLIP tokenizers/text encoders, concatenated
+penultimate hidden states, the second encoder's projected pooled embedding, and 1024-based
+time IDs. Save and resume both trainable-token adapters; never silently fall back to SD2's
+single-encoder conditioning.
 
 ## Preflight and dry-run
 
@@ -99,6 +106,28 @@ for pcb1 and 126 seconds for capsules, with roughly 3.20 GiB peak allocated VRAM
 Do not claim byte-identical independent CUDA training: FP16/TF32 kernels are not bitwise
 deterministic. Exact resume and sample-local generator reproducibility are the applicable
 claims.
+
+## M11 SDXL Colab handoff
+
+Do not download the SDXL base weights unattended because they exceed the project's 2 GB
+approval boundary. Before handoff, require both object dry-runs, the notebook validator, and
+the minimal bundle builder:
+
+```powershell
+uv run python src/training/train_inpaint_lora.py --config configs/lora_sdxl.yaml --object pcb1 --dry-run
+uv run python src/training/train_inpaint_lora.py --config configs/lora_sdxl.yaml --object capsules --dry-run
+uv run python scripts/validate_colab_notebook.py
+uv run python scripts/package_m11_colab.py
+```
+
+The notebook must remain a thin wrapper with five explicit sections, read `HF_TOKEN` only from
+Colab Secrets, copy data to `/content` before training, require an L4-class GPU, keep per-object
+Drive checkpoint roots, automatically choose fresh versus `latest` resume, and run the same
+independent validator with `configs/lora_sdxl.yaml`.
+
+Do not mark M11 complete until the real immutable SDXL model has completed one local smoke,
+fresh/no-checkpoint and checkpoint-resume branches have both run, saved adapters reload, and
+peak VRAM is recorded. A tiny or structural test is useful evidence but does not replace this.
 
 ## Independent validation and visual review
 

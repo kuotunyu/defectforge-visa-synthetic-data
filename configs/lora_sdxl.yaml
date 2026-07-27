@@ -1,0 +1,48 @@
+model:
+  id: diffusers/stable-diffusion-xl-1.0-inpainting-0.1
+  revision: 115134f363124c53c7d878647567d04daf26e41e
+  family: sdxl
+  resolution: 1024
+  license: CreativeML Open RAIL++-M
+  expected_files:
+    text_encoder/model.safetensors: 79f531155c765c22c89e23328793a2e91a1178070af961c57e2eae5f0509b65b
+    text_encoder_2/model.safetensors: 283bb90f987a133dec11947571aca17692ed32f3fff708441ac8eedcfa4a040e
+    unet/diffusion_pytorch_model.safetensors: df858870144f8af28e1d23aaf92a5238bfb5e3809775eca4e04b80516412c327
+    vae/diffusion_pytorch_model.safetensors: 98a14dc6fe8d71c83576f135a87c61a16561c9c080abba418d2cc976ee034f88
+
+objects:
+  pcb1:
+    description: a printed circuit board
+  capsules:
+    description: green capsules on inspection cloth
+
+training:
+  rank: 4
+  alpha: 4
+  lora_dropout: 0.0
+  max_train_steps: 400
+  train_batch_size: 1
+  gradient_accumulation_steps: 1
+  learning_rate: 0.0001
+  token_learning_rate: 0.0005
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_weight_decay: 0.01
+  adam_epsilon: 0.00000001
+  max_grad_norm: 1.0
+  lr_scheduler: constant
+  lr_warmup_steps: 0
+  mixed_precision: fp16
+  gradient_checkpointing: true
+  allow_tf32: true
+  horizontal_flip_probability: 0.5
+  mask_loss_weight: 5.0
+  checkpoint_every: 100
+  sample_every: 100
+  sample_inference_steps: 20
+  sample_guidance_scale: 7.5
+  sample_crop_ratio: 2.5
+  report_every: 10
+
+output:
+  name: lora_sdxl

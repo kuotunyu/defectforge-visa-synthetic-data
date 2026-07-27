@@ -24,6 +24,7 @@ from diffusers import (
     AutoencoderKL,
     DDPMScheduler,
     StableDiffusionInpaintPipeline,
+    StableDiffusionXLInpaintPipeline,
     UNet2DConditionModel,
 )
 from diffusers.optimization import get_scheduler
@@ -37,7 +38,7 @@ from peft import (
 from PIL import Image
 from skimage.measure import label
 from torch.nn import functional
-from transformers import CLIPTextModel, CLIPTokenizer
+from transformers import CLIPTextModel, CLIPTextModelWithProjection, CLIPTokenizer
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -56,7 +57,7 @@ from src.common.paths import Paths, load_paths
 from src.synthetic.copy_paste import ValidationError, object_code
 
 LOGGER = logging.getLogger("train_inpaint_lora")
-PIPELINE_VERSION = "0.2.0"
+PIPELINE_VERSIONS = {"sd2": "0.2.0", "sdxl": "0.3.0"}
 LORA_TARGET_MODULES = ["to_k", "to_q", "to_v", "to_out.0"]
 
 
@@ -328,6 +329,7 @@ def training_batch(
     paths: Paths,
     samples: list[TrainingSample],
     tokenizer: CLIPTokenizer,
+    tokenizer_2: CLIPTokenizer | None = None,
     *,
     config: dict[str, Any],
     object_name: str,
@@ -370,12 +372,66 @@ def training_batch(
         truncation=True,
         return_tensors="pt",
     )
-    return {
+    result = {
         "pixel_values": torch.stack(images),
         "masks": torch.stack(masks),
         "masked_images": torch.stack(masked_images),
         "input_ids": tokenized.input_ids,
         "attention_mask": tokenized.attention_mask,
+    }
+    if tokenizer_2 is not None:
+        tokenized_2 = tokenizer_2(
+            prompts,
+            max_length=tokenizer_2.model_max_length,
+            padding="max_length",
+            truncation=True,
+            return_tensors="pt",
+        )
+        result["input_ids_2"] = tokenized_2.input_ids
+        result["attention_mask_2"] = tokenized_2.attention_mask
+    return result
+
+
+def encode_text_conditioning(
+    text_encoder: torch.nn.Module,
+    batch: dict[str, torch.Tensor],
+    *,
+    family: str,
+    resolution: int,
+    device: torch.device,
+    text_encoder_2: torch.nn.Module | None,
+) -> tuple[torch.Tensor, dict[str, torch.Tensor] | None]:
+    """Encode SD2 or dual-encoder SDXL conditioning for one training batch."""
+
+    first_output = text_encoder(
+        input_ids=batch["input_ids"].to(device),
+        attention_mask=batch["attention_mask"].to(device),
+        output_hidden_states=family == "sdxl",
+    )
+    if family == "sd2":
+        return first_output[0], None
+    if family != "sdxl" or text_encoder_2 is None:
+        raise TrainingError(f"Invalid text-conditioning family: {family}")
+    second_output = text_encoder_2(
+        input_ids=batch["input_ids_2"].to(device),
+        attention_mask=batch["attention_mask_2"].to(device),
+        output_hidden_states=True,
+    )
+    encoder_hidden_states = torch.cat(
+        (
+            first_output.hidden_states[-2],
+            second_output.hidden_states[-2],
+        ),
+        dim=-1,
+    )
+    add_time_ids = torch.tensor(
+        [[resolution, resolution, 0, 0, resolution, resolution]],
+        device=device,
+        dtype=encoder_hidden_states.dtype,
+    ).repeat(encoder_hidden_states.shape[0], 1)
+    return encoder_hidden_states, {
+        "text_embeds": second_output.text_embeds,
+        "time_ids": add_time_ids,
     }
 
 
@@ -431,9 +487,11 @@ def cast_trainable_parameters(model: torch.nn.Module) -> None:
 
 def create_or_load_adapters(
     *,
+    family: str,
     model_id: str,
     revision: str | None,
     tokenizer: CLIPTokenizer,
+    tokenizer_2: CLIPTokenizer | None,
     trigger_tokens: list[str],
     rank: int,
     alpha: int,
@@ -441,7 +499,18 @@ def create_or_load_adapters(
     dtype: torch.dtype,
     resume_checkpoint: Path | None,
     gradient_checkpointing: bool,
-) -> tuple[PeftModel, PeftModel, AutoencoderKL, DDPMScheduler, list[int]]:
+) -> tuple[
+    PeftModel,
+    PeftModel,
+    PeftModel | None,
+    AutoencoderKL,
+    DDPMScheduler,
+    dict[str, list[int]],
+]:
+    if family not in PIPELINE_VERSIONS:
+        raise TrainingError(f"Unsupported model family: {family}")
+    if (family == "sdxl") != (tokenizer_2 is not None):
+        raise TrainingError("SDXL requires tokenizer_2 and SD2 must not provide it")
     load_kwargs: dict[str, Any] = {
         "subfolder": "unet",
         "torch_dtype": dtype,
@@ -463,6 +532,13 @@ def create_or_load_adapters(
             kwargs["revision"] = revision
     base_unet = UNet2DConditionModel.from_pretrained(model_id, **load_kwargs)
     base_text = CLIPTextModel.from_pretrained(model_id, **text_kwargs)
+    base_text_2: CLIPTextModelWithProjection | None = None
+    if family == "sdxl":
+        text_2_kwargs = {**text_kwargs, "subfolder": "text_encoder_2"}
+        base_text_2 = CLIPTextModelWithProjection.from_pretrained(
+            model_id,
+            **text_2_kwargs,
+        )
     vae = AutoencoderKL.from_pretrained(model_id, **vae_kwargs)
     noise_scheduler = DDPMScheduler.from_pretrained(model_id, **scheduler_kwargs)
     if int(base_unet.config.in_channels) != 9 or int(base_unet.config.out_channels) != 4:
@@ -472,7 +548,13 @@ def create_or_load_adapters(
         )
 
     if resume_checkpoint is None:
-        token_ids = add_trigger_tokens(tokenizer, base_text, trigger_tokens)
+        token_ids = {"text_encoder": add_trigger_tokens(tokenizer, base_text, trigger_tokens)}
+        if tokenizer_2 is not None and base_text_2 is not None:
+            token_ids["text_encoder_2"] = add_trigger_tokens(
+                tokenizer_2,
+                base_text_2,
+                trigger_tokens,
+            )
         unet = get_peft_model(
             base_unet,
             LoraConfig(
@@ -485,16 +567,27 @@ def create_or_load_adapters(
         )
         text_encoder = get_peft_model(
             base_text,
-            TrainableTokensConfig(token_indices=token_ids),
+            TrainableTokensConfig(token_indices=token_ids["text_encoder"]),
+        )
+        text_encoder_2 = (
+            get_peft_model(
+                base_text_2,
+                TrainableTokensConfig(token_indices=token_ids["text_encoder_2"]),
+            )
+            if base_text_2 is not None
+            else None
         )
     else:
         saved_tokenizer = CLIPTokenizer.from_pretrained(resume_checkpoint / "tokenizer")
         if saved_tokenizer.get_vocab() != tokenizer.get_vocab():
             raise TrainingError("Resume tokenizer differs from the selected checkpoint")
         base_text.resize_token_embeddings(len(saved_tokenizer))
-        token_ids = [
-            int(saved_tokenizer.convert_tokens_to_ids(token)) for token in sorted(trigger_tokens)
-        ]
+        token_ids = {
+            "text_encoder": [
+                int(saved_tokenizer.convert_tokens_to_ids(token))
+                for token in sorted(trigger_tokens)
+            ]
+        }
         unet = PeftModel.from_pretrained(
             base_unet,
             str(resume_checkpoint / "unet_adapter"),
@@ -505,13 +598,34 @@ def create_or_load_adapters(
             str(resume_checkpoint / "text_token_adapter"),
             is_trainable=True,
         )
+        text_encoder_2 = None
+        if tokenizer_2 is not None and base_text_2 is not None:
+            saved_tokenizer_2 = CLIPTokenizer.from_pretrained(
+                resume_checkpoint / "tokenizer_2"
+            )
+            if saved_tokenizer_2.get_vocab() != tokenizer_2.get_vocab():
+                raise TrainingError("Resume tokenizer_2 differs from the selected checkpoint")
+            base_text_2.resize_token_embeddings(len(saved_tokenizer_2))
+            token_ids["text_encoder_2"] = [
+                int(saved_tokenizer_2.convert_tokens_to_ids(token))
+                for token in sorted(trigger_tokens)
+            ]
+            text_encoder_2 = PeftModel.from_pretrained(
+                base_text_2,
+                str(resume_checkpoint / "text_token_adapter_2"),
+                is_trainable=True,
+            )
     if gradient_checkpointing:
         base_unet.enable_gradient_checkpointing()
         base_text.gradient_checkpointing_enable()
+        if base_text_2 is not None:
+            base_text_2.gradient_checkpointing_enable()
     cast_trainable_parameters(unet)
     cast_trainable_parameters(text_encoder)
+    if text_encoder_2 is not None:
+        cast_trainable_parameters(text_encoder_2)
     vae.requires_grad_(False).eval()
-    return unet, text_encoder, vae, noise_scheduler, token_ids
+    return unet, text_encoder, text_encoder_2, vae, noise_scheduler, token_ids
 
 
 def checkpoint_candidates(output_dir: Path) -> list[Path]:
@@ -530,7 +644,18 @@ def checkpoint_candidates(output_dir: Path) -> list[Path]:
             path / "text_token_adapter" / "adapter_config.json",
             path / "tokenizer" / "tokenizer_config.json",
         )
-        if all(item.is_file() for item in required):
+        family = None
+        try:
+            family = str(load_json(path / "trainer_state.json").get("model_family", "sd2"))
+        except (OSError, ValueError, json.JSONDecodeError):
+            continue
+        sdxl_required = (
+            path / "text_token_adapter_2" / "adapter_config.json",
+            path / "tokenizer_2" / "tokenizer_config.json",
+        )
+        if all(item.is_file() for item in required) and (
+            family != "sdxl" or all(item.is_file() for item in sdxl_required)
+        ):
             result.append((step, path))
     return [path for _, path in sorted(result)]
 
@@ -558,6 +683,8 @@ def save_adapter_bundle(
     unet: torch.nn.Module,
     text_encoder: torch.nn.Module,
     tokenizer: CLIPTokenizer,
+    text_encoder_2: torch.nn.Module | None,
+    tokenizer_2: CLIPTokenizer | None,
     optimizer: torch.optim.Optimizer,
     lr_scheduler: Any,
     trainer_state: dict[str, Any],
@@ -576,6 +703,14 @@ def save_adapter_bundle(
         safe_serialization=True,
     )
     tokenizer.save_pretrained(destination / "tokenizer")
+    if (text_encoder_2 is None) != (tokenizer_2 is None):
+        raise TrainingError("Second text encoder/tokenizer bundle is incomplete")
+    if text_encoder_2 is not None and tokenizer_2 is not None:
+        accelerator.unwrap_model(text_encoder_2).save_pretrained(
+            str(destination / "text_token_adapter_2"),
+            safe_serialization=True,
+        )
+        tokenizer_2.save_pretrained(destination / "tokenizer_2")
     torch.save(
         {
             "optimizer": optimizer.state_dict(),
@@ -646,6 +781,8 @@ def render_training_sample(
     unet: torch.nn.Module,
     text_encoder: torch.nn.Module,
     tokenizer: CLIPTokenizer,
+    text_encoder_2: torch.nn.Module | None,
+    tokenizer_2: CLIPTokenizer | None,
     vae: AutoencoderKL,
     trigger_token: str,
     smoke: bool,
@@ -672,8 +809,15 @@ def render_training_sample(
     prompt = f"a photo of {trigger_token} defect on {description}"
     unwrapped_unet = accelerator.unwrap_model(unet)
     unwrapped_text = accelerator.unwrap_model(text_encoder)
+    unwrapped_text_2 = (
+        accelerator.unwrap_model(text_encoder_2)
+        if text_encoder_2 is not None
+        else None
+    )
     unwrapped_unet.eval()
     unwrapped_text.eval()
+    if unwrapped_text_2 is not None:
+        unwrapped_text_2.eval()
     vae_dtype = next(vae.parameters()).dtype
 
     def cast_sampling_latents(
@@ -687,20 +831,43 @@ def render_training_sample(
         callback_kwargs["latents"] = callback_kwargs["latents"].to(dtype=vae_dtype)
         return callback_kwargs
 
+    family = str(config["model"]["family"])
     pipeline_kwargs: dict[str, Any] = {
         "unet": unwrapped_unet,
         "text_encoder": unwrapped_text,
         "tokenizer": tokenizer,
         "vae": vae,
         "torch_dtype": torch.float16,
-        "safety_checker": None,
-        "requires_safety_checker": False,
     }
+    if family == "sd2":
+        pipeline_kwargs.update(
+            {
+                "safety_checker": None,
+                "requires_safety_checker": False,
+            }
+        )
+    elif family == "sdxl":
+        if unwrapped_text_2 is None or tokenizer_2 is None:
+            raise TrainingError("SDXL sampling requires both text encoders and tokenizers")
+        pipeline_kwargs.update(
+            {
+                "text_encoder_2": unwrapped_text_2,
+                "tokenizer_2": tokenizer_2,
+                "add_watermarker": False,
+            }
+        )
+    else:
+        raise TrainingError(f"Unsupported sampling family: {family}")
     if revision is not None:
         pipeline_kwargs["revision"] = revision
-    pipeline: StableDiffusionInpaintPipeline | None = None
+    pipeline: StableDiffusionInpaintPipeline | StableDiffusionXLInpaintPipeline | None = None
     try:
-        pipeline = StableDiffusionInpaintPipeline.from_pretrained(
+        pipeline_class = (
+            StableDiffusionXLInpaintPipeline
+            if family == "sdxl"
+            else StableDiffusionInpaintPipeline
+        )
+        pipeline = pipeline_class.from_pretrained(
             model_id,
             **pipeline_kwargs,
         ).to(accelerator.device)
@@ -723,6 +890,8 @@ def render_training_sample(
         del pipeline
         unwrapped_unet.train()
         unwrapped_text.train()
+        if unwrapped_text_2 is not None:
+            unwrapped_text_2.train()
         torch.cuda.empty_cache()
     panel = Image.new("RGB", (resolution * 3, resolution), "white")
     panel.paste(image_crop, (0, 0))
@@ -755,6 +924,7 @@ def validate_saved_bundle(
     *,
     model_id: str,
     revision: str | None,
+    family: str = "sd2",
 ) -> dict[str, Any]:
     tokenizer = CLIPTokenizer.from_pretrained(bundle / "tokenizer")
     kwargs: dict[str, Any] = {
@@ -782,7 +952,27 @@ def validate_saved_bundle(
         base_text,
         str(bundle / "text_token_adapter"),
     )
-    if not isinstance(loaded_unet, PeftModel) or not isinstance(loaded_text, PeftModel):
+    loaded_text_2: PeftModel | None = None
+    base_text_2: CLIPTextModelWithProjection | None = None
+    if family == "sdxl":
+        tokenizer_2 = CLIPTokenizer.from_pretrained(bundle / "tokenizer_2")
+        base_text_2 = CLIPTextModelWithProjection.from_pretrained(
+            model_id,
+            subfolder="text_encoder_2",
+            **kwargs,
+        )
+        base_text_2.resize_token_embeddings(len(tokenizer_2))
+        loaded_text_2 = PeftModel.from_pretrained(
+            base_text_2,
+            str(bundle / "text_token_adapter_2"),
+        )
+    elif family != "sd2":
+        raise TrainingError(f"Unsupported bundle family: {family}")
+    if (
+        not isinstance(loaded_unet, PeftModel)
+        or not isinstance(loaded_text, PeftModel)
+        or (family == "sdxl" and not isinstance(loaded_text_2, PeftModel))
+    ):
         raise TrainingError("Saved adapters did not reload through PeftModel")
     result = {
         "unet_adapter_sha256": sha256_file(bundle / "unet_adapter" / "adapter_model.safetensors"),
@@ -792,7 +982,11 @@ def validate_saved_bundle(
         "tokenizer_vocab_size": len(tokenizer),
         "reload_class": type(loaded_unet).__name__,
     }
-    del loaded_unet, loaded_text, base_unet, base_text
+    if family == "sdxl":
+        result["text_token_adapter_2_sha256"] = sha256_file(
+            bundle / "text_token_adapter_2" / "adapter_model.safetensors"
+        )
+    del loaded_unet, loaded_text, loaded_text_2, base_unet, base_text, base_text_2
     gc.collect()
     return result
 
@@ -809,6 +1003,10 @@ def main() -> int:
         config = load_config(args.config)
         if args.object not in paths.objects or args.object not in config["objects"]:
             raise TrainingError(f"Unknown object: {args.object}")
+        family = str(config["model"]["family"])
+        if family not in PIPELINE_VERSIONS:
+            raise TrainingError(f"Unsupported model family: {family}")
+        pipeline_version = PIPELINE_VERSIONS[family]
         seed = paths.seed if args.seed is None else args.seed
         model_id = args.base_model or str(config["model"]["id"])
         revision = (
@@ -851,6 +1049,7 @@ def main() -> int:
             },
             "base_model": model_id,
             "base_model_revision": model_revision,
+            "model_family": family,
             "resolution": resolution,
             "rank": rank,
             "alpha": alpha,
@@ -863,26 +1062,25 @@ def main() -> int:
             "defect_types_sha256": defect_types_sha256,
             "status": "validated",
         }
-        signature_payload = {
-            key: dry_run_summary[key]
-            for key in (
-                "object",
-                "component_samples",
-                "type_counts",
-                "base_model",
-                "base_model_revision",
-                "resolution",
-                "rank",
-                "alpha",
-                "max_train_steps",
-                "learning_rate",
-                "token_learning_rate",
-                "training_config_sha256",
-                "manifest_sha256",
-                "selection_sha256",
-                "defect_types_sha256",
-            )
-        }
+        signature_keys = (
+            "object",
+            "component_samples",
+            "type_counts",
+            "base_model",
+            "base_model_revision",
+            *(("model_family",) if family == "sdxl" else ()),
+            "resolution",
+            "rank",
+            "alpha",
+            "max_train_steps",
+            "learning_rate",
+            "token_learning_rate",
+            "training_config_sha256",
+            "manifest_sha256",
+            "selection_sha256",
+            "defect_types_sha256",
+        )
+        signature_payload = {key: dry_run_summary[key] for key in signature_keys}
         dry_run_summary["run_signature"] = hashlib.sha256(
             json.dumps(signature_payload, sort_keys=True).encode("utf-8")
         ).hexdigest()
@@ -916,9 +1114,9 @@ def main() -> int:
             mixed_precision=mixed_precision,
         )
         if accelerator.num_processes != 1:
-            raise TrainingError("M10 currently requires a single local process")
+            raise TrainingError("LoRA training currently requires a single process")
         if accelerator.device.type != "cuda":
-            raise TrainingError("M10 SD2 training requires CUDA")
+            raise TrainingError("Inpainting LoRA training requires CUDA")
         if bool(config["training"]["allow_tf32"]):
             torch.backends.cuda.matmul.allow_tf32 = True
         torch.manual_seed(seed)
@@ -930,18 +1128,29 @@ def main() -> int:
         if revision is not None:
             tokenizer_kwargs["revision"] = revision
         tokenizer = CLIPTokenizer.from_pretrained(model_id, **tokenizer_kwargs)
+        tokenizer_2: CLIPTokenizer | None = None
+        if family == "sdxl":
+            tokenizer_2_kwargs = {**tokenizer_kwargs, "subfolder": "tokenizer_2"}
+            tokenizer_2 = CLIPTokenizer.from_pretrained(model_id, **tokenizer_2_kwargs)
         if resume_checkpoint is not None:
             tokenizer = CLIPTokenizer.from_pretrained(resume_checkpoint / "tokenizer")
+            if family == "sdxl":
+                tokenizer_2 = CLIPTokenizer.from_pretrained(
+                    resume_checkpoint / "tokenizer_2"
+                )
         (
             unet,
             text_encoder,
+            text_encoder_2,
             vae,
             noise_scheduler,
             token_ids,
         ) = create_or_load_adapters(
+            family=family,
             model_id=model_id,
             revision=revision,
             tokenizer=tokenizer,
+            tokenizer_2=tokenizer_2,
             trigger_tokens=trigger_tokens,
             rank=rank,
             alpha=alpha,
@@ -954,16 +1163,37 @@ def main() -> int:
         trainable_text = [
             parameter for parameter in text_encoder.parameters() if parameter.requires_grad
         ]
-        if not trainable_unet or not trainable_text:
-            raise TrainingError("LoRA or trigger-token adapter has no trainable parameters")
-        optimizer = torch.optim.AdamW(
+        trainable_text_2 = (
             [
-                {"params": trainable_unet, "lr": learning_rate},
+                parameter
+                for parameter in text_encoder_2.parameters()
+                if parameter.requires_grad
+            ]
+            if text_encoder_2 is not None
+            else []
+        )
+        if (
+            not trainable_unet
+            or not trainable_text
+            or (family == "sdxl" and not trainable_text_2)
+        ):
+            raise TrainingError("LoRA or trigger-token adapter has no trainable parameters")
+        optimizer_groups = [
+            {"params": trainable_unet, "lr": learning_rate},
+            {
+                "params": trainable_text,
+                "lr": float(config["training"]["token_learning_rate"]),
+            },
+        ]
+        if trainable_text_2:
+            optimizer_groups.append(
                 {
-                    "params": trainable_text,
+                    "params": trainable_text_2,
                     "lr": float(config["training"]["token_learning_rate"]),
-                },
-            ],
+                }
+            )
+        optimizer = torch.optim.AdamW(
+            optimizer_groups,
             betas=(
                 float(config["training"]["adam_beta1"]),
                 float(config["training"]["adam_beta2"]),
@@ -1007,15 +1237,37 @@ def main() -> int:
                 f"Checkpoint step {global_step} already reaches controlled stop {run_until_step}"
             )
 
-        unet, text_encoder, optimizer, lr_scheduler = accelerator.prepare(
-            unet,
-            text_encoder,
-            optimizer,
-            lr_scheduler,
-        )
+        if text_encoder_2 is None:
+            unet, text_encoder, optimizer, lr_scheduler = accelerator.prepare(
+                unet,
+                text_encoder,
+                optimizer,
+                lr_scheduler,
+            )
+        else:
+            (
+                unet,
+                text_encoder,
+                text_encoder_2,
+                optimizer,
+                lr_scheduler,
+            ) = accelerator.prepare(
+                unet,
+                text_encoder,
+                text_encoder_2,
+                optimizer,
+                lr_scheduler,
+            )
         vae.to(accelerator.device, dtype=weight_dtype)
         unet.train()
         text_encoder.train()
+        if text_encoder_2 is not None:
+            text_encoder_2.train()
+        accumulation_models = (
+            (unet, text_encoder, text_encoder_2)
+            if text_encoder_2 is not None
+            else (unet, text_encoder)
+        )
         optimizer.zero_grad(set_to_none=True)
         training_started = time.perf_counter()
         last_loss = float("nan")
@@ -1028,13 +1280,14 @@ def main() -> int:
                 paths,
                 samples,
                 tokenizer,
+                tokenizer_2,
                 config=config,
                 object_name=args.object,
                 resolution=resolution,
                 seed=seed,
                 micro_step=micro_step,
             )
-            with accelerator.accumulate(unet, text_encoder):
+            with accelerator.accumulate(*accumulation_models):
                 pixel_values = batch["pixel_values"].to(
                     accelerator.device,
                     dtype=weight_dtype,
@@ -1044,8 +1297,6 @@ def main() -> int:
                     accelerator.device,
                     dtype=weight_dtype,
                 )
-                input_ids = batch["input_ids"].to(accelerator.device)
-                attention_mask = batch["attention_mask"].to(accelerator.device)
                 generator = torch.Generator(device=accelerator.device).manual_seed(
                     sample_generator_seed(seed, args.object, micro_step, 99)
                 )
@@ -1079,14 +1330,19 @@ def main() -> int:
                     (noisy_latents, latent_masks, masked_latents),
                     dim=1,
                 )
-                encoder_hidden_states = text_encoder(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                )[0]
+                encoder_hidden_states, added_cond_kwargs = encode_text_conditioning(
+                    text_encoder,
+                    batch,
+                    family=family,
+                    resolution=resolution,
+                    device=accelerator.device,
+                    text_encoder_2=text_encoder_2,
+                )
                 model_prediction = unet(
                     model_input,
                     timesteps,
                     encoder_hidden_states,
+                    added_cond_kwargs=added_cond_kwargs,
                 ).sample
                 prediction_type = str(noise_scheduler.config.prediction_type)
                 if prediction_type == "epsilon":
@@ -1102,7 +1358,7 @@ def main() -> int:
                 accelerator.backward(loss)
                 if accelerator.sync_gradients:
                     accelerator.clip_grad_norm_(
-                        [*trainable_unet, *trainable_text],
+                        [*trainable_unet, *trainable_text, *trainable_text_2],
                         float(config["training"]["max_grad_norm"]),
                     )
                 optimizer.step()
@@ -1133,7 +1389,7 @@ def main() -> int:
                 "last_loss": last_loss,
                 "token_ids": token_ids,
                 "created_at": datetime.now(UTC).isoformat(),
-                "pipeline_version": PIPELINE_VERSION,
+                "pipeline_version": pipeline_version,
             }
             if (
                 global_step % checkpoint_every == 0
@@ -1147,6 +1403,8 @@ def main() -> int:
                     unet=unet,
                     text_encoder=text_encoder,
                     tokenizer=tokenizer,
+                    text_encoder_2=text_encoder_2,
+                    tokenizer_2=tokenizer_2,
                     optimizer=optimizer,
                     lr_scheduler=lr_scheduler,
                     trainer_state=trainer_state,
@@ -1179,6 +1437,8 @@ def main() -> int:
                     unet=unet,
                     text_encoder=text_encoder,
                     tokenizer=tokenizer,
+                    text_encoder_2=text_encoder_2,
+                    tokenizer_2=tokenizer_2,
                     vae=vae,
                     trigger_token=trigger_tokens[sample_type_index],
                     smoke=args.smoke,
@@ -1214,7 +1474,7 @@ def main() -> int:
             "last_loss": last_loss,
             "token_ids": token_ids,
             "created_at": datetime.now(UTC).isoformat(),
-            "pipeline_version": PIPELINE_VERSION,
+            "pipeline_version": pipeline_version,
         }
         save_adapter_bundle(
             final_dir,
@@ -1222,18 +1482,21 @@ def main() -> int:
             unet=unet,
             text_encoder=text_encoder,
             tokenizer=tokenizer,
+            text_encoder_2=text_encoder_2,
+            tokenizer_2=tokenizer_2,
             optimizer=optimizer,
             lr_scheduler=lr_scheduler,
             trainer_state=final_state,
         )
         peak_vram_gib = torch.cuda.max_memory_allocated(accelerator.device) / 2**30
-        del optimizer, lr_scheduler, unet, text_encoder, vae
+        del optimizer, lr_scheduler, unet, text_encoder, text_encoder_2, vae
         gc.collect()
         torch.cuda.empty_cache()
         reload_evidence = validate_saved_bundle(
             final_dir,
             model_id=model_id,
             revision=revision,
+            family=family,
         )
         report = {
             **final_state,
@@ -1253,7 +1516,8 @@ def main() -> int:
             encoding="utf-8",
         )
         LOGGER.info(
-            "M10 %s complete: %d steps in %.1fs, peak %.2fGiB",
+            "%s %s complete: %d steps in %.1fs, peak %.2fGiB",
+            family,
             args.object,
             global_step,
             training_elapsed,

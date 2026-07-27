@@ -9,12 +9,39 @@ from PIL import Image
 from src.training.train_inpaint_lora import (
     TrainingSample,
     checkpoint_candidates,
+    encode_text_conditioning,
     heldout_placement,
     output_directory,
     sample_tensors,
     square_context_bbox,
     step_sample_indices,
 )
+
+
+class DummyTextEncoder(torch.nn.Module):
+    def __init__(self, width: int, *, projected: bool = False) -> None:
+        super().__init__()
+        self.width = width
+        self.projected = projected
+
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        *,
+        output_hidden_states: bool,
+    ):
+        del attention_mask
+        batch, sequence = input_ids.shape
+        hidden = torch.ones((batch, sequence, self.width))
+        if not output_hidden_states:
+            return (hidden,)
+        return SimpleNamespace(
+            hidden_states=(hidden * 0, hidden * 2, hidden * 3),
+            text_embeds=(
+                torch.full((batch, self.width), 4.0) if self.projected else None
+            ),
+        )
 
 
 def test_step_schedule_is_reproducible_and_covers_each_epoch() -> None:
@@ -134,3 +161,29 @@ def test_heldout_placement_selects_requested_trigger_token(tmp_path: Path) -> No
 
     assert record["trigger_token"] == "<pcb1-type1>"
     assert np.asarray(mask).all()
+
+
+def test_sdxl_conditioning_concatenates_dual_encoders_and_time_ids() -> None:
+    batch = {
+        "input_ids": torch.ones((2, 5), dtype=torch.long),
+        "attention_mask": torch.ones((2, 5), dtype=torch.long),
+        "input_ids_2": torch.ones((2, 5), dtype=torch.long),
+        "attention_mask_2": torch.ones((2, 5), dtype=torch.long),
+    }
+    hidden, added = encode_text_conditioning(
+        DummyTextEncoder(3),
+        batch,
+        family="sdxl",
+        resolution=1024,
+        device=torch.device("cpu"),
+        text_encoder_2=DummyTextEncoder(4, projected=True),
+    )
+    assert hidden.shape == (2, 5, 7)
+    assert torch.all(hidden[..., :3] == 2)
+    assert torch.all(hidden[..., 3:] == 2)
+    assert added is not None
+    assert added["text_embeds"].shape == (2, 4)
+    assert added["time_ids"].tolist() == [
+        [1024, 1024, 0, 0, 1024, 1024],
+        [1024, 1024, 0, 0, 1024, 1024],
+    ]

@@ -1,8 +1,8 @@
 # 換你做：Colab 操作手冊
 
-> **狀態：骨架，尚未填內容。** 兩本 notebook 在里程碑 M10 / M11 完成、通過本機
-> 1-step smoke test 之後，這份文件才會被填滿（見 [PLAN.md](PLAN.md) M15）。
-> 填滿之前請不要照這份文件操作。
+> **狀態：部分完成。** M11 SDXL 的離線 bundle 與操作欄位已備妥，但 real-model
+> smoke、峰值 VRAM 與 Colab 正式 run 尚未執行；M10 SD2 欄位仍待 M15 補齊。
+> 在 M11 通過 real-model smoke 且跨專案 GPU 鎖解除前，請先不要執行 Notebook 2。
 
 ## 通用流程（每本 notebook 都一樣）
 
@@ -32,15 +32,15 @@
 | 4. 預估時數與 compute units | TBD (M15) |
 | 5. 跑完要下載哪些檔案 / 放回哪個路徑 | TBD (M15) |
 
-## Notebook 2 — `02_train_inpaint_lora_sdxl.ipynb`
+## Notebook 2 — `01_train_inpaint_lora_sdxl.ipynb`
 
 | 項目 | 內容 |
 |---|---|
-| 1. 上 Colab 方式 | TBD (M15) |
-| 2. Runtime 選型 | TBD (M15) |
-| 3. 需要的 Colab Secrets | TBD (M15) |
-| 4. 預估時數與 compute units | TBD (M15) |
-| 5. 跑完要下載哪些檔案 / 放回哪個路徑 | TBD (M15) |
+| 1. 上 Colab 方式 | 把 `D:\sdg-data\01-defectforge\colab\m11\` 的兩個 zip 上傳到 `MyDrive/sdg-portfolio/01-defectforge-visa/`，再從 Drive 開 notebook |
+| 2. Runtime 選型 | **L4 GPU（24 GB）**；notebook 會在總 VRAM <20 GiB 時先停止 |
+| 3. 需要的 Colab Secrets | `HF_TOKEN`，只由 `google.colab.userdata` 讀取；notebook 無明文 token |
+| 4. 預估時數與 compute units | 400 steps × 2 objects；實際時數、峰值 VRAM 與 CU 差額待第一次 Colab 正式 run 填回，未實測前不猜數字 |
+| 5. 跑完要下載哪些檔案 / 放回哪個路徑 | Drive `results/lora_sdxl/` 內 validation JSON、兩物件 `training_report.json`、`final/`、`samples/`；下載到本機 `results/colab/lora_sdxl/` |
 
 ---
 

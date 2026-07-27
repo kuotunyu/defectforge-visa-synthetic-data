@@ -639,3 +639,36 @@ U-statistic 用同一有限集合對自身比較時，會因排除 kernel 對角
 - `pcb1/copy-paste/type1` filtered 為空仍保留 `status=empty`，不補樣本、不改 taxonomy。
 - 每次 run 先雜湊全部 provenance，且在模型載入前檢查同機 existing VRAM；
   test blocklist 命中或資源上限超標皆 fail closed。
+
+---
+
+<a id="adr-018"></a>
+## ADR-018 — M11 延伸同一 trainer 支援 SDXL 雙文字編碼器，Colab 使用最小資料 bundle
+
+**狀態：Accepted**（2026-07-27）
+
+### 背景
+既有 M10 trainer 固定為 SD2 的單 tokenizer／單 CLIP text encoder。SDXL 若只換
+model ID 與解析度，會缺少第二組 token conditioning、pooled projection 與 time IDs；
+這種 smoke 即使勉強啟動也不是正確的 SDXL 訓練。另一方面完整 VisA tar 為 1.8 GB，
+M11 實際只需要 20 張 frozen few-shot image/mask 與四個 held-out placement。
+
+### 決策
+- `train_inpaint_lora.py` 保持單一訓練迴圈，以 `model.family` 分支 conditioning：
+  SD2 schema/version 保持 0.2.0；SDXL 使用 0.3.0。
+- SDXL 同時載入兩個 tokenizer/text encoder，兩者各訓一份 TrainableTokens adapter；
+  UNet 收到兩個 penultimate hidden states 的 concatenation、第二 encoder 的 projected
+  pooled embedding，以及 `[1024,1024,0,0,1024,1024]` time IDs。
+- SDXL 鎖定 public model revision `115134f...e41e` 與兩個 text encoder、UNet、VAE
+  四個 LFS SHA256；dry-run 必須先通過遠端 metadata 與 frozen data guards。
+- notebook 只負責 L4 preflight、Drive、Secrets、`uv sync`、fresh/resume 路由與
+  validator，不複製任何 loss／optimizer／scheduler 程式。
+- Colab bundle 只帶實際會讀到的來源，另寫 archive SHA256 manifest；不包含 `.git`、
+  `.env`、test data 或整份 VisA。
+
+### 後果
+- M10 已完成的 SD2 checkpoints、validator 與 pipeline version 不需重訓或改寫。
+- M11 在使用者操作前可完成 model-lock dry-run、notebook 靜態驗證與資料交接；
+  超過 2 GB 的 SDXL 權重下載與真正 smoke 仍需使用者明確同意。
+- M11 不得因 structural tests 通過就勾選；必須等 real-model smoke、resume、reload
+  與 peak VRAM 證據全齊。

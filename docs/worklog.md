@@ -346,6 +346,43 @@ M11 SDXL notebook／Colab L4 執行與 M15 交接仍需使用者醒來後接續�
 
 ---
 
+## 2026-07-27 — Session 17：M11 SDXL 雙 encoder trainer 與 Colab 離線交接 foundation
+
+### 做了什麼
+- 新增 `configs/lora_sdxl.yaml`，鎖定 public SDXL inpainting revision 與
+  text encoder 1/2、UNet、VAE 四個 LFS SHA256
+- 延伸既有單一 trainer：SDXL 雙 tokenizer／雙 TrainableTokens adapter、
+  concatenated penultimate states、pooled projection、time IDs、雙 adapter save/resume/reload
+- 保留 SD2 pipeline 0.2.0 與既有 bundle schema；SDXL 獨立標 0.3.0
+- 新增 11-cell 薄封裝 Colab notebook、靜態 validator 與最小 bundle builder
+- 依 `df-finetune` SOP 與官方 Diffusers SDXL conditioning 文件更新介面與 ADR-018
+
+### 驗證與產物
+- pcb1 / capsules SDXL dry-run 皆通過：23 / 12 components、10 source images/object、
+  frozen 三組 checksum、model revision 與四個 LFS hashes 全相符
+- 第一次 dry-run 曾因手抄 VAE hash 少字而 fail closed；從 HF metadata 修正後才通過
+- dual-conditioning 單元測試驗證 hidden concat、pooled embedding 與 1024 time IDs
+- notebook validator：11 cells、5 sections、0 literal credentials、0 duplicated training loop
+- 完整 CPU regression：67 tests passed；Ruff、既有 SD2 bundle validator 與 skill validator
+  全部通過
+- bundle：188 source files / 48 data files，test blocklist hits = 0；位置
+  `D:\sdg-data\01-defectforge\colab\m11\`
+  - archive bytes、file counts 與 SHA256 以同目錄 `m11_colab_bundle.json` 為唯一準據
+  - 舊版 bundle 保留在 `archive-pre-final-20260727\`，可回復、未刪除
+
+### 未完成與下一步
+- SDXL base weights 超過無人值守 2 GB 下載界線，未下載、未冒充 real-model smoke
+- 3_FormosaNLU 正式生成期間遵守跨專案 GPU 鎖；本輪只做 CPU／文件／測試，
+  未啟動 CUDA、Ollama 或修改其程序
+- M11 PLAN 保持未勾；等使用者同意下載後跑本機 1-step smoke、fresh/resume、
+  fresh PEFT reload 並記錄 peak VRAM，再上 Colab L4 正式訓練
+
+### 換你做
+醒來後決定是否同意下載 pinned SDXL 權重並執行本機 smoke；GitHub repo/remote/push
+仍未建立或操作。
+
+---
+
 ## 2026-07-27 — Session 12：M10 SD2 LoRA 正式訓練、resume 與獨立重載
 
 ### 做了什麼
