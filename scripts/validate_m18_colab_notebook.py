@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 from pathlib import Path
@@ -59,6 +60,11 @@ def main() -> int:
     code_cells = [
         cell for cell in notebook["cells"] if cell.get("cell_type") == "code"
     ]
+    for index, cell in enumerate(code_cells):
+        try:
+            ast.parse("".join(cell.get("source", [])))
+        except SyntaxError as exc:
+            raise RuntimeError(f"Notebook code cell {index} is not valid Python") from exc
     if any(cell.get("outputs") for cell in code_cells):
         raise RuntimeError("Notebook must be committed without execution outputs")
     if any(cell.get("execution_count") is not None for cell in code_cells):
