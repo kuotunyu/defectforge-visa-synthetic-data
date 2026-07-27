@@ -148,3 +148,48 @@ uv run --frozen python scripts/validate_diffusion.py `
 
 Both validators must finish with `"status": "passed"`. The searched report additionally
 must show 1,000 original baselines compared and zero regressed score deltas.
+
+## SDXL searched comparison
+
+The preregistered SDXL comparison uses the Colab-trained adapters and the same monotonic
+searched protocol, with 250 samples per object. The base model is
+`diffusers/stable-diffusion-xl-1.0-inpainting-0.1` at revision
+`115134f363124c53c7d878647567d04daf26e41e`.
+
+### PCB formal bucket
+
+| object | records | wall time | peak VRAM | improved / equal / regressed | mean score | mean delta |
+|---|---:|---:|---:|---:|---:|---:|
+| pcb1 | 250 | 11,472.76 s | 9.000 GiB | 188 / 62 / 0 | 0.727411 | +0.121870 |
+| capsules | 250 | 10,725.78 s | 9.000 GiB | 210 / 40 / 0 | 0.548296 | +0.144467 |
+| **total** | **500** | **22,198.54 s** | **9.000 GiB** | **398 / 102 / 0** | **0.637854** | **+0.133169** |
+
+The independent validator passed all 250 records, 250 unique image hashes, 250 unique mask
+hashes, 104 frozen source files, and zero test-blocklist hits. The selected guidance counts
+were 5.0: 68, 7.5: 62, 10.0: 65, 12.5: 55; selected crop-ratio counts were 1.8: 14,
+2.5: 90, 3.5: 146. All four candidate indices were selected.
+
+Automatic integrity and monotonic refine checks do not imply semantic realism. Human review
+found a mixed bucket: some local burns, stains, scratches, and discolouration are plausible,
+but multiple edits resemble beetles, insects, or inserted IC components. The formal bucket
+is retained unchanged so M16/M17 can measure its actual downstream utility. See
+[`sdxl_searched_visual_review.md`](sdxl_searched_visual_review.md) and
+[`figures/sdxl_searched_pcb1.png`](figures/sdxl_searched_pcb1.png).
+
+Capsules independently passed 250 records, 250 unique image hashes, 250 unique mask hashes,
+104 frozen source files, and zero test-blocklist hits. Selected guidance counts were
+5.0: 98, 7.5: 40, 10.0: 60, 12.5: 52; crop-ratio counts were 1.8: 87, 2.5: 64,
+3.5: 99. All four candidate indices were selected.
+
+Capsules visual review found plausible type-1 corrosion, roughness, discolouration, and
+coating-loss examples. Type-0, however, repeatedly hallucinated purple jewellery, buttons,
+lenses, or mechanical rings across several masks and parameter choices. This systematic
+semantic failure is retained in the formal bucket and recorded in
+[`figures/sdxl_searched_capsules.png`](figures/sdxl_searched_capsules.png).
+
+The combined validator passed all 500 records, 500 unique image hashes, 500 unique mask
+hashes, 208 frozen source files, 500 original-baseline comparisons, zero blocklist hits, and
+zero refine-score regressions. Across both objects, selected guidance counts were 5.0: 166,
+7.5: 102, 10.0: 125, 12.5: 107; crop counts were 1.8: 101, 2.5: 154, 3.5: 245.
+The automatic searched objective improved 398 records and retained 102 baselines, but the
+human review demonstrates that this monotonic score is not a semantic-validity metric.

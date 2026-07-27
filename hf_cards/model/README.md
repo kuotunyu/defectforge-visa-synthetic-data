@@ -98,8 +98,9 @@ interface.
 - Ten training images per object create a high risk of overfitting and limited defect
   diversity.
 - Trigger tokens are pseudo-types and may mix multiple visual failure mechanisms.
-- SDXL `pcb1-type0` can hallucinate component- or insect-like shapes; search improves
-  boundary fit but does not guarantee semantic correctness.
+- SDXL `pcb1-type0` can hallucinate component- or insect-like shapes, while capsules
+  `type0` can repeatedly produce jewellery-, button-, lens-, or mechanical-ring-like
+  objects; search improves boundary fit but does not guarantee semantic correctness.
 - Inpainting quality is sensitive to mask geometry, crop ratio, guidance scale, and
   background domain.
 - These adapters cover only `pcb1` and `capsules`; they are not general industrial

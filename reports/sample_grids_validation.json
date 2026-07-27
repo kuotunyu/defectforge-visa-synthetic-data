@@ -1,0 +1,219 @@
+{
+  "objects": {
+    "capsules": {
+      "figure": "reports/figures/sample_grid_capsules.png",
+      "figure_sha256": "45e314591a92841fb866e772c304919b03df954d2ff2eb49e4feeb22b12f1732",
+      "samples": {
+        "real": [
+          {
+            "defect_type": "real",
+            "image_sha256": "ef6c0b8b14447ca8e1ae5b1b51ff1543d406a8c80549f432c4b08a5dece865c2",
+            "mask_sha256": "80980eaf9947b745d9097e57ba45e379a0399cf34560acf23009539cbcdda549",
+            "sample_id": "004"
+          },
+          {
+            "defect_type": "real",
+            "image_sha256": "4375fdeea646b9587119cff1a0cd9418d83eaa33a703f93f07fc3d6955ce8501",
+            "mask_sha256": "878484630f12558ac24b198dddc064003aad30b1a3b778f03a4a6dace8297d42",
+            "sample_id": "009"
+          },
+          {
+            "defect_type": "real",
+            "image_sha256": "23b383e42c111073db810a753681b898ee65a23629966e9caaafc0ab09a63175",
+            "mask_sha256": "2c20aead1668744497de678b657e2575090f81fbfcdb64682538e3f7b3e3af73",
+            "sample_id": "010"
+          }
+        ],
+        "stageA_copypaste": [
+          {
+            "defect_type": "type0",
+            "image_sha256": "561663a09dc48323763a136f9e44fe6561b22ac529845365485c1db3f0a41c89",
+            "mask_sha256": "eb02e9b91ec13956ea18bc534a8acb5c66e6031c9ef45e3d397b331e7b478bf1",
+            "sample_id": "capsules__type0__004__00004"
+          },
+          {
+            "defect_type": "type1",
+            "image_sha256": "ab5ba52ebce5348895fd31176b01151cc85cf3c85677aab36de2c9bbcdfde5ce",
+            "mask_sha256": "2119a5cb3ae316b1dfa26059fa15ab038836c387dcfb738ac2c99ed33df7d4df",
+            "sample_id": "capsules__type1__050__00379"
+          },
+          {
+            "defect_type": "type0",
+            "image_sha256": "20e01f9ba0fc6bd991693b80436256cced1e0e23a2050004b98d0b5b24012ec0",
+            "mask_sha256": "0794ac19d8d2340dcb7931597b53ba6edb24854db8a85ba1ed795a37f4c08710",
+            "sample_id": "capsules__type0__004__00008"
+          }
+        ],
+        "stageA_procedural": [
+          {
+            "defect_type": "crack",
+            "image_sha256": "cdfdbc8f653c302139d938a0ab82b9deeb483ec1fc6a5fd34440909e8f77c577",
+            "mask_sha256": "702530e26c3fa7d63430b0fe467a8fa1675b2728f75f34b231016ba0d12f115e",
+            "sample_id": "capsules__procedural_crack__00125"
+          },
+          {
+            "defect_type": "perlin",
+            "image_sha256": "2916a1645b755d795c0094d062456d62e5c512a9f11b4cac066fad369f922f1e",
+            "mask_sha256": "83b46e70d275f9557ce5d2221fe0280aa89d123b86ce447537f45e57b28a385a",
+            "sample_id": "capsules__procedural_perlin__00000"
+          },
+          {
+            "defect_type": "scratch",
+            "image_sha256": "5bd393513f6b6df4b1fbeeafad998b0fc279e22da074ecef976b45eef2393710",
+            "mask_sha256": "c0ea4a84dd1468a56a4341f41716d11e82afc4ea9927b6ffe7d037294a7669b3",
+            "sample_id": "capsules__procedural_scratch__00250"
+          }
+        ],
+        "stageB_sd2": [
+          {
+            "defect_type": "type0",
+            "image_sha256": "87fe90b4504a09a02148f6aeb57a451f00b77152bab0fd38ccc9bca296fcb336",
+            "mask_sha256": "f144bd10fdb03c1a73c7e9286fe1ff4068ea0b82dc72b55a9005412bf1e35a79",
+            "sample_id": "capsules__type0__001__00"
+          },
+          {
+            "defect_type": "type1",
+            "image_sha256": "6eeb3f4fdf20945268f9da4c020bb071539417f30dd00248bc0654553573f7cf",
+            "mask_sha256": "93e1709d7a10e3499af18d8d37bcabec1a6ef1813ae96e335d6d1d75feaf6c1f",
+            "sample_id": "capsules__type1__001__01"
+          },
+          {
+            "defect_type": "type0",
+            "image_sha256": "6c3a09dd6af04877223d093b0f01dc3db72271defedb5aedfcd09642bddb02cf",
+            "mask_sha256": "7b9a890c6877dd9e1a87879e5c41bfb0b5b1a9c0ddf857410ce70fc94a6f5f8e",
+            "sample_id": "capsules__type0__001__02"
+          }
+        ],
+        "stageB_sdxl": [
+          {
+            "defect_type": "type0",
+            "image_sha256": "cbe1de5d0d90ff7267b3b4cae063b89f9a0f70348f6a9831abbf03c7f5033358",
+            "mask_sha256": "f144bd10fdb03c1a73c7e9286fe1ff4068ea0b82dc72b55a9005412bf1e35a79",
+            "sample_id": "capsules__type0__001__00"
+          },
+          {
+            "defect_type": "type1",
+            "image_sha256": "dd0a69fa9f0c8422008d393ae47bdb27639f16aafe4cae714072e6bc330a2c49",
+            "mask_sha256": "93e1709d7a10e3499af18d8d37bcabec1a6ef1813ae96e335d6d1d75feaf6c1f",
+            "sample_id": "capsules__type1__001__01"
+          },
+          {
+            "defect_type": "type0",
+            "image_sha256": "f59b11ea5a2f14afbe8fcf26f8041c7d4a618f602345d436d1204b4e51ddb374",
+            "mask_sha256": "7b9a890c6877dd9e1a87879e5c41bfb0b5b1a9c0ddf857410ce70fc94a6f5f8e",
+            "sample_id": "capsules__type0__001__02"
+          }
+        ]
+      }
+    },
+    "pcb1": {
+      "figure": "reports/figures/sample_grid_pcb1.png",
+      "figure_sha256": "8d88001f17b456c4c30574d645ff456474cefe581a7208c1cd4f65f08a5114e5",
+      "samples": {
+        "real": [
+          {
+            "defect_type": "real",
+            "image_sha256": "cf562b8b172b50417487d0640885c1d89b930492b4524b68c9fd4cc003dee643",
+            "mask_sha256": "c1f1bd039b539ed56697bbeafef4f2701687372a2dabd6355503c8af1f4f2299",
+            "sample_id": "004"
+          },
+          {
+            "defect_type": "real",
+            "image_sha256": "e05c40ca6a95bfcea04598dac35b13f6b7f41a45901168abcf0def187ebcf0e9",
+            "mask_sha256": "5e6d3737d9c622691eaf48574ed90490d378fbe6b9e1b7d81b76d4859c39315f",
+            "sample_id": "009"
+          },
+          {
+            "defect_type": "real",
+            "image_sha256": "42a0ee0c7d9e46733d3c19521d00bed0b1bc702f3f53488289014f44dbf9b020",
+            "mask_sha256": "8e728bcf798f63a8cfe8f0b27a9bbfc930d98251c6d75c6b3f63a5303c47fdd1",
+            "sample_id": "010"
+          }
+        ],
+        "stageA_copypaste": [
+          {
+            "defect_type": "type0",
+            "image_sha256": "47b61234ed4121cc23510369d2cea0166eb68b57a983038798d83b70b925925e",
+            "mask_sha256": "9625781aba63bc4104d1ed8e02a65717f37a0633e59f86fcc8d60417e0bd7eec",
+            "sample_id": "pcb1__type0__009__00022"
+          },
+          {
+            "defect_type": "type0",
+            "image_sha256": "9f2c52cb46ea23fa5ea725ae0612d0633baa13d296591df5c1b5454da2bff2d4",
+            "mask_sha256": "45cf3e63d93d3e4d03ece2affb7384ad1758796d090c576b498e9a836cbb369c",
+            "sample_id": "pcb1__type0__009__00045"
+          },
+          {
+            "defect_type": "type0",
+            "image_sha256": "40f2f7535d40af751509fcd53dbcade00f11c00b5ae36191e921ce262fe5f9f7",
+            "mask_sha256": "0913d5132ba95ac7bb32941d387059b659b43954936fb8b316426b8eed1b7e48",
+            "sample_id": "pcb1__type0__009__00050"
+          }
+        ],
+        "stageA_procedural": [
+          {
+            "defect_type": "crack",
+            "image_sha256": "7423387b1d7eb907b77a05d0a9527c1e0e5d69aa4ff475ad02e693d8879b8be7",
+            "mask_sha256": "5c2b5f90c4dbba786bbffb2479a178024da9c635de96149d225fa04cd99f21d9",
+            "sample_id": "pcb1__procedural_crack__00125"
+          },
+          {
+            "defect_type": "perlin",
+            "image_sha256": "dd66713b82b15f4300a0992da4f1195b7e486b49c2717884e6ce06454c68cb83",
+            "mask_sha256": "e318d4f5d61b59830a44e844b8e908cd46d5b6f8eaff26b13aea8c638da6072e",
+            "sample_id": "pcb1__procedural_perlin__00001"
+          },
+          {
+            "defect_type": "scratch",
+            "image_sha256": "58e3c1e736620677ece87049bb60c83d9612ef3dfde9e61f9d5498f88d644f5e",
+            "mask_sha256": "911eb390b5288f64b84f369aac6b2ef905567cd9fcb9ab21398766e50591cd0f",
+            "sample_id": "pcb1__procedural_scratch__00252"
+          }
+        ],
+        "stageB_sd2": [
+          {
+            "defect_type": "type0",
+            "image_sha256": "f1e183a32a7938e9c3d6536b5618ab19ad4de41523cd5f2f54aff1686972f9a3",
+            "mask_sha256": "7f3e228dd2b96d2a7dab5361a9865c14d46c43dcfa56ea3cab982c7086b7e6ca",
+            "sample_id": "pcb1__type0__0000__02"
+          },
+          {
+            "defect_type": "type1",
+            "image_sha256": "8eaf608a8c88072e09100a3658f4d70aa720d3950f1837df424f17fa10217e1d",
+            "mask_sha256": "a7af5c2277adfe69e85831a94e219fc7358294ea6977aa3e42078378780d8679",
+            "sample_id": "pcb1__type1__0000__01"
+          },
+          {
+            "defect_type": "type0",
+            "image_sha256": "f562efe86669550d4e466a19196957908266fbbe4596ea324ecb5dc7bc9fe320",
+            "mask_sha256": "df0be481240929888052fff14cd8a0d6be74669c3b185d8aa8c8cde398aecad6",
+            "sample_id": "pcb1__type0__0003__00"
+          }
+        ],
+        "stageB_sdxl": [
+          {
+            "defect_type": "type0",
+            "image_sha256": "75d3a23e7dfa85d8a7670228eb63c43d825709201a740a19dab0874d79b166a9",
+            "mask_sha256": "168f2dc942daa4d5aa1afcaf02e1aeb894c21a9a2311db74be0a7ef24109ef2f",
+            "sample_id": "pcb1__type0__0000__00"
+          },
+          {
+            "defect_type": "type1",
+            "image_sha256": "30f4f5737c1205cdcac9115c347ee0148f33bd45b5f3066b60411be1f1c30925",
+            "mask_sha256": "a7af5c2277adfe69e85831a94e219fc7358294ea6977aa3e42078378780d8679",
+            "sample_id": "pcb1__type1__0000__01"
+          },
+          {
+            "defect_type": "type0",
+            "image_sha256": "7def10166d48e4791198edd06dec8b0f0d62c816a1257872aff3e214e370be8d",
+            "mask_sha256": "7f3e228dd2b96d2a7dab5361a9865c14d46c43dcfa56ea3cab982c7086b7e6ca",
+            "sample_id": "pcb1__type0__0000__02"
+          }
+        ]
+      }
+    }
+  },
+  "schema_version": 1,
+  "status": "passed",
+  "visual_inspection_required": true
+}

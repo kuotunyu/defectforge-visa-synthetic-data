@@ -1,0 +1,50 @@
+{
+  "bucket": "searched",
+  "config_sha256": "edbe3df7b82cd23414a3a63b644613b55a67a88c4b0b79f246c7278371e1bead",
+  "defect_types_sha256": "0c7669287fb1b8f48b3f6aff202eaefc914e8bfc1d892b9e63f88b20996cb41a",
+  "manifest_sha256": "3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c",
+  "mean_refine_score": 0.548296128224121,
+  "mean_visible_change": 0.25041671046614644,
+  "objects": {
+    "capsules": {
+      "type0": 187,
+      "type1": 63
+    }
+  },
+  "original_baselines_compared": 250,
+  "output": "D:\\sdg-data\\01-defectforge\\synthetic\\stageB_sdxl\\searched",
+  "records": 250,
+  "refine_selection": {
+    "crop_ratio_counts": {
+      "1.8": 87,
+      "2.5": 64,
+      "3.5": 99
+    },
+    "guidance_scale_counts": {
+      "10": 60,
+      "12.5": 52,
+      "5": 98,
+      "7.5": 40
+    },
+    "score_delta": {
+      "equal": 40,
+      "improved": 210,
+      "maximum": 0.706817533635556,
+      "mean": 0.14446709082292833,
+      "minimum": 0.0,
+      "regressed": 0
+    },
+    "selected_candidate_index_counts": {
+      "0": 40,
+      "1": 68,
+      "2": 77,
+      "3": 65
+    }
+  },
+  "selection_sha256": "7021234d0bef51926832591d60c205fa7273e0cc32fd0ae5348740094b060ea2",
+  "status": "passed",
+  "test_blocklist_hits": 0,
+  "unique_image_sha256": 250,
+  "unique_mask_sha256": 250,
+  "unique_source_files_hashed": 104
+}
