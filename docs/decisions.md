@@ -540,3 +540,33 @@ M10 開工時重新查證 ADR-001 指定的
 - [Preservation mirror model card](https://huggingface.co/sd2-community/stable-diffusion-2-inpainting)
 - [Diffusers Stable Diffusion inpainting API](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint)
 - [Diffusers LoRA training guide](https://github.com/huggingface/diffusers/blob/main/docs/source/en/training/lora.md)
+
+---
+
+<a id="adr-015"></a>
+## ADR-015 — Refine 搜尋必須包含 byte-reproducible original baseline，分數不得退步
+
+**狀態**：Accepted ｜ **日期**：2026-07-27
+
+### 脈絡
+M12 最初的 deterministic stratified schedule 每筆抽四個不同的
+`(guidance_scale, crop_ratio)`，雖能覆蓋四個 guidance 與三個 crop ratio，卻不保證
+包含 original 的 `(7.5, 2.5)`。Formal searched 的前 111 筆稽核發現 97 筆分數提高、
+5 筆相同、9 筆反而下降；平均差仍為正並不能掩蓋逐筆退步。這也表示
+`original` / `searched` 配對消融沒有「搜尋至少不比基準差」的基本保證。
+
+### 決策
+- searched candidate 0 固定為 original 的 guidance 7.5、crop ratio 2.5 與
+  candidate-index-0 generator seed；其評分證據必須逐欄等於 original candidate 0。
+- 另外三個候選以 deterministic greedy coverage 選取；四個候選合計仍覆蓋四個
+  guidance 與三個 crop ratio，且 parameter pair 不重複。
+- original bucket 保留 pipeline v0.5.0；修正排程的 searched bucket 升為 v0.6.0，
+  不混用或 resume 舊版 sidecar。
+- 獨立 validator 要求 selected score 等於四候選最大值且不低於 original；若 selected
+  candidate 是 0，輸出影像 SHA256 必須等於 original。
+
+### 後果
+- 每筆 searched 在目前 heuristic 下保證單調不退步，同時保留完整搜尋維度覆蓋。
+- 每筆少一個純探索候選，換取可解釋且可驗證的 baseline safety。
+- 問題排程產生的 formal prefix 移到 D: 的隔離目錄，不納入 canonical metadata；
+  原始失敗數字保留在本 ADR 與 worklog，不用挑圖或改寫歷史掩蓋。

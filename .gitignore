@@ -25,6 +25,14 @@ kaggle.json
 /reports/placements_smoke*_validation.json
 /reports/figures/placements_det_*_check_*.png
 /reports/placements_det_*_report.md
+# Local M12 diffusion calibration, determinism, and validator grids. Formal
+# original/searched/comparison figures do not contain "smoke" and remain tracked.
+/reports/figures/diffusion_*smoke*.png
+/reports/stageB_sd2*smoke*.json
+# Per-object checkpoints used while the other object still occupies the GPU.
+# The canonical combined original/searched validation JSON remains tracked.
+/reports/stageB_sd2_*_pcb1_validation.json
+/reports/stageB_sd2_*_capsules_validation.json
 # results/ must stay tracked as a directory so results/colab/.gitkeep survives:
 # ignore its CONTENTS, not the directory itself.
 /results/*

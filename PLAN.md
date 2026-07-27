@@ -103,10 +103,14 @@
   - **驗證**：`--max-train-steps 1 --smoke` 跑通薄封裝並存出權重檔；斷點續跑分支（有／無 checkpoint）
     各跑一次；notebook 內無明文 token；峰值 VRAM 記進 `instructions_for_me.md`
 
-- [ ] **M12** 👀 `src/synthetic/generate_diffusion.py` — SD2 生成 **500 張／物件** ＋ refine 搜尋
+- [x] **M12** 👀 `src/synthetic/generate_diffusion.py` — SD2 生成 **500 張／物件** ＋ refine 搜尋
   - **無人值守**：SD2 部分可跑到底；**SDXL 部分等 M11 的 Colab 權重回來才做**
   - **驗證**：`metadata.jsonl` 每行通過 schema（缺欄即失敗）；同 seed 重跑位元相同；
     `original/` 與 `searched/` 並排 grid **自己看**，確認 refine 真的變好（沒變好就檢討 `refine_score` 權重）
+  - **完成證據**：original / searched 各 1,000 筆；searched 逐筆保留 original baseline，
+    778 改善 / 222 相同 / 0 退步；兩桶皆 1,000 unique image/mask SHA、0 blocklist hit，
+    完整 validator、37 tests、Ruff 與 type-balanced 四欄目視通過，詳見
+    `reports/generation_report.md`
 
 ---
 

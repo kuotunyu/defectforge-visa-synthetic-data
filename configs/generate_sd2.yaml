@@ -1,0 +1,48 @@
+model:
+  id: sd2-community/stable-diffusion-2-inpainting
+  revision: 5f74973cbb64c8568780732c17f43eb269d63a0d
+  family: sd2
+  resolution: 512
+  expected_files:
+    text_encoder/model.safetensors: cce6febb0b6d876ee5eb24af35e27e764eb4f9b1d0b7c026c8c3333d4cfc916c
+    unet/diffusion_pytorch_model.safetensors: 9bcbb17f54b039f58bf78677fab8cd8a35dd686f6c9dd553e3646a8b0aaff41a
+    vae/diffusion_pytorch_model.safetensors: a1d993488569e928462932c8c38a0760b874d166399b14414135bd9c42df5815
+
+objects:
+  pcb1:
+    description: a printed circuit board
+    adapter: lora_sd2/pcb1/seed_42/final
+    unet_adapter_sha256: 471cc2e38a4bdb7024919f46c9469b5c60c328d8756a11ae7b88b6ba9dab1770
+    text_token_adapter_sha256: 68b8af46a35c4a5666ddd8f8c3f019d3f847daf5b240d04641a3e92cf3e441e0
+    placements_sha256: 58532c6da7795bc97cb9f5dee5193a7f2f3ba208e1c350e70d63130782c141d5
+  capsules:
+    description: green capsules on inspection cloth
+    adapter: lora_sd2/capsules/seed_42/final
+    unet_adapter_sha256: 3025b8753df9d27015a4a257b72092d4abfbadcfe14a45a5a6e6e41bde7ef64f
+    text_token_adapter_sha256: c4b3ef4c64c2ac1cdca726d85318e246393b8447f3f678329e2a1169fe79af26
+    placements_sha256: 148f427ec3549f2f187b13afc6ec0ade8589842b0a977ca10786d391f01ea323
+
+generation:
+  n: 500
+  num_inference_steps: 40
+  guidance_scale: 7.5
+  crop_ratio: 2.5
+  strength: 1.0
+  negative_prompt: text, letters, logo, watermark, signature, duplicated object, deformed object
+  blend: feather_alpha
+  blend_dilation_px: 2
+  blend_feather_sigma: 3.0
+
+refine:
+  score_version: boundary-gradient-v2
+  num_search_run: 4
+  guidance_grid: [5.0, 7.5, 10.0, 12.5]
+  crop_ratio_grid: [1.8, 2.5, 3.5]
+  visible_change_target: 0.12
+  visible_change_tolerance: 0.10
+  visible_change_weight: 0.25
+  seam_weight: 0.65
+  artifact_weight: 0.10
+
+output:
+  name: stageB_sd2

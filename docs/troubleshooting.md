@@ -216,3 +216,23 @@ M10 panel 又刻意顯示尚未做 ADR-004 全解析度 blend 的原始 inpaint 
 near-copy 規則過濾。
 
 **預防**：里程碑驗收分開記錄「訓練／重載正確」與「最終合成品質」；不得用前者替代後者。
+
+---
+
+## 2026-07-27 — Refine 網格有覆蓋不代表 searched 逐筆不會退步
+
+**里程碑**：M12
+
+**症狀**：初版四候選 schedule 的平均 searched score 上升，但前 111 筆仍有 9 筆低於
+同 sample ID 的 original score。
+
+**根因**：deterministic stratified schedule 覆蓋了四個 guidance 與三個 crop ratio，
+卻可能漏掉 original `(7.5, 2.5)` 配對；「四選一最大值」只能保證不低於當次四個候選，
+不能保證不低於另一桶的 baseline。
+
+**解法**：searched v0.6.0 固定 candidate 0 為 original 的參數與 candidate-index-0 seed，
+另外三個候選再做 greedy grid coverage。舊 prefix 移到隔離目錄並從乾淨 canonical
+目錄重跑，沒有混用 sidecar。
+
+**預防**：不能只看平均 refine score。獨立 validator 必須逐 sample 比對 candidate 0
+與 original evidence、selected score 下界，以及選回 baseline 時的 image SHA256。

@@ -258,5 +258,13 @@ for each sample in original/:
 - `guidance_scale` ∈ {5.0, 7.5, 10.0, 12.5}
 - `crop_ratio` ∈ {1.8, 2.5, 3.5}（mask bbox 的外擴倍率）
 
+M12 smoke 後鎖定 `boundary-gradient-v2`：`original` 使用 pipeline v0.5.0；
+searched v0.6.0 把 candidate 0 固定為 original 的 guidance 7.5、crop ratio 2.5 與
+candidate-index-0 seed，另外三次採 deterministic stratified schedule。四次合計保證
+四個 guidance 與三個 crop ratio 全覆蓋，且搜尋分數不可能低於 original。評分權重為 mask 內可見變化 0.25、
+相對 frozen background 的 mask-boundary Sobel excess gradient 0.65、clipped-pixel artifact
+0.10。全解析度縫合使用 2px dilation + 3px Gaussian feather。這個分數只負責四選一，
+**不取代 M13 的 near-copy、語意、文字與 seam 過濾**。
+
 **M12 驗證**：`metadata.jsonl` 每行通過 schema 驗證；同 seed 重跑位元相同；
 `original` 與 `searched` 並排 grid **自己看**，確認 refine 真的變好（沒變好就檢討 refine_score 權重）。

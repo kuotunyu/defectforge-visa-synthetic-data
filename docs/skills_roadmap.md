@@ -22,8 +22,8 @@
 | — | `df-stage-a` | Stage A 合成：copy-paste 與程序化 anomaly，含自動斷言與抽樣 grid 檢視 | M7–M8 |
 | `prep-testcase` | `df-prep-testcase` | Auto mask placement，並依真實 mask 元件數**按比例分配 `num_SDG`**，輸出 SDG-ready 的 (clean, mask) 清單 | M9 |
 | `finetune` | `df-finetune` | 驗證訓練資料、產訓練 config、跑本機 smoke test、把 notebook 交接給使用者上 Colab | M10–M11 |
-| `sdg-inference` | `df-sdg` | 從指定 LoRA checkpoint 批次生成到 `original/` 桶，支援 `--resume` | M12 |
-| `sdg-refine` | `df-refine` | 對 `original/` 做 `(guidance_scale, crop_ratio)` 逐樣本搜尋，組裝最佳結果進 `searched/` 桶 | M12 |
+| `sdg-inference` | `df-sdg` ✅ | 從指定 LoRA checkpoint 批次生成到 `original/` 桶，支援 `--resume` | M12 |
+| `sdg-refine` | `df-refine` ✅ | 對 `original/` 做 `(guidance_scale, crop_ratio)` 逐樣本搜尋，組裝最佳結果進 `searched/` 桶 | M12 |
 | — | `df-filter` | 六道過濾、輸出 filtered/unfiltered 兩版、產漏斗報表 | M13 |
 | `eval` | `df-eval` | per-type `nn_score`（主 KPI）／`mnn_score`／FID／KID，含健全性檢查 | M14 |
 | — | `df-downstream` | Phase 2 下游訓練：分類（本機約 40 run）與分割（Colab 8×2 run）的組別展開、防洩漏 preflight、結果聚合 | M16 / M18 / M20 |

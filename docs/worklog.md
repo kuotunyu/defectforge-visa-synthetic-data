@@ -357,6 +357,66 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 13：M12 SD2 formal original／searched 生成與單調 refine
+
+### 做了什麼
+- 新增 `configs/generate_sd2.yaml`、`src/synthetic/generate_diffusion.py`：凍結
+  model／adapter／M9 placement checksum，40-step crop inpainting、全解析度 feather blend、
+  atomic sidecar、canonical metadata、fail-closed resume 與 contact sheet
+- 新增 `scripts/validate_diffusion.py`：獨立重建 placement inventory，核對 source／adapter／
+  config／pipeline hash chain、blocklist、mask identity、crop 外像素、候選排程與輸出 SHA
+- 新增 `scripts/compare_diffusion.py`，以同 sample ID、union crop 固定視野產生
+  clean／mask／original／searched 四欄圖，並在 type0/type1 間 round-robin 抽樣
+- 兩次同 seed fresh smoke 得到 image/mask mismatch 0；完整 resume 得
+  generated=0、skipped=2、peak VRAM=0，沒有載入模型
+- 建立並通過 `.claude/skills/df-sdg/` 與 `.claude/skills/df-refine/`
+
+### Formal original
+- pcb1 / capsules 各 500 張，耗時 866.33 / 859.41 秒，峰值皆 3.051 GiB
+- 合併 1,000 records；type quota 精確為 pcb1 348/152、capsules 375/125
+- validator：1,000 unique image SHA、1,000 unique mask SHA、374 source files 重算、
+  0 blocklist hit、M9 mask byte identity 與 full-resolution blend support 全通過
+- 目視保留棋盤格、絲印扭曲、RGB 條紋、capsule halo／label-like highlight 等失敗樣本，
+  不挑圖掩蓋
+
+### Refine 排程修正
+- 初版四候選雖覆蓋搜尋網格，卻未保證含 original pair；前 111 筆為
+  97 改善 / 5 相同 / 9 退步
+- 立即中止並新增 ADR-015；舊輸出移到兩個可復原隔離目錄，不混入 canonical metadata
+- searched 升 v0.6.0：candidate 0 固定重現 original `(g=7.5, crop=2.5, seed index 0)`，
+  另外三候選 deterministic greedy coverage；validator 逐筆要求 evidence 相同與 score 不退步
+- v0.6 smoke 四筆 candidate 0 evidence 全相同，score delta 全非負，再從乾淨目錄正式重跑
+
+### Formal searched 與目視
+- pcb1 / capsules 各 500 張，4,000 candidate evaluations；耗時 3,228.21 / 3,200.48 秒，
+  峰值皆 3.051 GiB
+- 合併結果：778 改善 / 222 baseline / 0 退步；mean score 0.778089，
+  對 original 平均 +0.087527
+- validator：1,000 original baseline comparisons、1,000 unique image/mask SHA、
+  0 blocklist hit、0 regression，全數通過
+- PCB 的 checkerboard、黑色結構塊與 RGB stripes 多數變成低對比刮痕；capsule halo
+  多數變成細痕／斑點
+- 仍保留 near-invisible、silkscreen/text distortion、紫色高對比點、深色圓斑與
+  stamp-like artifact；明列為 M13 filtering 的輸入，不宣稱 refine 已取代 final filter
+
+### 驗證與資源
+- Ruff 全綠；37 pytest 全過；兩個 skill quick validator 通過
+- original 與 searched combined validators 最終皆 `status=passed`
+- searched formal resume 兩物件皆 generated=0 / skipped=500 / peak VRAM=0，沒有載入模型
+- formal bulk outputs 留在 D:；Git 僅納入 code/config/tests/reports/JSON/正式視覺證據
+- 全部 Git author/committer 維持
+  `kuotunyu <61350295+kuotunyu@users.noreply.github.com>`；無 remote／push
+
+### 下一步
+**M11** — 完成 SDXL 單一訓練實作的 Colab L4 薄封裝與 smoke；實際 Colab 訓練等使用者。
+本機 critical path 可接著做 **M13** 六道 filtering 與漏斗報表。
+
+### 換你做
+目前仍沒有本機操作需求。GitHub repo、remote、push 繼續等使用者醒來；SDXL 正式訓練
+才需要使用者在 Colab 操作。
+
+---
+
 ## 2026-07-27 — Session 10：M8 程序化 Stage A 與 no-real-stats 對照
 
 ### 做了什麼

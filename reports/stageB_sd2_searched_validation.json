@@ -1,0 +1,54 @@
+{
+  "bucket": "searched",
+  "config_sha256": "5950f5fef7041b07c982578be88daec33849e8e16618b6b2113839bc3b480bef",
+  "defect_types_sha256": "0c7669287fb1b8f48b3f6aff202eaefc914e8bfc1d892b9e63f88b20996cb41a",
+  "manifest_sha256": "3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c",
+  "mean_refine_score": 0.7780890555661693,
+  "mean_visible_change": 0.08946832510642708,
+  "objects": {
+    "capsules": {
+      "type0": 375,
+      "type1": 125
+    },
+    "pcb1": {
+      "type0": 348,
+      "type1": 152
+    }
+  },
+  "original_baselines_compared": 1000,
+  "output": "D:\\sdg-data\\01-defectforge\\synthetic\\stageB_sd2\\searched",
+  "records": 1000,
+  "refine_selection": {
+    "crop_ratio_counts": {
+      "1.8": 251,
+      "2.5": 333,
+      "3.5": 416
+    },
+    "guidance_scale_counts": {
+      "10": 231,
+      "12.5": 186,
+      "5": 361,
+      "7.5": 222
+    },
+    "score_delta": {
+      "equal": 222,
+      "improved": 778,
+      "maximum": 0.7603346782223642,
+      "mean": 0.0875273188991532,
+      "minimum": 0.0,
+      "regressed": 0
+    },
+    "selected_candidate_index_counts": {
+      "0": 222,
+      "1": 282,
+      "2": 266,
+      "3": 230
+    }
+  },
+  "selection_sha256": "7021234d0bef51926832591d60c205fa7273e0cc32fd0ae5348740094b060ea2",
+  "status": "passed",
+  "test_blocklist_hits": 0,
+  "unique_image_sha256": 1000,
+  "unique_mask_sha256": 1000,
+  "unique_source_files_hashed": 374
+}

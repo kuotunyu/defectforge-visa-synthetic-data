@@ -201,9 +201,32 @@ scripts/validate_lora_run.py
 --guidance-grid 5.0,7.5,10.0,12.5
 --crop-ratio-grid 1.8,2.5,3.5
 --out-name STR             # 預設 stageB_sd2 / stageB_sdxl
+--contact-sheet PATH       # clean crop / binary mask / generated crop 的正式目視證據
 ```
-產出：`${synthetic}/<out-name>/{original,searched}/{images,masks}/` + `metadata.jsonl`
-斷言：每行 metadata 通過 `provenance.validate_record`；同 seed 重跑位元相同
+產出：`${synthetic}/<out-name>/{original,searched}/{images,masks,.records}/` +
+`metadata.jsonl`。每筆 atomic sidecar 鎖 config SHA、pipeline version、model revision、
+placement checksum、effective parameters、候選分數與 image/mask SHA256；canonical metadata
+由 sidecar 重建。
+
+斷言：每行 metadata 通過 `provenance.validate_record`；同 seed 的獨立行程 PNG 位元相同；
+完整 `--resume` 不載模型且峰值 VRAM 為 0；輸出 crop 外像素完全等於 frozen background。
+`original` pipeline v0.5.0；`searched` v0.6.0 的 candidate 0 必須逐欄重現 original
+的 guidance、crop、seed 與評分證據，另外三候選覆蓋剩餘搜尋網格，因此 selected score
+必須大於或等於 original baseline。
+
+正式獨立重驗：
+```text
+scripts/validate_diffusion.py
+--paths --config --out-name --bucket {original,searched} --n --object --output
+```
+
+正式同 ID 比較圖：
+```text
+scripts/compare_diffusion.py
+--paths --out-name --object --maximum --output
+```
+四欄固定為 clean / mask / original / searched，兩桶使用 union crop 的同一視野；
+抽樣在 defect type 間 round-robin，且背景 SHA 與兩桶 mask SHA 不同即失敗。
 
 ### M13 `src/filtering/run_filters.py`
 ```
