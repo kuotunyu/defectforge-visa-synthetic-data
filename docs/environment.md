@@ -193,7 +193,7 @@ headers。M8 的程序噪聲因此改由 NumPy/scikit-image 實作，避免為�
 | 項目 | 說明 |
 |---|---|
 | Runtime | SD2 LoRA → **T4** 足夠；SDXL LoRA → **需 L4**（[ADR-001](decisions.md#adr-001)） |
-| Compute units | T4 約 **1.76–1.96 CU/hr**；A100 約 10–15 CU/hr。**L4 費率待 M15 到 Colab 頁面實測確認**。Pro 每月 100 CU |
+| Compute units | T4 約 **1.76–1.96 CU/hr**；A100 約 10–15 CU/hr。M11 的 L4 執行前未記錄 CU，不能誠實回推；已保留實測 wall time 與 peak VRAM，未虛構 CU 數字。Pro 每月 100 CU |
 | 資料 | 先解壓到 `/content/data` 再訓練，**不從掛載的 Drive 直接讀圖** |
 | Checkpoint | 定期同步回 `MyDrive/sdg-portfolio/01-defectforge-visa/`，支援斷點續跑 |
 | 輸出目錄 | `runs/lora_<model>/<object>/seed_<n>/`，每本 notebook 唯一 |

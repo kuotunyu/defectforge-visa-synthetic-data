@@ -672,3 +672,32 @@ M11 實際只需要 20 張 frozen few-shot image/mask 與四個 held-out placeme
   超過 2 GB 的 SDXL 權重下載與真正 smoke 仍需使用者明確同意。
 - M11 不得因 structural tests 通過就勾選；必須等 real-model smoke、resume、reload
   與 peak VRAM 證據全齊。
+
+---
+
+<a id="adr-019"></a>
+## ADR-019 — M15 驗收已完成的 Phase 1；M18 才建立分割 Notebook 交接
+
+**狀態：Accepted**（2026-07-27）
+
+### 背景
+原始 M15 驗收文字要求 SDXL 與 SegFormer 兩本 notebook 都先具備五項操作資料，但
+SegFormer notebook 的建立、`--group` 實作與本機 smoke 明確屬於 Phase 2 的 M18。
+同一份 PLAN 又規定 Phase 1 全綠前不准開始 Phase 2，因此形成
+「M15 等 M18、M18 等 M15」的循環依賴，無法在不違反規格的情況下前進。
+
+### 決策
+- M15 驗收 M0–M14 的凍結證據、M11 SDXL notebook 的五項完整交接、Phase 2 協定已
+  事先凍結，以及 M0–M15 的 commit／Contributor 完整性。
+- M18 負責建立 SegFormer notebook、跑本機 1-step smoke，並在
+  `instructions_for_me.md` 填入它的五項**具體**操作資料；M19 才要求使用者上 Colab。
+- M11 未在執行前記錄 Colab CU，因此只報實測 wall time、training time 與 peak VRAM，
+  CU 明列 unavailable，不以第三方費率倒推成假精確數字。
+- `scripts/verify_phase1.py` 是 M15 的 CPU-only 獨立驗收入口；它同時逐 commit 驗證
+  author／committer 只有 `kuotunyu`，且禁止 `Co-Authored-By` trailer。
+
+### 後果
+- Phase 1 可以在不偷跑 Phase 2、也不捏造不存在 notebook 的前提下誠實關閉。
+- 使用者目前不需做 Colab 操作；等 M18 的 notebook 與 smoke 全綠後，才會收到確切
+  檔名、Runtime、Secrets、成本估計與下載清單。
+- 未來若 M18 的實作改變資源需求，交接內容會依實測更新，不受 M15 的猜測綁死。

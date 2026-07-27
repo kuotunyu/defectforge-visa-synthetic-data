@@ -1,0 +1,124 @@
+{
+  "evidence": {
+    "passed_json": {
+      "reports/generation_quality_validation.json": "passed",
+      "reports/lora_sd2_validation.json": "passed",
+      "reports/lora_sdxl_import_validation.json": "passed",
+      "reports/lora_sdxl_local_validation.json": "passed",
+      "reports/placements_validation.json": "passed",
+      "reports/stageA_copypaste_validation.json": "passed",
+      "reports/stageA_procedural_norealstats_validation.json": "passed",
+      "reports/stageA_procedural_validation.json": "passed",
+      "reports/stageB_sd2_original_validation.json": "passed",
+      "reports/stageB_sd2_searched_validation.json": "passed"
+    },
+    "required_file_count": 13,
+    "split_assertions": {
+      "all_anomaly_images_have_masks": "passed",
+      "eight_expected_counts": "passed",
+      "fewshot_train_subset_highshot_train": "passed",
+      "highshot_train_test_disjoint": "passed",
+      "prepared_tree_matches_csv": "passed"
+    }
+  },
+  "git": {
+    "coauthored_by_trailers": 0,
+    "commit_count": 25,
+    "contributor_emails": [
+      "61350295+kuotunyu@users.noreply.github.com"
+    ],
+    "contributor_names": [
+      "kuotunyu"
+    ],
+    "milestone_commits": {
+      "M0": [
+        "292ea4750e9419c35234f29866855a19b500acdf",
+        "22b26e33b58e73e794ff2ad4eaf3e1babd096856",
+        "36dda7cafda49c914c079479e709d7bfe535fa6c"
+      ],
+      "M1": [
+        "b9c8578aec3e572a340fb3c35afe3394e3f6d1be"
+      ],
+      "M10": [
+        "dbd9ca0063bee497eab7442dfb247f7adb2af21d"
+      ],
+      "M11": [
+        "763844a58d9d2f08c6eaca1f26708e6067d70be6",
+        "0d03039040ed5e81ff1319376290353c64a614cd",
+        "db68d05edaa93476f3f196ea5ac7b3b78fd17a7c",
+        "08c020d0837b7090eaff3a0e8498d6a8c7393e17"
+      ],
+      "M12": [
+        "73aba3d8f243a09c821060c1f6bb3c7302174e24"
+      ],
+      "M13": [
+        "ee80470b9c65f286409086c79e7420e1a060cfff",
+        "e83b875cad997f9181248ae927cb8a34d0017b66"
+      ],
+      "M14": [
+        "84a2158ca8b0471622fa414e6d6f9f02a7d1feaa"
+      ],
+      "M15": [
+        "fe2227826070b5037efb92d803e6dc3874481555"
+      ],
+      "M2": [
+        "75bc7e1526f8880be8ff5604a9a31680954e3ccb"
+      ],
+      "M3": [
+        "c8c174979c4ef2dcbfe668154a6c7f15b0631b5c"
+      ],
+      "M4": [
+        "50615c443703b332eb788b4204047073f9d069d9"
+      ],
+      "M5": [
+        "b2a607aef7cbe9046b2b2dd765364e87583f75ac"
+      ],
+      "M6": [
+        "a063d72e14d14a22ee3bea7dba81743b3f2ae815"
+      ],
+      "M7": [
+        "f347a0fc29b1ee027ee57e17b3724d17407540d1"
+      ],
+      "M8": [
+        "ae598b83732d601712a2f0e280edd3b9410e406c"
+      ],
+      "M9": [
+        "aa5c7e24cada0d4a8282c28c3532a20cddecd65f"
+      ]
+    },
+    "remote_count": 0,
+    "repo_local_identity": "kuotunyu <61350295+kuotunyu@users.noreply.github.com>"
+  },
+  "independent_validators": {
+    "scripts/validate_colab_notebook.py": "passed",
+    "scripts/verify_filter_report.py": "passed",
+    "scripts/verify_generation_quality.py": "passed"
+  },
+  "instructions": {
+    "m11_handoff_rows": 5,
+    "m11_status": "complete",
+    "m18_status": "owned_by_m18"
+  },
+  "plan": {
+    "checked_milestones": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ]
+  },
+  "status": "passed",
+  "verified_at": "2026-07-27T13:12:29.898477+00:00"
+}

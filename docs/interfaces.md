@@ -295,6 +295,17 @@ scripts/compare_diffusion.py
 產出：`${runs}/cls/<run-name>/`、附加一列到 `results/classification.csv`
 斷言：`df-guard` 的防洩漏檢查表全綠；訓練集 ∩ highshot test == ∅
 
+### M15 `scripts/verify_phase1.py`
+```text
+--project-root PATH
+--output reports/phase1_acceptance.json
+--report reports/phase1_acceptance.md
+```
+CPU-only 驗收 M0–M15 的 PLAN 狀態、里程碑 commit 覆蓋、凍結 evidence、M11 五項
+Colab 交接與三支獨立 validator。另逐 commit 檢查 author／committer 必須都是
+`kuotunyu <61350295+kuotunyu@users.noreply.github.com>`，且歷史中不得出現
+`Co-Authored-By` trailer。SegFormer 的五項具體交接依 ADR-019 由 M18 負責。
+
 ### M18 `src/training/train_segmenter.py`
 ```
 （同 M16 的共用參數）

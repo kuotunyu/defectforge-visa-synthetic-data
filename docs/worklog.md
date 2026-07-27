@@ -303,6 +303,29 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 20：M15 Phase 1 獨立驗收與交接邊界修正
+
+### 做了什麼
+- 發現原 M15 要求先填完 M18 SegFormer notebook 的五項交接，但 Phase 2 又必須等
+  M15 全綠，形成無法執行的循環依賴
+- 新增 ADR-019：M15 關閉已完成的 Phase 1；M18 負責分割 notebook、smoke 與五項
+  具體交接，M19 才由使用者執行 Colab
+- 新增 CPU-only `scripts/verify_phase1.py` 與單元測試，驗 M0–M15 勾選、凍結 evidence、
+  M11 五項交接、三支獨立 validator 與每個 milestone 的 commit 覆蓋
+- verifier 逐 commit 檢查 author／committer 僅
+  `kuotunyu <61350295+kuotunyu@users.noreply.github.com>`，並禁止
+  `Co-Authored-By` trailer
+- M11 的 L4 CU 在執行前未記錄，文件明列 unavailable，不用第三方費率倒推
+
+### 下一步
+**M16** — 先用 `df-guard` 重新驗證分類資料展開與 test blocklist，再實作固定
+ConvNeXt-Tiny 協定、1-run smoke 與約 40 個正式 run。
+
+### 換你做
+目前沒有；M16 在本機 RTX 4090 執行。M18 準備好分割 notebook 前不需再開 Colab。
+
+---
+
 ## 2026-07-27 — Session 18：M11 SDXL Colab 正式 fresh run 回收與 CPU 驗收
 
 ### 做了什麼

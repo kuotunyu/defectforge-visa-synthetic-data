@@ -53,13 +53,16 @@ bundle 都通過 fresh `PeftModel` 雙 encoder 重載。證據在
 
 ## Notebook 2 — M18 SegFormer（尚未建立）
 
-| 項目 | 內容 |
-|---|---|
-| 1. 上 Colab 方式 | TBD (M18 / M15 最終驗收) |
-| 2. Runtime 選型 | TBD (M18 / M15 最終驗收) |
-| 3. 需要的 Colab Secrets | TBD (M18 / M15 最終驗收) |
-| 4. 預估時數與 compute units | TBD (M18 / M15 最終驗收) |
-| 5. 跑完要下載哪些檔案 / 放回哪個路徑 | TBD (M18 / M15 最終驗收) |
+這本 notebook 屬於 Phase 2 的 M18，會在分類基準 M16 與品質關聯分析 M17 完成後建立。
+M18 必須先完成本機 1-step smoke，然後才會在這裡填入下列五項**可直接照做**的操作資料：
+
+1. 上 Colab 的確切檔名、Drive 來源與開啟方式
+2. Runtime GPU 選型與最低 VRAM
+3. 所需 Colab Secrets（若不需要也會明寫「不需要」）
+4. 依本機 smoke 推估的時數與 compute units，並要求回報實測值
+5. 完整下載清單與 `results/colab/` 的本機回收路徑
+
+在 M18 完成前不要自行建立或執行分割 notebook；目前沒有需要你操作的 Colab 工作。
 
 ---
 

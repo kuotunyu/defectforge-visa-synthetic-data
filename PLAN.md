@@ -132,9 +132,12 @@
     純雜訊 crop → `nn_score` 明顯低於 τ_low、KID 很大；所有輸入 crop 路徑不在 test blocklist 內；
     `reports/generation_quality.md` 分瑕疵型列出四項指標
 
-- [ ] **M15** 🙋 `instructions_for_me.md` 填滿 ＋ Phase 1 驗收
-  - **驗證**：SDXL 與分割兩本 notebook 各具備五節（上 Colab 方式／Runtime／Secrets／時數與 compute units／
-    跑完抓哪些檔放回 `results/colab/` 的哪個路徑）；紙上走一遍無缺口；M1–M15 全勾；每個里程碑至少一筆 commit
+- [x] **M15** 🙋 `instructions_for_me.md` 的 M11 交接填滿 ＋ Phase 1 驗收
+  - **驗證**（[ADR-019](docs/decisions.md#adr-019)）：SDXL notebook 具備五節（上 Colab
+    方式／Runtime／Secrets／實測時數與 compute units／跑完抓哪些檔放回
+    `results/colab/` 的哪個路徑）；SegFormer notebook 的建立、smoke 與五節具體交接由
+    M18 負責，避免 M15 ↔ M18 循環依賴；`scripts/verify_phase1.py` 紙上走一遍無缺口，
+    M0–M15 全勾、每個里程碑至少一筆 commit、所有歷史身份僅 `kuotunyu`
 
 ---
 
@@ -154,7 +157,9 @@
 
 - [ ] **M18** 🤖 分割 notebook（SegFormer-B0）＋ 本機 smoke test ＋ 寫進 `instructions_for_me.md`
   - **驗證**：`--group` 參數能切換九組中的任一組；本機 1-step smoke 跑通；
-    第 9 組在文件中明確標示「引用第 4 組，不重跑」（實跑 8 組 × 2 物件）
+    notebook 與 `instructions_for_me.md` 具備五節具體交接（上 Colab 方式／Runtime／
+    Secrets／預估時數與 compute units／跑完抓哪些檔放回哪個路徑）；第 9 組在文件中
+    明確標示「引用第 4 組，不重跑」（實跑 8 組 × 2 物件）
 
 - [ ] **M19** 🙋 **使用者在 Colab 跑分割**，產出放回 `results/colab/`
   - **驗證**：對照 `instructions_for_me.md` 的預期清單盤點產出，缺件就停下來列清單問使用者，不要硬做
