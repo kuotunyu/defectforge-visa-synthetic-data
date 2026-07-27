@@ -7,6 +7,8 @@ import csv
 import hashlib
 import json
 import math
+import os
+import tempfile
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -107,6 +109,86 @@ def segmentation_value(
     value = float(row[metric])
     require(math.isfinite(value), f"Nonfinite M20 value {object_name}/{group_name}/{metric}")
     return value
+
+
+def validate_figure_inputs(
+    classification_rows: Sequence[Mapping[str, str]],
+    segmentation_rows: Sequence[Mapping[str, str]],
+) -> None:
+    classification_columns = {
+        "requested_group",
+        "canonical_group",
+        "object",
+        "seed",
+        "macro_f1",
+        "auroc",
+    }
+    segmentation_columns = {
+        "logical_group",
+        "canonical_group",
+        "object",
+        "seed",
+        "dice",
+        "aupro",
+    }
+    require(bool(classification_rows), "Classification result CSV is empty")
+    require(bool(segmentation_rows), "Segmentation result CSV is empty")
+    require(
+        classification_columns <= set(classification_rows[0]),
+        "Classification result CSV columns are incomplete",
+    )
+    require(
+        segmentation_columns <= set(segmentation_rows[0]),
+        "Segmentation result CSV columns are incomplete",
+    )
+    classification_keys = [
+        (row["requested_group"], row["object"], int(row["seed"]))
+        for row in classification_rows
+    ]
+    require(
+        len(classification_keys) == 38 and len(set(classification_keys)) == 38,
+        "Classification result CSV must contain 38 unique formal rows",
+    )
+    expected_segmentation = {
+        (group_name, object_name)
+        for group_name in SEGMENTATION_GROUPS
+        for object_name in OBJECTS
+    }
+    segmentation_keys = [
+        (row["logical_group"], row["object"]) for row in segmentation_rows
+    ]
+    require(
+        len(segmentation_keys) == 18
+        and len(set(segmentation_keys)) == 18
+        and set(segmentation_keys) == expected_segmentation,
+        "Segmentation result CSV must contain 18 exact logical rows",
+    )
+    required_macro_f1_groups = tuple(
+        dict.fromkeys((*MAIN_GROUPS, "real_20", "syn_125", "syn_250"))
+    )
+    for object_name in OBJECTS:
+        for group_name in required_macro_f1_groups:
+            classification_value(
+                classification_rows,
+                object_name=object_name,
+                group_name=group_name,
+                metric="macro_f1",
+            )
+        for group_name in MAIN_GROUPS:
+            classification_value(
+                classification_rows,
+                object_name=object_name,
+                group_name=group_name,
+                metric="auroc",
+            )
+        for group_name in SEGMENTATION_GROUPS:
+            for metric in ("dice", "aupro"):
+                segmentation_value(
+                    segmentation_rows,
+                    object_name=object_name,
+                    group_name=group_name,
+                    metric=metric,
+                )
 
 
 def equivalent_real_count(
@@ -399,17 +481,45 @@ def main() -> int:
     segmentation_path = args.segmentation.resolve(strict=True)
     classification_rows = read_csv(classification_path)
     segmentation_rows = read_csv(segmentation_path)
+    validate_figure_inputs(classification_rows, segmentation_rows)
     output_dir = args.output_dir
-    figures = {
-        "real_scaling_curve": output_dir / "real_scaling_curve.png",
-        "synthetic_volume_curve": output_dir / "synthetic_volume_curve.png",
-        "main_comparison_table": output_dir / "main_comparison_table.png",
-        "segmentation_table": output_dir / "segmentation_table.png",
+    output_dir.parent.mkdir(parents=True, exist_ok=True)
+    figure_names = {
+        "real_scaling_curve": "real_scaling_curve.png",
+        "synthetic_volume_curve": "synthetic_volume_curve.png",
+        "main_comparison_table": "main_comparison_table.png",
+        "segmentation_table": "segmentation_table.png",
     }
-    equivalents = plot_real_scaling(classification_rows, figures["real_scaling_curve"])
-    plot_synthetic_volume(classification_rows, figures["synthetic_volume_curve"])
-    plot_main_comparison(classification_rows, figures["main_comparison_table"])
-    plot_segmentation_table(segmentation_rows, figures["segmentation_table"])
+    with tempfile.TemporaryDirectory(
+        prefix=".phase2_figures_",
+        dir=output_dir.parent,
+    ) as temporary_name:
+        temporary_dir = Path(temporary_name)
+        temporary_figures = {
+            name: temporary_dir / filename for name, filename in figure_names.items()
+        }
+        equivalents = plot_real_scaling(
+            classification_rows,
+            temporary_figures["real_scaling_curve"],
+        )
+        plot_synthetic_volume(
+            classification_rows,
+            temporary_figures["synthetic_volume_curve"],
+        )
+        plot_main_comparison(
+            classification_rows,
+            temporary_figures["main_comparison_table"],
+        )
+        plot_segmentation_table(
+            segmentation_rows,
+            temporary_figures["segmentation_table"],
+        )
+        output_dir.mkdir(parents=True, exist_ok=True)
+        figures = {
+            name: output_dir / filename for name, filename in figure_names.items()
+        }
+        for name, final_path in figures.items():
+            os.replace(temporary_figures[name], final_path)
     payload = {
         "status": "passed",
         "schema_version": 1,
@@ -423,10 +533,12 @@ def main() -> int:
         "visual_inspection_required": True,
     }
     args.validation_out.parent.mkdir(parents=True, exist_ok=True)
-    args.validation_out.write_text(
+    validation_temporary = args.validation_out.with_suffix(args.validation_out.suffix + ".tmp")
+    validation_temporary.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    os.replace(validation_temporary, args.validation_out)
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 
