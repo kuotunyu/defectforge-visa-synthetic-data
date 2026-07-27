@@ -28,10 +28,10 @@ orchestrator skill（見 [docs/skills_roadmap.md](../../../docs/skills_roadmap.m
 然後檢查磁碟上的實際狀態，**不要只信文件**：
 
 ```powershell
-Get-ChildItem C:\Users\3Hml\Desktop\mySyntheticData\1_DefectForge\splits
+Get-ChildItem .\splits
 Test-Path D:\sdg-data\01-defectforge\raw\VisA
-git -C C:\Users\3Hml\Desktop\mySyntheticData\1_DefectForge log --oneline -5
-git -C C:\Users\3Hml\Desktop\mySyntheticData\1_DefectForge status --short
+git log --oneline -5
+git status --short
 ```
 
 **文件說已完成、但磁碟上東西不在 → 以磁碟為準，並回報這個落差。**

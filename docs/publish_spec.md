@@ -104,7 +104,7 @@ trigger token 清單與對應的瑕疵型別、推論範例程式碼（含 crop-
 
 ### 5.2 必須不存在
 - 任何 API key、token、`.env`
-- 個人絕對路徑（`C:\Users\3Hml\...`）→ 發佈前全 repo grep
+- 個人絕對路徑（例如 Windows 使用者目錄）→ 發佈前全 repo grep
 - 大型二進位（影像、權重）→ 那些在 HF
 - 任何 `Co-Authored-By` 或產生器署名
 
@@ -132,7 +132,7 @@ trigger token 清單與對應的瑕疵型別、推論範例程式碼（含 crop-
 - [ ] VisA 的 CC BY 4.0 標註完整
 
 **安全**
-- [ ] 全 repo grep：`gho_`、`hf_`、`sk-`、`AIza`、`.env`、`C:\Users` → 0 命中
+- [ ] 全 repo 掃描 token 格式、被追蹤的 `.env`、Windows 使用者絕對路徑 → 0 命中
 - [ ] `git shortlog -sne --all` 只有 `kuotunyu`
 - [ ] trailer 掃描無輸出
 

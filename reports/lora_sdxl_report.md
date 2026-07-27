@@ -57,7 +57,7 @@ Machine-readable evidence is in `reports/lora_sdxl_import_validation.json`; repr
 
 ```powershell
 uv run --frozen python scripts/verify_colab_lora_results.py `
-  --archive C:/Users/3Hml/Downloads/lora_sdxl-20260727T054640Z-1-001.zip
+  --archive ~/Downloads/lora_sdxl-20260727T054640Z-1-001.zip
 ```
 
 ## Local smoke and resume closure

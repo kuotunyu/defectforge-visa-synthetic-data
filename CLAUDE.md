@@ -97,7 +97,7 @@ git log -1 --format="%an <%ae>"; git log -1 --format="%B" | Select-String "Co-[A
 - Shell 是 **PowerShell 5.1**：沒有 `&&` 與 `||`，用 `A; if ($?) { B }`；沒有三元運算子；`head`/`tail`/`which`/`touch` 都不存在
 - **不得硬編絕對路徑**。所有路徑一律讀 [configs/paths.yaml](configs/paths.yaml)
 - 大檔（VisA 原始資料、合成影像、runs）放 `D:\sdg-data\01-defectforge`；專案資料夾只留程式碼、設定、文件、`splits/`、`reports/` 小圖
-- Hugging Face 快取沿用 C: 預設位置（`C:\Users\3Hml\.cache\huggingface`）
+- Hugging Face 快取沿用預設使用者快取位置（`%USERPROFILE%\.cache\huggingface`）
 - 密鑰放在上層的 `..\.env`（**不在** repo 內），用 `python-dotenv` 讀，絕不 print 內容
 - PyTorch DataLoader 在 Windows 用 spawn：`num_workers>0` 時所有進入點必須包 `if __name__ == "__main__":`，寫腳本時預設 `num_workers=0`
 
@@ -120,7 +120,7 @@ git log -1 --format="%an <%ae>"; git log -1 --format="%B" | Select-String "Co-[A
 
 | 項目 | 值 |
 |---|---|
-| 本機資料夾 | `C:\Users\3Hml\Desktop\mySyntheticData\1_DefectForge` |
+| 本機資料夾 | git checkout 的目前工作目錄 |
 | 未來 GitHub repo | `kuotunyu/01-defectforge-visa` |
 | 未來 Hugging Face | `steven0226`（合成資料集 + LoRA 權重，見 [docs/publish_spec.md](docs/publish_spec.md)） |
 | 資料集 | VisA（CC BY 4.0），先做 `pcb1` 與 `capsules` |

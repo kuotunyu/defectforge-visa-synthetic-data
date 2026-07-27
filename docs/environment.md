@@ -153,9 +153,9 @@ headers。M8 的程序噪聲因此改由 NumPy/scikit-image 實作，避免為�
 
 | 用途 | 位置 |
 |---|---|
-| 專案（git repo） | `C:\Users\3Hml\Desktop\mySyntheticData\1_DefectForge` |
+| 專案（git repo） | git checkout 的目前工作目錄 |
 | 大檔 `data_root` | `D:\sdg-data\01-defectforge` |
-| HF 快取 | C: 預設 `C:\Users\3Hml\.cache\huggingface`（約 8 GB） |
+| HF 快取 | 預設 `%USERPROFILE%\.cache\huggingface`（約 8 GB） |
 | 密鑰 | `..\.env`（**在 repo 外**），用 `python-dotenv` 讀 |
 
 `..\.env` 內已有的變數名稱（**只列名稱，絕不 print 值**）：

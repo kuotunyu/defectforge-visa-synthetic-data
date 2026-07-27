@@ -187,13 +187,13 @@ VisA 影像約 **1500×1000**，而且論文明指「VisA 的瑕疵明顯小於 
 
 ### 脈絡
 C: 剩 202 GB、D: 剩 1728 GB。本專案預估佔用 40–60 GB（VisA 原始 1.8GB tar +
-解壓約 4GB + 合成影像 + runs）。專案資料夾在 `C:\Users\3Hml\Desktop`，
+解壓約 4GB + 合成影像 + runs）。專案 git checkout 位於 C:，
 已確認**未**被 OneDrive 接管（否則 40GB 影像會被同步上雲）。
 
 ### 決策
 - `data_root = D:\sdg-data\01-defectforge`：VisA 原始、`VisA_pytorch` 佈局、
   合成桶、`runs/`、embedding 快取
-- **Hugging Face 快取沿用 C: 預設**（`C:\Users\3Hml\.cache\huggingface`，約 8GB）
+- **Hugging Face 快取沿用 C: 預設**（`%USERPROFILE%\.cache\huggingface`，約 8GB）
 - 專案資料夾（C:）只留：程式碼、設定、文件、`splits/`、`reports/` 小圖
 - **任何腳本不得硬編絕對路徑**，一律讀 [`configs/paths.yaml`](../configs/paths.yaml)
 

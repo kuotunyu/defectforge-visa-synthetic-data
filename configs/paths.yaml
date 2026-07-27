@@ -29,7 +29,7 @@ paths:
   colab_results: "results/colab"                       # where Colab artefacts are placed back
 
 # ---------------------------------------------------------------------------
-# Hugging Face cache stays on C: default (C:/Users/3Hml/.cache/huggingface).
+# Hugging Face cache stays at the default user location (%USERPROFILE%/.cache/huggingface).
 # Set hf_home to a path here only if C: gets tight; leave null to use the default.
 # ---------------------------------------------------------------------------
 hf_home: null
