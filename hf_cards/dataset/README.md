@@ -27,11 +27,11 @@ filtered 與 unfiltered 版本，並公開 provenance 與 test SHA-256 blocklist
 
 ```text
 data/
-  stageA_copypaste/{filtered,unfiltered}/{images,masks}/
-  stageA_procedural/{filtered,unfiltered}/{images,masks}/
-  stageA_procedural_norealstats/{filtered,unfiltered}/{images,masks}/
-  stageB_sd2/{original,searched}/{filtered,unfiltered}/{images,masks}/
-  stageB_sdxl/{original,searched}/{filtered,unfiltered}/{images,masks}/
+  filtered/{images,masks}/
+  unfiltered/{images,masks}/
+  ablations/stageA_procedural_norealstats/{images,masks}/
+  diagnostics/stageB_sd2/original/{images,masks}/
+  diagnostics/stageB_sdxl/{original,searched}/{images,masks}/
 splits/
   split_manifest.json
   defect_types.json
@@ -39,9 +39,14 @@ splits/
   *.sha256
 ```
 
-Each synthetic view also contains `metadata.jsonl`. No original VisA image is
+Each leaf dataset also contains `metadata.jsonl`. No original VisA image is
 redistributed. Source image fields are relative VisA paths plus SHA-256 values so users
 can reconstruct provenance after obtaining VisA independently.
+
+The formal downstream pool has 3,000 unfiltered samples: copy-paste, procedural, and
+searched SD2, 500 per object and source. The frozen M13 filter accepts 1,770 of them.
+The 1,000 no-real-statistics procedural samples and 2,000 SD2/SDXL diagnostic samples
+are published separately and were not assigned a retrospective pass/fail label.
 
 ## Generation
 
@@ -73,11 +78,13 @@ See `docs/synthesis_spec.md` in the GitHub repository for the normative schema.
 
 ## Filtered and unfiltered views
 
-Unfiltered views retain every generated sample and the full rejection evidence.
-Filtered views contain only samples that pass the preregistered DINOv2-neighbor,
+The unfiltered formal view retains all 3,000 downstream-pool samples and the full
+rejection evidence. The filtered formal view contains only samples that pass the
+preregistered DINOv2-neighbor,
 containment, morphology, seam, and pHash rules. Thresholds were frozen before downstream
 results. Both views are provided so the filtering claim can be tested rather than
-assumed.
+assumed. Ablation and diagnostic sets outside that formal pool remain explicitly
+unfiltered; they are not relabelled after downstream results.
 
 ## Leakage controls
 

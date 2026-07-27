@@ -79,9 +79,10 @@ def inventory(root: Path, *, repo_type: str) -> dict[str, Any]:
         size = path.stat().st_size
         total_bytes += size
         if path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
-            image_count += 1
             if "mask" in lower_parts or "masks" in lower_parts:
                 mask_count += 1
+            else:
+                image_count += 1
         if path.suffix.lower() == ".safetensors":
             safetensor_count += 1
         entries.append(
@@ -92,6 +93,27 @@ def inventory(root: Path, *, repo_type: str) -> dict[str, Any]:
             }
         )
     require(bool(entries), f"{repo_type} bundle is empty")
+    manifest_path = root / "release_manifest.json"
+    require(manifest_path.is_file(), f"{repo_type} bundle has no release_manifest.json")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    require(isinstance(manifest, dict), f"{repo_type} release manifest is invalid")
+    require(manifest.get("status") == "passed", f"{repo_type} release manifest did not pass")
+    expected_files = manifest.get("files")
+    require(isinstance(expected_files, list), f"{repo_type} release manifest has no file list")
+    observed_payload = [entry for entry in entries if entry["path"] != "release_manifest.json"]
+    require(
+        all(
+            isinstance(entry, dict)
+            and set(entry) == {"path", "bytes", "sha256"}
+            for entry in expected_files
+        ),
+        f"{repo_type} release manifest file rows are invalid",
+    )
+    require(
+        sorted(expected_files, key=lambda entry: str(entry["path"]))
+        == sorted(observed_payload, key=lambda entry: str(entry["path"])),
+        f"{repo_type} bundle differs from its release manifest",
+    )
     if repo_type == "dataset":
         require(image_count > 0 and mask_count > 0, "Dataset bundle needs images and masks")
     else:
@@ -105,6 +127,8 @@ def inventory(root: Path, *, repo_type: str) -> dict[str, Any]:
         "image_count": image_count,
         "mask_count": mask_count,
         "safetensor_count": safetensor_count,
+        "release_manifest_sha256": sha256_file(manifest_path),
+        "release_manifest_verified": True,
         "files": entries,
     }
 
@@ -130,6 +154,16 @@ def atomic_write_json(path: Path, payload: Mapping[str, Any]) -> None:
 
 def _selected_targets(value: str) -> tuple[str, ...]:
     return ("dataset", "model") if value == "both" else (value,)
+
+
+def plan_summary(bundle: Mapping[str, Any]) -> dict[str, Any]:
+    """Keep the tracked dry-run evidence compact; the release manifest owns file rows."""
+
+    return {
+        key: value
+        for key, value in bundle.items()
+        if key not in {"files", "root"}
+    }
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -165,8 +199,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "status": "passed",
         "mode": "confirmed_private_upload" if args.confirm else "dry_run",
         "changes_visibility": False,
-        "repositories_created_private": True,
-        "bundles": bundles,
+        "creates_or_updates_private_repositories": args.confirm,
+        "bundles": {
+            target: plan_summary(bundle)
+            for target, bundle in bundles.items()
+        },
     }
     atomic_write_json(args.plan_out, plan)
     if not args.confirm:

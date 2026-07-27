@@ -1,0 +1,31 @@
+{
+  "bundles": {
+    "dataset": {
+      "file_count": 15555,
+      "image_count": 7770,
+      "mask_count": 7770,
+      "release_manifest_sha256": "ab1202f69890947e1f0abfeb4837899f618fbb176fe1f5af979854f3f2dcb08d",
+      "release_manifest_verified": true,
+      "repo_id": "steven0226/defectforge-visa-synthetic",
+      "repo_type": "dataset",
+      "safetensor_count": 0,
+      "total_bytes": 14115088771
+    },
+    "model": {
+      "file_count": 38,
+      "image_count": 0,
+      "mask_count": 0,
+      "release_manifest_sha256": "acc3f8dd260ebb44b85198d5edb80077ed45ecfd64dd98472baf602d0360fa37",
+      "release_manifest_verified": true,
+      "repo_id": "steven0226/defectforge-visa-lora",
+      "repo_type": "model",
+      "safetensor_count": 10,
+      "total_bytes": 75457038
+    }
+  },
+  "changes_visibility": false,
+  "creates_or_updates_private_repositories": false,
+  "mode": "dry_run",
+  "schema_version": 1,
+  "status": "passed"
+}

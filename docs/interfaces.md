@@ -497,6 +497,7 @@ image、mask 與成圖 SHA256，並標記 `visual_inspection_required=true`。
 | `scripts/verify_readme.py` | 從 `results/*.csv` 重算 README 每張表的數字並比對 |
 | `scripts/verify_splits.py` | 重跑 [ADR-007](decisions.md#adr-007) 的四項斷言 |
 | `scripts/verify_publish.py` | M24 唯讀稽核：必備檔、13 skills、token／個人路徑、檔案大小、Git 身分與 co-author trailer |
+| `scripts/package_hf_release.py` | M24 本機封裝：預設只讀 inventory；`--build` 才原子建立 D 槽 HF dataset／model bundles，不連網 |
 | `scripts/upload_hf.py` | 見 [publish_spec.md](publish_spec.md)；**預設 `--dry-run`，上傳要顯式加 `--confirm`** |
 
 ---

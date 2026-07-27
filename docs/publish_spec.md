@@ -47,17 +47,19 @@ git log --format="%(trailers:key=Co-authored-by,valueonly)" | Select-String "\S"
 ### 3.1 內容
 ```
 data/
-  stageA_copypaste/{filtered,unfiltered}/{images,masks}/  metadata.jsonl
-  stageA_procedural/…
-  stageA_procedural_norealstats/…
-  stageB_sd2/{original,searched}/{filtered,unfiltered}/…
-  stageB_sdxl/…
+  filtered/{images,masks}/ metadata.jsonl
+  unfiltered/{images,masks}/ metadata.jsonl
+  ablations/stageA_procedural_norealstats/{images,masks}/ metadata.jsonl
+  diagnostics/stageB_sd2/original/{images,masks}/ metadata.jsonl
+  diagnostics/stageB_sdxl/{original,searched}/{images,masks}/ metadata.jsonl
 splits/            # split_manifest.json, defect_types.json, test_blocklist.json, checksums
 README.md          # dataset card
 ```
 
 **只上傳合成影像，不重新散佈 VisA 原始影像**（使用者自己去 AWS Open Data 下載）。
 `metadata.jsonl` 裡的 `source.background_image` 只存**相對路徑與 SHA256**，不存影像本身。
+`filtered`／`unfiltered` 僅指 M13 正式三來源池（copy-paste、procedural、SD2 searched）；
+norealstats 與 SD2／SDXL diagnostic sets 沒有事後補做 pass/fail 標籤。
 
 ### 3.2 Dataset card 必含（雙語：英文為主 + 繁中摘要）
 1. **這是什麼**：VisA pcb1/capsules 的合成瑕疵資料，few-shot（每物件 10 張真實瑕疵）生成
@@ -140,6 +142,9 @@ trigger token 清單與對應的瑕疵型別、推論範例程式碼（含 crop-
 
 **HF**
 - [ ] dataset card 與 model card 完整（§3.2、§4）
+- [ ] 首次用 `uv run python scripts/package_hf_release.py --build` 從凍結來源原子建立
+      本機 bundles；之後不加 `--build` 重驗現有 manifest 仍等於目前來源。
+      `reports/hf_package_validation.json` 的 test blocklist hits = 0
 - [ ] 上傳先 `--dry-run` 看清單，再加 `--confirm` 實際上傳
 - [ ] 上傳後自己下載回來抽查幾筆，確認 metadata 與影像對得上
 

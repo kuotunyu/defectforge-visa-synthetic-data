@@ -495,6 +495,44 @@ capsules；完成後把兩個未改名的結果 ZIP 放到 `results/colab/segmen
 
 ---
 
+## 2026-07-28 — Session 26：M19 等待期間的 M21／M24 發佈前封裝補強
+
+### M21／README fail-closed
+- `build_phase2_figures.py` 現在先驗 38 筆分類與 18 筆分割 exact logical rows，
+  四張圖在同磁碟 temporary directory 全部成功後才移入正式目錄
+- 用真 M16 數字與僅在 `%TEMP%` 的 dummy segmentation 做版面 preflight；
+  四張圖逐張看過，沒有裁切。dummy 圖未進 repo，M21 仍未勾選
+- `verify_readme.py --write` 改為先在記憶體完成全部 block／Limitations／TBD 驗證，
+  通過才原子寫入；失敗測試證明 README byte-for-byte 不變
+
+### HF 本機發佈包
+- 修正 dataset card／publish spec：只有 M13 正式三來源池具 filtered/unfiltered；
+  norealstats、SD2 original 與 SDXL original/searched 明列為未篩選 ablation/diagnostic
+- 新增 `scripts/package_hf_release.py`：預設只讀 inventory，`--build` 才在 D 槽以
+  staging + atomic rename 建包；不建 HF repo、不連網、不改 visibility
+- 真實資料逐檔 SHA 與 test blocklist 驗證通過：6,000 個獨立生成樣本、
+  7,770 個公開 sample views、7,770 masks、test hits 0
+- dataset payload 14,111,746,980 bytes；15,546 payload files 用 hardlink 建立，
+  僅 8 個跨磁碟 card/split 檔複製
+- model payload 75,449,968 bytes；SD2／SDXL × pcb1／capsules 的 10 個
+  SafeTensors adapter 均與正式 validation hash 相符
+- 本機輸出：`D:\sdg-data\01-defectforge\publish\{hf_dataset,hf_model}`
+
+### 上傳 gate 與 Contributors 紅線
+- `upload_hf.py` 上傳前必須逐檔吻合 `release_manifest.json`；封裝後任一 payload
+  改動會 fail closed
+- dry-run 通過並明列 `creates_or_updates_private_repositories=false`；
+  `reports/hf_upload_plan.json` 只保存統計與 manifest SHA，不重複 15k 筆 file rows
+- 真 Git repo 整合測試證明其他 author／committer 與真
+  `Co-Authored-By:` trailer 都會被 M24 audit 抓到
+- 完整回歸：Ruff passed、161 tests passed；目前仍無 remote／push／HF upload
+
+### 換你做
+仍是 M19：Colab 跑完後只需把兩個未改名結果 ZIP 放到
+`results/colab/segmentation/`。HF `--confirm` 與所有 public 動作都先不要做。
+
+---
+
 ## 2026-07-27 — Session 20：M15 Phase 1 獨立驗收與交接邊界修正
 
 ### 做了什麼
