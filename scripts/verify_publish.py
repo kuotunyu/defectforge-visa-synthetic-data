@@ -29,6 +29,10 @@ REQUIRED_PATHS = (
     "results/classification.csv",
     "results/segmentation.csv",
     "scripts/verify_readme.py",
+    "scripts/verify_license_chain.py",
+    "reports/license_chain_validation.json",
+    "hf_cards/dataset/README.md",
+    "hf_cards/model/README.md",
     "assets/demo.gif",
     ".claude/skills",
 )

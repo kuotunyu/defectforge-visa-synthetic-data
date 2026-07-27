@@ -1,0 +1,11 @@
+{
+  "document_sha256": {
+    "README.md": "e9a5719008f85a4dcd8f1733ecb27832bc0afe80a29bb5226f9816d31af7f984",
+    "hf_cards/dataset/README.md": "8e87b7618286c4fcbb0aeb3ed0559cb74baddf4c5e0872adbdd24ce8f814f8b5",
+    "hf_cards/model/README.md": "55266e3fe0dea86e70dfd0d6c77ca571c3ed34ba505177d28fb3fdf109dc5ea5"
+  },
+  "schema_version": 1,
+  "source_sha256": "904cac7fae5f0b7f085e2b6aaad18e133edcda59e382428fa95ef7e727185bb7",
+  "status": "passed",
+  "upstream_verification_sha256": "68303fa27f2f476ff5a99b832834f879653f7be46233b40bcebe59d638433aa3"
+}

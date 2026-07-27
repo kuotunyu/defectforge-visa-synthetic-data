@@ -150,13 +150,17 @@ See [docs/environment.md](docs/environment.md) for the current setup notes.
 Source code in this repository: **MIT** (see [LICENSE](LICENSE)). The MIT grant covers
 code only — data and model weights carry their own terms:
 
-| Asset | License | Note |
+<!-- BEGIN VERIFIED LICENSE_CHAIN -->
+| Asset | License | DefectForge obligation |
 |---|---|---|
-| VisA dataset | CC BY 4.0 | Attribution required; redistribution of derivatives permitted |
-| `sd2-community/stable-diffusion-2-inpainting` | CreativeML Open RAIL++-M | Immutable preservation mirror of the unavailable original; see ADR-014 |
-| `diffusers/stable-diffusion-xl-1.0-inpainting-0.1` | CreativeML Open RAIL++-M | Same |
-| `facebook/dinov2-base` | Apache-2.0 | Used for filtering and defect typing |
-| Synthetic images produced here | TBD — declared on the HF dataset card in Phase 2 | Derived from VisA, so CC BY 4.0 attribution carries through |
+| VisA source dataset | CC BY 4.0 | Attribute VisA and its paper; do not include the original images in our HF dataset |
+| `sd2-community/stable-diffusion-2-inpainting` | CreativeML Open RAIL++-M | Preserve the use-based restrictions and disclose the preservation mirror |
+| `diffusers/stable-diffusion-xl-1.0-inpainting-0.1` | CreativeML Open RAIL++-M | Preserve the use-based restrictions |
+| `facebook/dinov2-base` | Apache-2.0 | Attribute the model and DINOv2 paper |
+| DefectForge synthetic images | CC BY 4.0 | Treat as VisA derivatives; retain VisA attribution and disclose diffusion base licenses |
+| DefectForge LoRA weights | CreativeML Open RAIL++-M | Inherit the corresponding base-model restrictions and link the license |
+| DefectForge source code | MIT | The MIT grant applies to code only, not data or model weights |
+<!-- END VERIFIED LICENSE_CHAIN -->
 
 References:
 
