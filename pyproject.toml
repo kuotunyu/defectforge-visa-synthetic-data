@@ -38,6 +38,8 @@ dependencies = [
     "clean-fid",
     # reporting
     "matplotlib",
+    # local-only M22 inspection demo
+    "gradio",
 ]
 
 [dependency-groups]
