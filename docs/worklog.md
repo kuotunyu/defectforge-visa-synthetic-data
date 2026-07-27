@@ -336,6 +336,38 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 19：M11 本機 real-model smoke／resume 完整閉環
+
+### 做了什麼
+- 收到 GPU 解除通知後先跑 `df-guard`：1,806 manifest images、1,805 pHash groups、
+  0 crossing groups、803 unique blocklist hashes；兩物件 SDXL dry-run 均通過
+- 經使用者明確同意後，把 13,875,747,454-byte locked SDXL cache 放到 D 槽；四份
+  weight SHA256 全部符合 `configs/lora_sdxl.yaml`
+- pcb1 / capsules 各跑一次真實 one-step smoke；另用兩個 Python process 做 pcb1
+  step 1 controlled stop → `latest` resume → step 2
+- 新增 `verify_local_sdxl_checks.py`，CPU-only 驗 model cache、smoke、run signature、
+  checkpoint progression、三份 adapters、雙 tokenizer、samples 與 blocklist
+- GPU 再度讓給 FormosaNLU 前，三個必要 GPU run 已全部正常結束；後續只做 CPU closeout
+
+### 實測結果
+- pcb1 smoke：training 4.27 s、wall 550.99 s、loss 0.097596、peak 9.619 GiB
+- capsules smoke：training 4.51 s、wall 473.65 s、loss 0.187778、peak 9.619 GiB
+- resume：第二個 process 明確 `Resuming pcb1 from step 1`，完成 step 2；cumulative
+  training 9.77 s、wall 475.03 s、final loss 0.009820、peak 9.663 GiB
+- 三個 final bundle fresh `PeftModel` reload 均通過；CPU verifier `status=passed`、
+  blocklist hits=0
+- one-step panels 幾乎 near-normal；resume step-2 PCB 只有局部藍／暗痕，這些只證明
+  execution/resume，不取代 400-step formal visual review
+
+### 結論
+- M11 所有 formal、local smoke、actual resume、reload 與 VRAM 門檻已齊，PLAN 可勾完成
+- 不需再跑 M11 Colab 或本機 GPU；large weights/runs 只留 D 槽 ignored paths
+
+### 換你做
+目前沒有。Drive 的 M11 checkpoints 與本機 cache 先保留。
+
+---
+
 ## 2026-07-27 — Session 16：M14 mask-centered 生成品質評估與 sanity gate
 
 ### 做了什麼

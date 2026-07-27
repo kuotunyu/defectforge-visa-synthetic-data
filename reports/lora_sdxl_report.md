@@ -1,12 +1,12 @@
-# M11 SDXL Inpainting LoRA Colab Report
+# M11 SDXL Inpainting LoRA Report
 
 ## Outcome
 
-The M11 formal Colab L4 run passed for both objects. The immutable SDXL inpainting model
-completed 400 steps per object, produced four checkpoints and four held-out sample panels
-per object,
-saved the UNet plus both trainable-token adapters, and reloaded each final bundle through a
-fresh `PeftModel`.
+M11 is complete. The formal Colab L4 run passed for both objects, and the immutable SDXL
+inpainting model also passed local one-step smoke plus a real cross-process checkpoint resume.
+The formal run completed 400 steps per object, produced four checkpoints and four held-out
+sample panels per object, saved the UNet plus both trainable-token adapters, and reloaded each
+final bundle through a fresh `PeftModel`.
 
 - Base model: `diffusers/stable-diffusion-xl-1.0-inpainting-0.1`
 - Locked revision: `115134f363124c53c7d878647567d04daf26e41e`
@@ -60,6 +60,35 @@ uv run --frozen python scripts/verify_colab_lora_results.py `
   --archive C:/Users/3Hml/Downloads/lora_sdxl-20260727T054640Z-1-001.zip
 ```
 
+## Local smoke and resume closure
+
+The user approved the 13.9 GB local download. The cache is isolated under
+`D:/sdg-data/01-defectforge/cache/huggingface`; all four payloads total 13,875,747,454 bytes
+and match the SHA256 locks in `configs/lora_sdxl.yaml`.
+
+| check | steps | training time | wall time | loss | peak VRAM | fresh reload |
+|---|---:|---:|---:|---:|---:|---|
+| pcb1 smoke | 1 | 4.27 s | 550.99 s | 0.097596 | 9.619 GiB | `PeftModel` |
+| capsules smoke | 1 | 4.51 s | 473.65 s | 0.187778 | 9.619 GiB | `PeftModel` |
+| pcb1 resume | 1 → 2 | 9.77 s cumulative | 475.03 s | 0.009820 final | 9.663 GiB | `PeftModel` |
+
+The resume proof used two Python processes. The first stopped normally at
+`checkpoint-000001`; its state records global/micro step 1, both text-encoder token IDs,
+optimizer/scheduler state and run signature
+`c1f85174559a97036fe56213b29cfcdad12a13d5e87d5271b2b118af695f3376`. The second process
+logged `Resuming pcb1 from step 1`, completed only step 2, preserved that signature, wrote
+`checkpoint-000002` and reloaded the resumed final bundle.
+
+Wall time is dominated by loading 13.9 GB from disk and Windows paging during a second fresh
+model load; the actual optimizer steps took seconds. Reproduce the CPU-only evidence check
+without loading SDXL or reserving GPU memory:
+
+```powershell
+uv run --frozen python scripts/verify_local_sdxl_checks.py
+```
+
+The machine-readable result is `reports/lora_sdxl_local_validation.json`.
+
 ## Visual review
 
 All eight 3072 × 1024 panels were opened and inspected. None is a direct copy of one
@@ -75,14 +104,14 @@ This negative evidence is preserved. The adapters are valid experiment inputs, w
 generation must search guidance/crop parameters, blend into full-resolution backgrounds, and
 filter text-like, halo, seam and semantically incompatible outputs.
 
-## Remaining M11 gates
+The three local diagnostic panels were also inspected. Both one-step samples are intentionally
+near-normal; the resumed step-2 PCB sample adds a small blue/dark mark inside the mask. They
+prove execution and resume, not synthesis quality, and do not alter the formal 400-step visual
+assessment above.
 
-The formal no-checkpoint branch and final fresh reload passed, but M11 remains unchecked:
+## M11 completion
 
-1. PLAN and `df-finetune` explicitly require a one-step **local** SDXL smoke.
-2. The checkpoint-resume path was not exercised. The formal run created checkpoints
-   100/200/300/400, but it began fresh and therefore does not prove restoration of both text
-   adapters plus optimizer/scheduler state.
-
-No additional formal Colab training is needed. These two short checks should run after
-FormosaNLU releases the local GPU; until then, no CUDA process should be started.
+The formal no-checkpoint branch, both local one-step smoke runs, actual checkpoint restoration,
+saved dual token adapters, samples, peak VRAM recording and fresh reloads have all passed.
+`PLAN.md` can therefore mark M11 complete. No additional M11 Colab or local GPU run is needed;
+all large caches, checkpoints, adapters and panels remain in ignored D-drive/result paths.

@@ -197,13 +197,18 @@ scripts/validate_colab_notebook.py
 scripts/package_m11_colab.py --paths --output-dir PATH
 scripts/verify_colab_lora_results.py
   --paths --config --results-root PATH --archive PATH --output PATH
+scripts/verify_local_sdxl_checks.py
+  --paths --config --cache-root PATH --smoke-root PATH --resume-root PATH --output PATH
 ```
 前者驗五節、resume 分支、Secrets 與「notebook 不得複製訓練迴圈」；後者只封裝
 tracked source、20 張 frozen few-shot image/mask 與每型一個 held-out placement，
 產兩個 zip 與 SHA256 manifest。第三支對下載 ZIP 與 `results/colab/lora_sdxl/`
 做 CPU-only 重驗：CRC／安全 member、凍結 hashes、final adapter/tokenizer inventory、
 sample sidecar／panel／background hashes、blocklist 與 Colab validator 證據必須一致；
-不載入 SDXL base weights，也不得把它當成未實跑 resume 分支的替代證據。
+不載入 SDXL base weights，也不得把它當成未實跑 resume 分支的替代證據。第四支重算
+本機四份 locked base-weight SHA256，並驗兩物件 one-step smoke、step 1 → 2 resume
+progression、run signature、checkpoint/final bundles、雙 tokenizer、sample 與 blocklist；
+同樣不載入模型或配置 GPU。
 
 ### M12 `src/synthetic/generate_diffusion.py`
 ```

@@ -1,0 +1,111 @@
+{
+  "base_model": "diffusers/stable-diffusion-xl-1.0-inpainting-0.1",
+  "base_model_revision": "115134f363124c53c7d878647567d04daf26e41e",
+  "frozen_sha256": {
+    "defect_types_sha256": "0c7669287fb1b8f48b3f6aff202eaefc914e8bfc1d892b9e63f88b20996cb41a",
+    "manifest_sha256": "3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c",
+    "selection_sha256": "7021234d0bef51926832591d60c205fa7273e0cc32fd0ae5348740094b060ea2"
+  },
+  "model_cache": {
+    "bytes": 13875747454,
+    "files": {
+      "text_encoder/model.safetensors": {
+        "bytes": 492265879,
+        "sha256": "79f531155c765c22c89e23328793a2e91a1178070af961c57e2eae5f0509b65b"
+      },
+      "text_encoder_2/model.safetensors": {
+        "bytes": 2778702976,
+        "sha256": "283bb90f987a133dec11947571aca17692ed32f3fff708441ac8eedcfa4a040e"
+      },
+      "unet/diffusion_pytorch_model.safetensors": {
+        "bytes": 10270135331,
+        "sha256": "df858870144f8af28e1d23aaf92a5238bfb5e3809775eca4e04b80516412c327"
+      },
+      "vae/diffusion_pytorch_model.safetensors": {
+        "bytes": 334643268,
+        "sha256": "98a14dc6fe8d71c83576f135a87c61a16561c9c080abba418d2cc976ee034f88"
+      }
+    }
+  },
+  "pipeline_version": "0.3.0",
+  "resume": {
+    "checkpoint_names": [
+      "checkpoint-000001",
+      "checkpoint-000002"
+    ],
+    "final_adapter_hashes": {
+      "text_token_adapter_2_sha256": "f7e78fac3a1521f6ceef95560d1c8f9ba71246e010dbacc511acc693d8535a67",
+      "text_token_adapter_sha256": "d721c0e514ab759b523b3c019671b352bc74020a80404d2f4c59843f09efc90d",
+      "unet_adapter_sha256": "339cfc6cd796353007e82b1e5aa9bacb01a4441d6dd0616dfcf6fc008c310bd5"
+    },
+    "final_global_step": 2,
+    "final_loss": 0.009820470586419106,
+    "peak_vram_gib": 9.663203716278076,
+    "reload_class": "PeftModel",
+    "run_signature": "c1f85174559a97036fe56213b29cfcdad12a13d5e87d5271b2b118af695f3376",
+    "sample": {
+      "file": "samples/step_000002.png",
+      "panel_sha256": "e4feefd184d6afbe101b3152da75cbcc5303c7492412e172bc0fa2cb9b6d4861",
+      "placement_id": "pcb1__type0__0000__00",
+      "trigger_token": "<pcb1-type0>"
+    },
+    "source_adapter_hashes": {
+      "text_token_adapter_2_sha256": "0f920dfe68ac781e8b3bb0f9a464e9d8bdaab41b33318e9af3ed328c87a6beeb",
+      "text_token_adapter_sha256": "050ed1bbb925c12c27dfc43324ee6832e2b981064bdae260f01b212ee2ad5454",
+      "unet_adapter_sha256": "0a2c24eb82904c402bfc72ff3f435349600e5d695e1fac9626004228769330eb"
+    },
+    "source_checkpoint": "checkpoint-000001",
+    "source_global_step": 1,
+    "training_elapsed_seconds": 9.773625199995877,
+    "wall_clock_seconds": 475.032283200002
+  },
+  "smoke": {
+    "capsules": {
+      "adapter_hashes": {
+        "text_token_adapter_2_sha256": "f37f47400ea96768b167760880d663703f0b830a7ce63479bec3d9824cbe581a",
+        "text_token_adapter_sha256": "07fa3291caec84ab24e23120ce4d0882c992cd8d7237a0249fea2ace4a18125a",
+        "unet_adapter_sha256": "c1222473a35d65bb590abdc6b85ae1e2f1f06a911c2623e2cfb43749a0260264"
+      },
+      "checkpoint_names": [
+        "checkpoint-000001"
+      ],
+      "last_loss": 0.18777772784233093,
+      "peak_vram_gib": 9.61937952041626,
+      "reload_class": "PeftModel",
+      "sample": {
+        "file": "samples/step_000001.png",
+        "panel_sha256": "025d109fa2c3b66b7283b5d6072569c81292310e0c85654f8a6f302c16c76dbc",
+        "placement_id": "capsules__type0__001__00",
+        "trigger_token": "<capsules-type0>"
+      },
+      "steps": 1,
+      "training_elapsed_seconds": 4.512441299993952,
+      "wall_clock_seconds": 473.65314649999345
+    },
+    "pcb1": {
+      "adapter_hashes": {
+        "text_token_adapter_2_sha256": "39f97a475c0bde98b953afa38a0f59143849c931ed64b2a1e904532501f1f73a",
+        "text_token_adapter_sha256": "c02e6e7bc99fd2ee8055337dd01b014331357951baa0ab8fcc3804093ce99e46",
+        "unet_adapter_sha256": "4b05f03d171171d7e4c5ab5479bde833d4b5679788be11ca61eb1cad851e8291"
+      },
+      "checkpoint_names": [
+        "checkpoint-000001"
+      ],
+      "last_loss": 0.09759633988142014,
+      "peak_vram_gib": 9.61937952041626,
+      "reload_class": "PeftModel",
+      "sample": {
+        "file": "samples/step_000001.png",
+        "panel_sha256": "2cdb07cd020ea757ffd9a0dbe699d765a526a39f158e7fa3e428e6644e0f8ad5",
+        "placement_id": "pcb1__type0__0000__00",
+        "trigger_token": "<pcb1-type0>"
+      },
+      "steps": 1,
+      "training_elapsed_seconds": 4.271718799995142,
+      "wall_clock_seconds": 550.988612000001
+    }
+  },
+  "status": "passed",
+  "test_blocklist_hits": 0,
+  "validated_at": "2026-07-27T09:21:58.730030+00:00"
+}

@@ -1,8 +1,8 @@
 # 換你做：Colab 操作手冊
 
-> **狀態：部分完成。** Notebook 1（M11 SDXL）的 Colab L4 正式 fresh run 與本機
-> artifact import 已通過，不需再跑正式 Colab；仍缺本機 one-step smoke 與 checkpoint
-> resume。Notebook 2（M18 SegFormer）尚未建立。本機 GPU 鎖解除前不要啟動 CUDA。
+> **狀態：Notebook 1 已完成。** M11 SDXL 的 Colab L4 正式 fresh run、成果匯入、
+> 本機兩物件 one-step smoke 與 checkpoint resume 均已通過，不需再跑。Notebook 2
+>（M18 SegFormer）尚未建立；在它備妥前目前沒有 Colab 操作。
 
 ## 通用流程（每本 notebook 都一樣）
 
@@ -45,6 +45,11 @@ fresh reload 與驗證都已通過，因此沒有 `01_train_inpaint_lora_sd2.ipy
 | 3. 需要的 Colab Secrets | `HF_TOKEN`，只由 `google.colab.userdata` 讀取；notebook 無明文 token |
 | 4. 實測時數與 compute units | pcb1 wrapper 922.2 s、capsules 855.8 s，合計 29 分 38 秒；正式 training 826.28 / 830.61 s；peak VRAM 皆 9.680 GiB。執行前未記 CU，無法誠實回推 |
 | 5. 跑完要下載哪些檔案 / 放回哪個路徑 | **已完成**：validation JSON、兩物件 `training_report.json`、`final/`、`samples/` 共 49 files，已放回本機 `results/colab/lora_sdxl/`；Drive checkpoints 暫不刪 |
+
+本機補充驗收也已完成：pcb1 / capsules one-step smoke 的 peak VRAM 皆為
+9.619 GiB，pcb1 受控 resume 從 step 1 恢復至 step 2，peak 9.663 GiB；三個 final
+bundle 都通過 fresh `PeftModel` 雙 encoder 重載。證據在
+`reports/lora_sdxl_local_validation.json`。目前不需再操作 Notebook 1。
 
 ## Notebook 2 — M18 SegFormer（尚未建立）
 

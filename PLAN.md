@@ -98,16 +98,19 @@
     訓練 128.66 / 125.65 秒、峰值皆 3.203 GiB；受控中斷／resume 與兩物件
     `PeftModel` 獨立重載通過，詳見 `reports/lora_sd2_report.md`
 
-- [ ] **M11** 🙋 `notebooks/01_train_inpaint_lora_sdxl.ipynb`（Colab L4）＋ 本機 smoke test
+- [x] **M11** 🙋 `notebooks/01_train_inpaint_lora_sdxl.ipynb`（Colab L4）＋ 本機 smoke test
   - **無人值守**：notebook 與 `--smoke` 本機驗證可自動做完；**實際 Colab 訓練必須等人**
   - **驗證**：`--max-train-steps 1 --smoke` 跑通薄封裝並存出權重檔；斷點續跑分支（有／無 checkpoint）
     各跑一次；notebook 內無明文 token；峰值 VRAM 記進 `instructions_for_me.md`
-  - **目前證據**：Colab L4 正式 fresh run 已完成兩物件各 400 steps、四個 checkpoints、
-    三份 adapters、8 張 sample 與 fresh `PeftModel` reload；峰值 9.680 GiB，CPU import
-    verifier 全綠。仍缺本機 one-step smoke 與實際 checkpoint resume，故保持未勾。
+  - **完成證據**：Colab L4 正式 fresh run 已完成兩物件各 400 steps、四個 checkpoints、
+    三份 adapters、8 張 sample 與 fresh `PeftModel` reload；峰值 9.680 GiB。本機兩物件
+    one-step smoke（峰值皆 9.619 GiB）與 pcb1 step 1 → 2 跨 process resume（9.663 GiB）
+    均通過，四份 base weights、雙 tokenizer、三份 adapters、sample 與 blocklist 的
+    CPU verifier 全綠，詳見 `reports/lora_sdxl_report.md`。
 
 - [x] **M12** 👀 `src/synthetic/generate_diffusion.py` — SD2 生成 **500 張／物件** ＋ refine 搜尋
-  - **無人值守**：SD2 部分可跑到底；**SDXL 部分等 M11 的 Colab 權重回來才做**
+  - **無人值守**：SD2 部分可跑到底；SDXL 權重已由 M11 回收，本 milestone 的正式
+    generation／refine 證據仍為 SD2
   - **驗證**：`metadata.jsonl` 每行通過 schema（缺欄即失敗）；同 seed 重跑位元相同；
     `original/` 與 `searched/` 並排 grid **自己看**，確認 refine 真的變好（沒變好就檢討 `refine_score` 權重）
   - **完成證據**：original / searched 各 1,000 筆；searched 逐筆保留 original baseline，

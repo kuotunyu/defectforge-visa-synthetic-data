@@ -201,6 +201,27 @@ samples 與正式 400-step runs 均通過。
 
 ---
 
+## 2026-07-27 — SDXL 本機 smoke 的 optimizer 很快，但 fresh reload 看似停住
+
+**里程碑**：M11
+
+**症狀**：RTX 4090 的 one-step optimizer 約 2–5 秒完成，但整個 smoke wall time 約
+8–9 分鐘；final bundle 寫出後，終端可連續數分鐘沒有新輸出。
+
+**根因**：鎖定 SDXL base payload 共 13.875 GB。32 GB Windows 主機在同一 process
+卸載訓練模型後再 fresh-load UNet 與兩個 text encoders 時會大量換頁；這不是 CUDA
+hang，GPU peak 仍只有約 9.62–9.66 GiB。
+
+**解法**：先用 `nvidia-smi` 與 `Get-Process` 確認 process 仍回應、RAM／GPU 數值仍有
+變化，讓 fresh reload 自然完成。cache 放在
+`D:\sdg-data\01-defectforge\cache\huggingface`，不要因安靜期重開下載或刪除 checkpoint。
+
+**預防**：在 32 GB Windows 主機預留數分鐘 reload wall time；以
+`reports/lora_sdxl_local_validation.json` 的 hashes、step progression 與
+`reload_class=PeftModel` 驗收，不以終端暫時無輸出判定失敗。
+
+---
+
 ## 2026-07-27 — LoRA 訓練通過不代表 raw inpaint patch 可直接發佈
 
 **里程碑**：M10

@@ -143,6 +143,27 @@ Do not mark M11 complete until the real immutable SDXL model has completed one l
 fresh/no-checkpoint and checkpoint-resume branches have both run, saved adapters reload, and
 peak VRAM is recorded. A tiny or structural test is useful evidence but does not replace this.
 
+The measured local M11 reference uses the approved cache at
+`D:/sdg-data/01-defectforge/cache/huggingface`:
+
+- pcb1 / capsules one-step smoke: 9.619 GiB peak each, fresh dual-text-encoder
+  `PeftModel` reload passed;
+- pcb1 controlled resume: a fresh process stopped at checkpoint 1, a second process resumed
+  at step 1 and completed step 2, 9.663 GiB peak, final reload passed;
+- the four locked base-weight payloads total 13,875,747,454 bytes.
+
+Recheck the ignored local evidence without loading weights or configuring CUDA:
+
+```powershell
+uv run --frozen python scripts/verify_local_sdxl_checks.py
+```
+
+Require all four cached model hashes, both smoke runs, the exact checkpoint 1 -> 2 progression
+and run signature, dual tokenizers, three adapter bundles, samples, and zero blocklist hits.
+On a 32 GB Windows host, initial model loading and final fresh reload can spend several minutes
+paging even though the optimizer step itself takes only a few seconds; do not interrupt a
+responsive process during that phase.
+
 ## Independent validation and visual review
 
 Run:
