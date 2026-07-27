@@ -338,6 +338,34 @@ formal groups。另需先用 M11 adapters 補齊 `stageB_sdxl/searched` 250 張�
 
 ---
 
+## 2026-07-27 — Session 22：M16 Real-only 超參調校與共同設定凍結
+
+### 搜尋設計
+- 只用兩物件 frozen Real-only validation；六個 development run 的 test inventory
+  全部為空
+- 固定 weight decay 0.05、batch 16、搜尋 budget 300 steps，比較 learning rate
+  `1e-5 / 3e-5 / 1e-4`
+- 選擇規則事前固定為兩物件 mean Macro-F1 → mean AUROC → 較低 learning rate
+
+### 結果
+- `1e-5`：mean Macro-F1 **0.799986**、mean AUROC **0.939352**；pcb1 / capsules
+  best step 100 / 75
+- `3e-5`：mean Macro-F1 0.755161、mean AUROC 0.941667
+- `1e-4`：mean Macro-F1 0.773602、mean AUROC 0.880093
+- 凍結共同設定：learning rate `1e-5`、weight decay `0.05`、batch 16、
+  final refit **100 optimizer steps**
+- `verify_classifier_tuning.py` 從六份 raw report 重算 winner 並確認 config 完全相符，
+  `status=passed`
+
+### 下一步
+使用唯一 frozen setting 跑 38 個 formal canonical runs；任何 synthetic 組不得調參。
+在 `base_sdxl` 前先補齊 250 張／物件 SDXL searched 來源。
+
+### 換你做
+目前沒有；formal 分類與 SDXL 生成都在本機 RTX 4090 執行。
+
+---
+
 ## 2026-07-27 — Session 20：M15 Phase 1 獨立驗收與交接邊界修正
 
 ### 做了什麼

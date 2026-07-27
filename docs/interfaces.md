@@ -314,6 +314,18 @@ scripts/verify_classifier_smoke.py
 驗 model/revision/base hash、1 step、portable data manifest hash、validation real-only、
 test inventory 為空、sample exposure、peak VRAM 與輸出 model hash；不載模型或配置 GPU。
 
+Real-only tuning 的 CPU-only 凍結驗證：
+```text
+scripts/verify_classifier_tuning.py
+  --paths configs/paths.yaml
+  --config configs/classifier.yaml
+  --output reports/classifier_tuning.json
+  --report reports/classifier_tuning.md
+```
+驗三個 learning-rate 候選 × 兩物件的 raw report、development test inventory 皆為空、
+validation 皆為真實資料、model lock 與固定搜尋預算；以兩物件 mean Macro-F1、mean AUROC、
+較低 learning rate 依序選擇，並要求 config 的 frozen setting 完全相符。
+
 ### M15 `scripts/verify_phase1.py`
 ```text
 --project-root PATH

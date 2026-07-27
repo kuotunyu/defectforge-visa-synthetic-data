@@ -1,0 +1,118 @@
+{
+  "candidates": [
+    {
+      "learning_rate": 1e-05,
+      "mean_auroc": 0.9393518518518518,
+      "mean_macro_f1": 0.7999856321839081,
+      "objects": {
+        "capsules": {
+          "anomaly_f1": 0.6666666666666666,
+          "auroc": 0.9259259259259258,
+          "best_step": 75,
+          "data_manifest_sha256": "a0445b60dafd35b6fca66dec0c82dc207e0b1b6fb424c449675ba9e32ce08a3a",
+          "executed_steps": 175,
+          "macro_f1": 0.8133333333333332,
+          "normal_false_positive_rate": 0.0,
+          "peak_vram_gib": 3.1747636795043945,
+          "run_name": "m16_tune_capsules_lr1e5_s300",
+          "training_seconds": 57.920246300000144,
+          "validation_n": 42
+        },
+        "pcb1": {
+          "anomaly_f1": 0.625,
+          "auroc": 0.9527777777777777,
+          "best_step": 100,
+          "data_manifest_sha256": "0ea5350d70caf92f35d6e4f28cd2728b619264743fc795eac64a4c8cf89611d4",
+          "executed_steps": 200,
+          "macro_f1": 0.7866379310344828,
+          "normal_false_positive_rate": 0.08333333333333333,
+          "peak_vram_gib": 3.1747636795043945,
+          "run_name": "m16_tune_pcb1_lr1e5_s300",
+          "training_seconds": 72.80793489999996,
+          "validation_n": 66
+        }
+      },
+      "weight_decay": 0.05
+    },
+    {
+      "learning_rate": 3e-05,
+      "mean_auroc": 0.9416666666666667,
+      "mean_macro_f1": 0.7551610707803993,
+      "objects": {
+        "capsules": {
+          "anomaly_f1": 0.5,
+          "auroc": 0.9305555555555556,
+          "best_step": 50,
+          "data_manifest_sha256": "a0445b60dafd35b6fca66dec0c82dc207e0b1b6fb424c449675ba9e32ce08a3a",
+          "executed_steps": 150,
+          "macro_f1": 0.7236842105263157,
+          "normal_false_positive_rate": 0.0,
+          "peak_vram_gib": 3.1747636795043945,
+          "run_name": "m16_tune_capsules_lr3e5_s300",
+          "training_seconds": 50.1207344999998,
+          "validation_n": 42
+        },
+        "pcb1": {
+          "anomaly_f1": 0.625,
+          "auroc": 0.9527777777777777,
+          "best_step": 50,
+          "data_manifest_sha256": "0ea5350d70caf92f35d6e4f28cd2728b619264743fc795eac64a4c8cf89611d4",
+          "executed_steps": 150,
+          "macro_f1": 0.7866379310344828,
+          "normal_false_positive_rate": 0.08333333333333333,
+          "peak_vram_gib": 3.1747636795043945,
+          "run_name": "m16_tune_pcb1_lr3e5_s300",
+          "training_seconds": 52.849295399999846,
+          "validation_n": 66
+        }
+      },
+      "weight_decay": 0.05
+    },
+    {
+      "learning_rate": 0.0001,
+      "mean_auroc": 0.8800925925925926,
+      "mean_macro_f1": 0.7736021505376344,
+      "objects": {
+        "capsules": {
+          "anomaly_f1": 0.6666666666666666,
+          "auroc": 0.8935185185185186,
+          "best_step": 25,
+          "data_manifest_sha256": "a0445b60dafd35b6fca66dec0c82dc207e0b1b6fb424c449675ba9e32ce08a3a",
+          "executed_steps": 125,
+          "macro_f1": 0.8133333333333332,
+          "normal_false_positive_rate": 0.0,
+          "peak_vram_gib": 3.1747636795043945,
+          "run_name": "m16_tune_capsules_lr1e4_s300",
+          "training_seconds": 45.31196170000021,
+          "validation_n": 42
+        },
+        "pcb1": {
+          "anomaly_f1": 0.5,
+          "auroc": 0.8666666666666667,
+          "best_step": 100,
+          "data_manifest_sha256": "0ea5350d70caf92f35d6e4f28cd2728b619264743fc795eac64a4c8cf89611d4",
+          "executed_steps": 200,
+          "macro_f1": 0.7338709677419355,
+          "normal_false_positive_rate": 0.0,
+          "peak_vram_gib": 3.1747636795043945,
+          "run_name": "m16_tune_pcb1_lr1e4_s300",
+          "training_seconds": 73.67220769999994,
+          "validation_n": 66
+        }
+      },
+      "weight_decay": 0.05
+    }
+  ],
+  "selected": {
+    "batch_size": 16,
+    "final_total_steps": 100,
+    "learning_rate": 1e-05,
+    "weight_decay": 0.05,
+    "winner_mean_auroc": 0.9393518518518518,
+    "winner_mean_macro_f1": 0.7999856321839081
+  },
+  "selection_rule": "mean_macro_f1_then_mean_auroc_then_lower_lr",
+  "status": "passed",
+  "test_loaded": false,
+  "verified_at": "2026-07-27T13:41:30.778731+00:00"
+}

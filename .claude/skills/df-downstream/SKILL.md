@@ -44,6 +44,11 @@ Tune only `real_only` in `--mode development`. Development must never create tes
 Freeze one common learning rate, weight decay, total steps, augmentation policy, and model lock
 in `configs/classifier.yaml`; record the Real-only validation evidence before setting
 `hyperparameters_frozen: true`.
+Run `uv run --frozen python scripts/verify_classifier_tuning.py` after freezing; it must
+recompute the winner from all raw reports and confirm that the config matches.
+The verified M16 lock is learning rate `1e-5`, weight decay `0.05`, batch size `16`, and
+`100` final optimizer steps. Change it only through a new preregistered ADR and Real-only-only
+development rerun.
 
 Formal runs use:
 

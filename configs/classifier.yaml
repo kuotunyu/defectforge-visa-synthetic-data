@@ -1,6 +1,6 @@
 schema_version: 1
 pipeline_version: "0.1.0"
-hyperparameters_frozen: false
+hyperparameters_frozen: true
 
 model:
   name: convnext_tiny.fb_in1k
@@ -15,8 +15,8 @@ model:
 
 training:
   batch_size: 16
-  total_steps: 300
-  learning_rate: 0.00003
+  total_steps: 100
+  learning_rate: 0.00001
   weight_decay: 0.05
   warmup_steps: 20
   gradient_clip_norm: 1.0
