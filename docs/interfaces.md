@@ -474,6 +474,7 @@ Macro-F1 上分段內插；低於／高於觀察範圍只報 `≤10`／`≥60`�
 | `scripts/verify_generation_quality.py` | 核對 M14 CSV／Markdown／validation、sanity gate、圖與 feature-cache SHA256 |
 | `scripts/verify_readme.py` | 從 `results/*.csv` 重算 README 每張表的數字並比對 |
 | `scripts/verify_splits.py` | 重跑 [ADR-007](decisions.md#adr-007) 的四項斷言 |
+| `scripts/verify_publish.py` | M24 唯讀稽核：必備檔、13 skills、token／個人路徑、檔案大小、Git 身分與 co-author trailer |
 | `scripts/upload_hf.py` | 見 [publish_spec.md](publish_spec.md)；**預設 `--dry-run`，上傳要顯式加 `--confirm`** |
 
 ---

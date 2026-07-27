@@ -135,6 +135,7 @@ trigger token 清單與對應的瑕疵型別、推論範例程式碼（含 crop-
 - [ ] 全 repo 掃描 token 格式、被追蹤的 `.env`、Windows 使用者絕對路徑 → 0 命中
 - [ ] `git shortlog -sne --all` 只有 `kuotunyu`
 - [ ] trailer 掃描無輸出
+- [ ] `uv run python scripts/verify_publish.py` 全綠（此命令只稽核，不發佈／不上傳）
 
 **HF**
 - [ ] dataset card 與 model card 完整（§3.2、§4）
