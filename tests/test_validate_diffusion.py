@@ -6,6 +6,7 @@ import pytest
 from scripts.validate_diffusion import (
     DiffusionValidationError,
     compare_record_to_placement,
+    configured_adapter,
     expected_blend_support,
     expected_candidate_seed,
     read_records,
@@ -60,6 +61,31 @@ def metadata_record(placement: dict[str, object]) -> dict[str, object]:
         resolution=512,
         blend="feather_alpha",
     )
+
+
+def test_configured_adapter_supports_runs_and_colab_results(tmp_path: Path) -> None:
+    class FakePaths:
+        runs = tmp_path / "data" / "runs"
+        project_root = tmp_path / "project"
+        colab_results = project_root / "results" / "colab"
+
+    paths = FakePaths()
+    runs_adapter, runs_logical = configured_adapter(
+        paths,  # type: ignore[arg-type]
+        {"adapter": "lora_sd2/pcb1/seed_42/final"},
+    )
+    colab_adapter, colab_logical = configured_adapter(
+        paths,  # type: ignore[arg-type]
+        {
+            "adapter_root": "colab_results",
+            "adapter": "lora_sdxl/pcb1/final",
+        },
+    )
+
+    assert runs_adapter == (paths.runs / "lora_sd2/pcb1/seed_42/final").resolve()
+    assert runs_logical == "runs/lora_sd2/pcb1/seed_42/final"
+    assert colab_adapter == (paths.colab_results / "lora_sdxl/pcb1/final").resolve()
+    assert colab_logical == "results/colab/lora_sdxl/pcb1/final"
 
 
 def test_compare_record_to_placement_detects_source_mutation() -> None:

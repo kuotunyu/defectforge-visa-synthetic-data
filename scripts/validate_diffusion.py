@@ -1,4 +1,4 @@
-"""Independently validate Stage B SD2 generation and refine artifacts."""
+"""Independently validate Stage B diffusion generation and refine artifacts."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from src.common.integrity import (  # isort: skip
     sha256_file,
     verify_frozen_manifest,
 )
-from src.common.paths import load_paths  # isort: skip
+from src.common.paths import Paths, load_paths  # isort: skip
 from src.synthetic.generate_diffusion import (  # isort: skip
     load_config,
     pipeline_version,
@@ -57,6 +57,24 @@ def parse_args() -> argparse.Namespace:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise DiffusionValidationError(message)
+
+
+def configured_adapter(paths: Paths, object_config: dict[str, Any]) -> tuple[Path, str]:
+    root_name = str(object_config.get("adapter_root", "runs"))
+    if root_name == "runs":
+        adapter = paths.runs / str(object_config["adapter"])
+        logical = Path("runs") / str(object_config["adapter"])
+    elif root_name == "colab_results":
+        adapter = paths.colab_results / str(object_config["adapter"])
+        try:
+            logical = adapter.relative_to(paths.project_root)
+        except ValueError as error:
+            raise DiffusionValidationError(
+                f"Colab adapter is outside the project root: {adapter}"
+            ) from error
+    else:
+        raise DiffusionValidationError(f"Unsupported adapter_root: {root_name}")
+    return adapter.resolve(strict=False), logical.as_posix()
 
 
 def expected_candidate_seed(
@@ -240,8 +258,7 @@ def compare_record_to_placement(
     require(source == expected_source, f"{sample_id}: source provenance mismatch")
     expected_placement = {
         "affine": {
-            key: placement["affine"][key]
-            for key in ("dx", "dy", "rotation_deg", "scale", "flip")
+            key: placement["affine"][key] for key in ("dx", "dy", "rotation_deg", "scale", "flip")
         },
         "mask_area_px": placement["mask_area_px"],
         "mask_area_ratio": placement["mask_area_ratio"],
@@ -341,9 +358,7 @@ def validate_dataset(
     require(not list(root.rglob("*.tmp")), "Temporary files remain in output tree")
 
     manifest, manifest_sha256 = verify_frozen_manifest(paths.splits)
-    selection_sha256, selection_name = read_checksum_file(
-        paths.splits / "FEWSHOT_SELECTION.sha256"
-    )
+    selection_sha256, selection_name = read_checksum_file(paths.splits / "FEWSHOT_SELECTION.sha256")
     defect_types_sha256, defect_types_name = read_checksum_file(
         paths.splits / "DEFECT_TYPES.sha256"
     )
@@ -371,16 +386,17 @@ def validate_dataset(
     selected_candidate_indices: Counter[str] = Counter()
     selected_guidance: Counter[str] = Counter()
     selected_crop_ratio: Counter[str] = Counter()
-    type_counts: dict[str, Counter[str]] = {
-        object_name: Counter() for object_name in objects
-    }
+    type_counts: dict[str, Counter[str]] = {object_name: Counter() for object_name in objects}
 
     for index, record in enumerate(selected_records, start=1):
         sample_id = str(record["sample_id"])
         placement = expected[sample_id]
         compare_record_to_placement(record, placement)
         require(record["bucket"] == bucket, f"{sample_id}: bucket mismatch")
-        require(record["generator"] == "stageB_sd2", f"{sample_id}: generator mismatch")
+        require(
+            record["generator"] == str(config["output"]["name"]),
+            f"{sample_id}: generator mismatch",
+        )
         require(
             record["pipeline_version"] == pipeline_version(bucket),
             f"{sample_id}: pipeline version mismatch",
@@ -401,14 +417,13 @@ def validate_dataset(
             generation["model_resolution"] == config["model"]["resolution"],
             f"{sample_id}: model resolution mismatch",
         )
+        _, expected_adapter_path = configured_adapter(paths, object_config)
         require(
-            generation["lora_path"]
-            == f"runs/{str(object_config['adapter']).replace(chr(92), '/')}",
+            generation["lora_path"] == expected_adapter_path,
             f"{sample_id}: adapter path mismatch",
         )
         require(
-            generation["num_inference_steps"]
-            == int(config["generation"]["num_inference_steps"]),
+            generation["num_inference_steps"] == int(config["generation"]["num_inference_steps"]),
             f"{sample_id}: inference steps mismatch",
         )
         require(
@@ -482,8 +497,7 @@ def validate_dataset(
         selected_candidate = selected[0]
         require(
             int(selected_candidate["generator_seed"]) == int(generation["seed"])
-            and float(selected_candidate["guidance_scale"])
-            == float(generation["guidance_scale"])
+            and float(selected_candidate["guidance_scale"]) == float(generation["guidance_scale"])
             and float(selected_candidate["crop_ratio"]) == float(generation["crop_ratio"]),
             f"{sample_id}: selected candidate metadata mismatch",
         )
@@ -526,16 +540,12 @@ def validate_dataset(
         image_path = safe_png(root, str(record["image_path"]), "images")
         mask_path = safe_png(root, str(record["mask_path"]), "masks")
         placement_mask_path = (
-            paths.synthetic
-            / "placements"
-            / object_name
-            / str(placement["mask_path"])
+            paths.synthetic / "placements" / object_name / str(placement["mask_path"])
         )
         image_sha256 = sha256_file(image_path)
         mask_sha256 = sha256_file(mask_path)
         require(
-            image_sha256 == sidecar["image_sha256"]
-            and mask_sha256 == sidecar["mask_sha256"],
+            image_sha256 == sidecar["image_sha256"] and mask_sha256 == sidecar["mask_sha256"],
             f"{sample_id}: output hash mismatch",
         )
         require(
@@ -556,13 +566,11 @@ def validate_dataset(
         with Image.open(mask_path) as handle:
             mask = np.asarray(handle.convert("L"))
         require(
-            generated.shape == background.shape
-            and mask.shape == background.shape[:2],
+            generated.shape == background.shape and mask.shape == background.shape[:2],
             f"{sample_id}: full-resolution shape mismatch",
         )
         require(
-            {int(value) for value in np.unique(mask)}.issubset({0, 255})
-            and np.any(mask),
+            {int(value) for value in np.unique(mask)}.issubset({0, 255}) and np.any(mask),
             f"{sample_id}: mask is not non-empty binary PNG",
         )
         require(
@@ -592,17 +600,24 @@ def validate_dataset(
         "Two Stage B records unexpectedly share identical masks",
     )
     for object_name in objects:
-        adapter = paths.runs / str(config["objects"][object_name]["adapter"])
+        object_config = config["objects"][object_name]
+        adapter, _ = configured_adapter(paths, object_config)
         require(
             sha256_file(adapter / "unet_adapter" / "adapter_model.safetensors")
-            == config["objects"][object_name]["unet_adapter_sha256"],
+            == object_config["unet_adapter_sha256"],
             f"{object_name}: UNet adapter changed",
         )
         require(
             sha256_file(adapter / "text_token_adapter" / "adapter_model.safetensors")
-            == config["objects"][object_name]["text_token_adapter_sha256"],
+            == object_config["text_token_adapter_sha256"],
             f"{object_name}: text adapter changed",
         )
+        if "text_token_adapter_2_sha256" in object_config:
+            require(
+                sha256_file(adapter / "text_token_adapter_2" / "adapter_model.safetensors")
+                == object_config["text_token_adapter_2_sha256"],
+                f"{object_name}: second text adapter changed",
+            )
 
     _, final_manifest_sha256 = verify_frozen_manifest(paths.splits)
     require(final_manifest_sha256 == manifest_sha256, "Frozen manifest changed during validation")
@@ -626,16 +641,13 @@ def validate_dataset(
                     "minimum": min(score_deltas),
                     "regressed": sum(delta < 0 for delta in score_deltas),
                 },
-                "selected_candidate_index_counts": dict(
-                    sorted(selected_candidate_indices.items())
-                ),
+                "selected_candidate_index_counts": dict(sorted(selected_candidate_indices.items())),
             }
             if score_deltas
             else None
         ),
         "objects": {
-            object_name: dict(sorted(type_counts[object_name].items()))
-            for object_name in objects
+            object_name: dict(sorted(type_counts[object_name].items())) for object_name in objects
         },
         "output": str(root),
         "records": len(selected_records),
@@ -665,9 +677,7 @@ def main() -> int:
         )
         rendered = json.dumps(result, indent=2, sort_keys=True) + "\n"
         if args.output is not None:
-            destination = (
-                args.output if args.output.is_absolute() else PROJECT_ROOT / args.output
-            )
+            destination = args.output if args.output.is_absolute() else PROJECT_ROOT / args.output
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_text(rendered, encoding="utf-8")
         print(rendered, end="")
