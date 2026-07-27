@@ -1,8 +1,9 @@
 # DefectForge-VisA
 
-> **Status: Phase 1 complete; Phase 2 in progress — downstream results pending.** This README is a skeleton; every
-> section marked `TBD` is filled from raw artefacts under `results/` at the end of Phase 2.
-> Numbers must never be typed by hand — see `scripts/verify_readme.py` (Phase 2).
+> **Status: Phase 1 complete; M16 classification verified; M19 segmentation runs pending.**
+> The remaining `TBD` blocks are filled atomically from both downstream CSVs after the returned
+> SegFormer artefacts pass M20 validation. Numbers are never typed by hand — see
+> `scripts/verify_readme.py`.
 
 **Can synthetic defect images improve few-shot industrial anomaly classification and
 segmentation?** An open-source replication of the NVIDIA GTC 2026 course

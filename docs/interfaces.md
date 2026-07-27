@@ -444,6 +444,14 @@ canonical group，並下載 `m18_seg_results_<object>.zip`。獨立 validator �
 --report reports/segmentation_results.md
 --validation-out reports/segmentation_validation.json
 ```
+
+`--results-root` 先必須含兩個未改名、未手動解壓的
+`m18_seg_results_{pcb1,capsules}.zip`。聚合器會在寫任何 M20 產物前，防 Zip Slip、
+symlink、Windows ADS、大小／成員數異常與 CRC 錯誤，要求每包恰有 43 個白名單檔案，
+核對 notebook validator 與八組 timings，再原子匯入到 `{object}/runs/`。重跑時以
+`import_manifest.json` 綁定原 ZIP SHA256；ZIP 改變就 fail closed。其後仍由
+`validate_segmenter_runs.py` 從 raw manifests／reports／SafeTensors 重新驗證，
+不採信 notebook 產生的 per-object CSV。
 先對兩物件各自的八個 raw run 呼叫獨立 M18 validator，再只從
 `training_report.json` + `data_manifest.json` 重建 long-format CSV 與 Markdown；
 Notebook 畫面和每個 Colab runtime 自己 append 的暫存 CSV 都不當數據源。輸出包含

@@ -6,10 +6,14 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import os
+import shutil
 import sys
+import tempfile
+import zipfile
 from collections.abc import Mapping, Sequence
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import numpy as np
@@ -55,6 +59,8 @@ CSV_COLUMNS = (
     "data_manifest_sha256",
 )
 METRICS = ("dice", "miou", "pixel_auroc", "aupro")
+MAX_RESULT_ARCHIVE_MEMBERS = 256
+MAX_RESULT_ARCHIVE_UNCOMPRESSED_BYTES = 2 * 1024**3
 
 
 class SegmentationAggregationError(RuntimeError):
@@ -70,6 +76,161 @@ def load_mapping(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
     require(isinstance(value, dict), f"Expected JSON mapping: {path}")
     return value
+
+
+def _expected_archive_files(object_name: str) -> set[str]:
+    expected = {
+        f"m18_{object_name}_validation.json",
+        f"segmentation_{object_name}.csv",
+        "timings.json",
+    }
+    for group_name in FORMAL_GROUPS:
+        run = f"runs/m18_{group_name}_{object_name}_seed42"
+        expected.update(
+            {
+                f"{run}/training_report.json",
+                f"{run}/run_config.json",
+                f"{run}/data_manifest.json",
+                f"{run}/final/config.json",
+                f"{run}/final/model.safetensors",
+            }
+        )
+    return expected
+
+
+def _normalized_archive_path(info: zipfile.ZipInfo) -> str:
+    name = info.filename
+    require("\\" not in name, f"ZIP member uses a Windows separator: {name}")
+    path = PurePosixPath(name)
+    require(not path.is_absolute(), f"ZIP member is absolute: {name}")
+    require(".." not in path.parts, f"ZIP member escapes its root: {name}")
+    require(not any(":" in part for part in path.parts), f"ZIP member uses a drive/ADS: {name}")
+    normalized = path.as_posix().rstrip("/")
+    require(normalized not in {"", "."}, f"ZIP member has an empty path: {name}")
+    return normalized
+
+
+def _inspect_result_archive(
+    archive_path: Path,
+    *,
+    object_name: str,
+) -> tuple[list[zipfile.ZipInfo], int]:
+    expected = _expected_archive_files(object_name)
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            members = archive.infolist()
+            require(
+                0 < len(members) <= MAX_RESULT_ARCHIVE_MEMBERS,
+                f"Unexpected ZIP member count: {len(members)}",
+            )
+            files: dict[str, zipfile.ZipInfo] = {}
+            casefolded: set[str] = set()
+            total_uncompressed = 0
+            for info in members:
+                normalized = _normalized_archive_path(info)
+                folded = normalized.casefold()
+                require(folded not in casefolded, f"Duplicate ZIP path: {normalized}")
+                casefolded.add(folded)
+                unix_type = (info.external_attr >> 16) & 0o170000
+                require(unix_type != 0o120000, f"ZIP member is a symlink: {normalized}")
+                if info.is_dir():
+                    require(
+                        any(path.startswith(f"{normalized}/") for path in expected),
+                        f"Unexpected ZIP directory: {normalized}",
+                    )
+                    continue
+                require(normalized in expected, f"Unexpected ZIP file: {normalized}")
+                files[normalized] = info
+                total_uncompressed += info.file_size
+            require(set(files) == expected, "M18 result ZIP inventory is incomplete")
+            require(
+                total_uncompressed <= MAX_RESULT_ARCHIVE_UNCOMPRESSED_BYTES,
+                f"M18 result ZIP is too large when expanded: {total_uncompressed}",
+            )
+            require(archive.testzip() is None, f"M18 result ZIP CRC failed: {archive_path.name}")
+            return list(files.values()), total_uncompressed
+    except zipfile.BadZipFile as error:
+        raise SegmentationAggregationError(
+            f"Invalid M18 result ZIP: {archive_path}"
+        ) from error
+
+
+def _verify_returned_summary(root: Path, *, object_name: str) -> None:
+    validation = load_mapping(root / f"m18_{object_name}_validation.json")
+    require(validation.get("status") == "passed", "Returned Colab validator did not pass")
+    require(validation.get("object") == object_name, "Returned Colab object changed")
+    require(validation.get("runs") == len(FORMAL_GROUPS), "Returned Colab run count changed")
+    require(validation.get("alias_reruns") == 0, "all_mixed was physically rerun")
+    require(
+        validation.get("all_mixed_alias_of") == "filtered_syn",
+        "Returned all_mixed alias changed",
+    )
+    require(validation.get("fresh_model_reload") is True, "Colab skipped fresh model reload")
+    timings = load_mapping(root / "timings.json")
+    require(set(timings) == set(FORMAL_GROUPS), "Returned timings do not cover eight groups")
+    for group_name, value in timings.items():
+        seconds = float(value)
+        require(
+            math.isfinite(seconds) and seconds > 0.0,
+            f"Invalid returned timing: {group_name}",
+        )
+
+
+def import_result_archive(results_root: Path, *, object_name: str) -> Path:
+    """Atomically and idempotently import one exact Colab result ZIP."""
+    archive_path = results_root / f"m18_seg_results_{object_name}.zip"
+    require(archive_path.is_file(), f"Missing M18 result ZIP: {archive_path}")
+    archive_sha256 = sha256_file(archive_path)
+    members, uncompressed_bytes = _inspect_result_archive(
+        archive_path,
+        object_name=object_name,
+    )
+    destination = results_root / object_name
+    import_manifest_name = "import_manifest.json"
+    if destination.exists():
+        manifest = load_mapping(destination / import_manifest_name)
+        require(manifest.get("archive_sha256") == archive_sha256, "Imported ZIP changed")
+        require(manifest.get("object") == object_name, "Imported object changed")
+        _verify_returned_summary(destination, object_name=object_name)
+        return destination
+
+    results_root.mkdir(parents=True, exist_ok=True)
+    temporary = Path(
+        tempfile.mkdtemp(prefix=f".importing_{object_name}_", dir=results_root)
+    ).resolve()
+    require(temporary.parent == results_root.resolve(), "Unsafe M18 import directory")
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            for info in members:
+                normalized = _normalized_archive_path(info)
+                target = temporary.joinpath(*PurePosixPath(normalized).parts)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with archive.open(info) as source, target.open("xb") as output:
+                    shutil.copyfileobj(source, output, length=1024 * 1024)
+        _verify_returned_summary(temporary, object_name=object_name)
+        (temporary / import_manifest_name).write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "object": object_name,
+                    "archive_file": archive_path.name,
+                    "archive_sha256": archive_sha256,
+                    "members": len(members),
+                    "uncompressed_bytes": uncompressed_bytes,
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        os.replace(temporary, destination)
+    except BaseException:
+        if temporary.exists() and temporary.parent == results_root.resolve():
+            shutil.rmtree(temporary)
+        raise
+    return destination
 
 
 def _physical_row(run_dir: Path, group_name: str, object_name: str) -> dict[str, Any]:
@@ -249,7 +410,7 @@ def main() -> int:
     validations: dict[str, Any] = {}
     raw_report_hashes: dict[str, str] = {}
     for object_name in paths.objects:
-        object_root = results_root / object_name
+        object_root = import_result_archive(results_root, object_name=object_name)
         run_root = object_root / "runs"
         validations[object_name] = validate(
             paths=paths,

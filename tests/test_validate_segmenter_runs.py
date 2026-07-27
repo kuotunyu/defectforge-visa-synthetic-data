@@ -5,6 +5,7 @@ import pytest
 from scripts.validate_segmenter_runs import (
     SegmenterValidationError,
     _validate_data_manifest,
+    _validate_training_budget,
 )
 
 
@@ -77,4 +78,19 @@ def test_validate_data_manifest_rejects_real_defect_in_procedural_group() -> Non
             expected_test_images={test_hash},
             expected_test_masks={test_hash: None},
             blocklist={test_hash},
+        )
+
+
+def test_validate_training_budget_requires_all_formal_steps() -> None:
+    config = {"training": {"total_steps": 500}}
+    _validate_training_budget(
+        {"requested_total_steps": 500, "executed_steps": 500},
+        config,
+        run_name="complete",
+    )
+    with pytest.raises(SegmenterValidationError, match="Executed"):
+        _validate_training_budget(
+            {"requested_total_steps": 500, "executed_steps": 499},
+            config,
+            run_name="partial",
         )

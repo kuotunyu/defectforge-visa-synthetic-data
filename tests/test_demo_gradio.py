@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -73,3 +75,17 @@ def test_cli_is_local_and_private_by_default() -> None:
     assert args.port == 7860
     assert args.share is False
     assert args.inbrowser is False
+
+
+def test_direct_script_entrypoint_exposes_help() -> None:
+    project_root = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [sys.executable, "src/inference/demo_gradio.py", "--help"],
+        cwd=project_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "--cls-ckpt" in result.stdout
+    assert "--seg-ckpt" in result.stdout

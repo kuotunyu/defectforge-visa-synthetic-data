@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -18,6 +19,10 @@ from safetensors.torch import load_file
 from torchvision.transforms import InterpolationMode
 from torchvision.transforms import functional as tvf
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from src.common.integrity import sha256_file
 from src.common.paths import Paths, load_paths
 from src.training.train_classifier import (
@@ -28,6 +33,9 @@ from src.training.train_classifier import (
 )
 from src.training.train_classifier import (
     load_model as load_classifier_model,
+)
+from src.training.train_segmenter import (
+    _load_saved_model_state as load_saved_segmenter_state,
 )
 from src.training.train_segmenter import load_config as load_segmenter_config
 from src.training.train_segmenter import load_model as load_segmenter_model
@@ -207,10 +215,7 @@ class InspectionRuntime:
 
         segmenter_config = load_segmenter_config(paths.configs / "segmenter.yaml")
         segmenter, _ = load_segmenter_model(paths, segmenter_config["model"])
-        segmenter.load_state_dict(
-            load_file(str(segmenter_checkpoint.weight), device="cpu"),
-            strict=True,
-        )
+        load_saved_segmenter_state(segmenter, segmenter_checkpoint.weight.parent)
         self.segmenter = segmenter.eval().to(device)
         self.segmenter_size = int(segmenter_config["model"]["input_size"])
         self.segmenter_mean = tuple(float(value) for value in segmenter_config["model"]["mean"])

@@ -393,6 +393,8 @@ def main() -> int:
         default=Path("reports/phase2_figures_validation.json"),
     )
     args = parser.parse_args()
+    require(args.classification.is_file(), f"Missing result CSV: {args.classification}")
+    require(args.segmentation.is_file(), f"Missing result CSV: {args.segmentation}")
     classification_path = args.classification.resolve(strict=True)
     segmentation_path = args.segmentation.resolve(strict=True)
     classification_rows = read_csv(classification_path)

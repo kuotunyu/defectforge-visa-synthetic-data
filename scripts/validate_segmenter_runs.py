@@ -151,6 +151,23 @@ def _validate_model(
         require(model.config.num_labels == 1, "Fresh SegFormer reload changed num_labels")
 
 
+def _validate_training_budget(
+    report: Mapping[str, Any],
+    config: Mapping[str, Any],
+    *,
+    run_name: str,
+) -> None:
+    expected = int(config["training"]["total_steps"])
+    require(
+        int(report["requested_total_steps"]) == expected,
+        f"Requested optimizer-step budget changed: {run_name}",
+    )
+    require(
+        int(report["executed_steps"]) == expected,
+        f"Executed optimizer-step budget changed: {run_name}",
+    )
+
+
 def validate(
     *,
     paths: Any,
@@ -205,11 +222,7 @@ def validate(
         require(report["model_revision"] == config["model"]["revision"], "Model revision changed")
         require(report["base_weight_sha256"] == config["model"]["sha256"], "Base hash changed")
         require(report["input_size"] == config["model"]["input_size"], "Input size changed")
-        require(
-            report["requested_total_steps"] == config["training"]["total_steps"],
-            "Optimizer-step budget changed",
-        )
-        require(report["executed_steps"] > 0, f"No optimizer steps: {run_name}")
+        _validate_training_budget(report, config, run_name=run_name)
         for metric_name in METRICS:
             value = float(report["metrics"][metric_name])
             require(math.isfinite(value) and 0.0 <= value <= 1.0, f"Invalid {metric_name}")

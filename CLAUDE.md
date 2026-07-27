@@ -126,4 +126,4 @@ git log -1 --format="%an <%ae>"; git log -1 --format="%B" | Select-String "Co-[A
 | 資料集 | VisA（CC BY 4.0），先做 `pcb1` 與 `capsules` |
 | 目標 | 少樣本瑕疵情境下，證明合成資料能提升**瑕疵分類**與**瑕疵區域分割** |
 | 方法論來源 | NVIDIA GTC 2026 *Few-shot Industrial SDG (Cosmos AnomalyGen)*，用開源工具復刻，見 [docs/methodology.md](docs/methodology.md) |
-| 目前階段 | Phase 2 M16（ConvNeXt-Tiny 分類實驗）。Phase 1 M0–M15 已由 `scripts/verify_phase1.py` 驗收通過；分割仍等 M18 |
+| 目前階段 | Phase 2 M19（使用者執行兩物件 SegFormer Colab 正式實驗）。M16–M18 已獨立驗證並提交；結果 ZIP 回收後由 M20 從 raw artifacts 聚合 |

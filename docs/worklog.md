@@ -459,6 +459,42 @@ capsules；完成後把兩個未改名的結果 ZIP 放到 `results/colab/segmen
 
 ---
 
+## 2026-07-28 — Session 25：M19 等待期間的 M20／M22 fail-closed 補強
+
+### M19 → M20 回收閉環
+- 發現操作手冊正確要求使用者只放回兩個未解壓 ZIP，但 M20 聚合器原本只接受已解壓的
+  `{object}/runs/`，形成必然的人工作業斷點
+- `aggregate_segmentation.py` 現在會直接讀固定檔名
+  `m18_seg_results_{pcb1,capsules}.zip`，先防 Zip Slip、symlink、Windows ADS、
+  case-insensitive duplicate path、member／expanded-size 異常與 CRC 錯誤
+- 每包必須恰有 43 個白名單檔案；核對 notebook validator `status=passed`、8 runs、
+  fresh model reload、`all_mixed` alias 0 rerun，以及八組正數 finite timings
+- 匯入使用同磁碟 temporary directory + atomic rename；`import_manifest.json` 綁定原始
+  ZIP SHA256。重跑可重用同一包，ZIP 改變則 fail closed
+- 真實缺檔狀態已實測：缺 `m18_seg_results_pcb1.zip` 時，在建立
+  `results/segmentation.csv`、報告或 validation JSON 前停止，三者皆不存在
+
+### 正式結果與 Demo gate 補強
+- `validate_segmenter_runs.py` 從「executed steps > 0」收緊為
+  `requested == executed == frozen 500`；防止不完整 formal run 通過公平性驗證
+- M22 Demo 改用 M18 已驗證的 `from_pretrained(local_dir)` SegFormer key conversion，
+  不再 raw strict-load 版本不相容的 SafeTensors keys
+- 補上 direct-file Windows entrypoint bootstrap；實測
+  `uv run python src/inference/demo_gradio.py --help` 成功且 `--share` 預設 off
+- README 與 CLAUDE 狀態更新為 M16 已驗證、M19 分割執行中；數字區仍保持原子 TBD，
+  不在 segmentation 缺失時提前寫半份結果
+
+### 驗證與邊界
+- 相關 22 tests passed、Ruff passed
+- `verify_readme.py` 與 `build_phase2_figures.py` 在缺
+  `results/segmentation.csv` 時均先停止，未留下 README validation 或任何 M21 正式圖
+- M19、M20、M22 仍未勾選；正式結果 ZIP、raw aggregation 與真模型 UI/GIF 缺一不可
+
+### 換你做
+仍是 M19：完成兩個 Colab 物件並放回兩個未改名 ZIP；不需自行解壓。
+
+---
+
 ## 2026-07-27 — Session 20：M15 Phase 1 獨立驗收與交接邊界修正
 
 ### 做了什麼
