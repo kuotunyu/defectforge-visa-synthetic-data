@@ -366,6 +366,51 @@ formal groups。另需先用 M11 adapters 補齊 `stageB_sdxl/searched` 250 張�
 
 ---
 
+## 2026-07-28 — Session 23：M16 正式分類矩陣與 M17 品質—下游分析
+
+### M16 正式矩陣
+- 執行 `df-guard` 後，以唯一凍結設定完成 38 / 38 個 formal ConvNeXt-Tiny run：
+  seed 42 的 15 canonical groups × 2 objects，加上事前指定的 Real-only 與
+  Filtered synthetic seed 43 / 44 重複；0 skipped、0 quarantined
+- 所有 run 使用相同 base revision／weight SHA、100 optimizer steps、batch 16、
+  learning rate `1e-5` 與 weight decay `0.05`；每列記錄 real／synthetic exposure、
+  portable data manifest、run signature 與 frozen test inventory
+- `scripts/verify_classifier_matrix.py` 獨立重驗 38 個 run artifacts、CSV、train/test
+  disjoint hashes、blocklist、aliases 與三 seed 統計，`status=passed`、blocklist hits 0
+
+### M16 結果
+- Real-only 三 seed AUROC mean ± std：pcb1 **0.9265 ± 0.0231**，
+  capsules **0.8160 ± 0.0224**
+- Filtered synthetic 三 seed AUROC mean ± std：pcb1 **0.1677 ± 0.0502**，
+  capsules **0.3243 ± 0.0426**；兩物件均穩定劣於 Real-only，不能解讀為改善
+- seed 42 的 Full-real AUROC：pcb1 **0.9294**、capsules **0.8583**，確認 trainer
+  本身可從真實瑕疵學習；PCB 的 125 synthetic 尚有 0.8779，但 250 synthetic
+  降至 0.1336，支持 exposure／domain-gap 風險
+- SDXL searched 250-image bucket AUROC：pcb1 **0.1420**、capsules **0.2967**；
+  影像觀感或 refine 分數改善不代表下游分類改善
+
+### M17 品質—下游分析
+- 依事前固定口徑，只 join 三個 unfiltered source-only generation rows 與對應物件的
+  seed-42 source-ablation classifier，Real-only 為同物件基準；沒有看結果後換來源或指標
+- 六個點的 Macro-F1 delta 全為負，範圍 **-0.0869 到 -0.4713**
+- Pearson `r(KID, ΔMacro-F1) = -0.6084`；只有六點，報告明確標為描述性統計，
+  不當成顯著性檢定或因果證據
+- `reports/figures/quality_vs_downstream.png` 已用原始解析度目視，標籤、零線、
+  座標與六個來源點均正確且無裁切
+
+### 產物與下一步
+- `results/classification.csv`
+- `reports/classifier_results.md`、`reports/classifier_matrix_validation.json`
+- `reports/quality_vs_downstream.md`、`reports/quality_vs_downstream.json`
+- `reports/figures/quality_vs_downstream.png`
+- 下一步是 M18：先在本機對兩物件跑 SegFormer-B0 one-step smoke 與獨立驗證，
+  通過後才封裝 Colab notebook／兩個資料 ZIP 並提供使用者精確操作路徑
+
+### 換你做
+目前沒有；M18 本機 smoke 與封裝完成前，不需要開 Colab 或搬檔案。
+
+---
+
 ## 2026-07-27 — Session 20：M15 Phase 1 獨立驗收與交接邊界修正
 
 ### 做了什麼
