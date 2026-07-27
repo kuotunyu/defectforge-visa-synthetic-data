@@ -37,6 +37,7 @@ kaggle.json
 # ignore its CONTENTS, not the directory itself.
 /results/*
 !/results/generation_quality.csv
+!/results/classification.csv
 !/results/colab/
 /results/colab/*
 !/results/colab/.gitkeep

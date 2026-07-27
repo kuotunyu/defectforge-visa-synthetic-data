@@ -701,3 +701,48 @@ SegFormer notebook 的建立、`--group` 實作與本機 smoke 明確屬於 Phas
 - 使用者目前不需做 Colab 操作；等 M18 的 notebook 與 smoke 全綠後，才會收到確切
   檔名、Runtime、Secrets、成本估計與下載清單。
 - 未來若 M18 的實作改變資源需求，交接內容會依實測更新，不受 M15 的猜測綁死。
+
+---
+
+<a id="adr-020"></a>
+## ADR-020 — M16 預註冊 38 個 canonical run，Real-only 開發階段完全不載入 test
+
+**狀態：Accepted**（2026-07-27）
+
+### 背景
+Phase 2 原協定寫「約 40 run」，但 `real_60` 與五組中的 `full_real`、`syn_500` 與
+主線 `filtered_syn`、`base_sd2` 與 refine 的 `bucket_searched` 實際是相同資料。
+重跑相同 alias 只會浪費 GPU，還可能因隨機性產生看似獨立的偽重複。另一方面，
+「最佳 Filtered 組補 3 seeds」若等看完 test 才選，會把 test 變成模型選擇集。
+
+### 決策
+- ConvNeXt-Tiny 固定 `timm/convnext_tiny.fb_in1k` revision
+  `b43a6303c9fcf176d2d707478a128c2c91e93528`，`model.safetensors` SHA256
+  `08b9dc9c3a3a29421de7996761e176501896d1ae7fc3085cf56a643772329276`，
+  384×384、每物件二元分類。模型載入後才把 1000-class head 換成 2-class head。
+- `--mode development` 只允許 `real_only`，只載 frozen real validation，資料結構中
+  test 清單就是空的；由兩物件共同 validation 凍結一套 learning rate、weight decay、
+  total steps 與 patience，之後所有合成組不得單獨調參。
+- `filtered_syn` 事前指定為三 seed 的主結果，不依 test 排名更換。`real_only` 與
+  `filtered_syn` 各補 seeds 43、44。
+- alias 不重跑：`real_60 → full_real`、`syn_500 → filtered_syn`、
+  `base_sd2 → bucket_searched`。seed 42 跑 15 個 canonical group × 2 物件，再加
+  8 個補 seed run，合計 **38 個實跑**，仍符合原定「約 40」。
+- 主線 filtered/unfiltered 與量掃描各用 deterministic source×type 分層抽樣；
+  source ablation 使用各來源原始 500 張，避免 pcb1 copy-paste 過濾後只剩 84 張造成
+  數量混淆。refine 與 SD2/SDXL 底模消融都固定原始 diffusion 250 張，隔離生成器差異。
+- 所有組固定 optimizer steps 並使用相同 label-balanced sampler；報告實際抽到的
+  real-good、real-bad、synthetic-bad exposure，不能只報資料集大小。
+
+### 後果
+- `results/classification.csv` 只收 formal test 結果；development 與 smoke 留在 D 槽
+  run 目錄，不會在調參時意外看到 test。
+- `base_sdxl` 在 `stageB_sdxl/searched` 尚未產生時 fail closed，不得拿 SD2 或 Colab
+  sample panel 代替；這是正式 M16 前必須補齊的 GPU 前置工作。
+- Standard Aug 組只改訓練 transform，不增加真實影像：random resized crop、水平翻轉、
+  小角度 affine 與輕量 color jitter；其他組用 deterministic resize，差異可被獨立解釋。
+
+### 來源
+- [timm Quickstart](https://huggingface.co/docs/timm/main/quickstart)
+- [timm model factory reference](https://huggingface.co/docs/timm/reference/models)
+- [locked ConvNeXt-Tiny model card](https://huggingface.co/timm/convnext_tiny.fb_in1k)

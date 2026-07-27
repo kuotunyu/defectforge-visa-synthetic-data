@@ -1,0 +1,4 @@
+interface:
+  display_name: "DefectForge Downstream"
+  short_description: "Run guarded M16/M18/M20 downstream experiments"
+  default_prompt: "Use $df-downstream to expand and validate DefectForge downstream groups, run the required workflow, and verify results without test leakage."

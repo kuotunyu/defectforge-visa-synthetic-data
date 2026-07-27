@@ -146,7 +146,7 @@
 > 協定見 [docs/experiment_protocol.md](docs/experiment_protocol.md)，發佈規格見 [docs/publish_spec.md](docs/publish_spec.md)。
 > **Phase 1 全綠之前不准開始 Phase 2。**
 
-- [ ] **M16** 🤖 分類實驗（本機 4090，約 40 run）
+- [~] **M16** 🤖 分類實驗（本機 4090，約 40 run）
   - **驗證**：`results/classification.csv` 每列可追回 `splits/split_manifest.json` 的資料清單；
     `df-guard` 的防洩漏檢查表（[experiment_protocol.md §7](docs/experiment_protocol.md)）全綠；
     所有組的超參相同且來自 Real-only 在 validation 上的調參；每組的真實樣本曝光次數已記錄

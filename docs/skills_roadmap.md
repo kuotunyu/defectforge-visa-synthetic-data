@@ -26,7 +26,7 @@
 | `sdg-refine` | `df-refine` ✅ | 對 `original/` 做 `(guidance_scale, crop_ratio)` 逐樣本搜尋，組裝最佳結果進 `searched/` 桶 | M12 |
 | — | **`df-filter`** ✅ | 六道過濾、輸出 filtered/unfiltered 兩版、產漏斗報表 | **M13（已建）** |
 | `eval` | **`df-eval`** ✅ | per-type `nn_score`（主 KPI）／`mnn_score`／FID／KID，含健全性檢查 | **M14（已建）** |
-| — | `df-downstream` | Phase 2 下游訓練：分類（本機約 40 run）與分割（Colab 8×2 run）的組別展開、防洩漏 preflight、結果聚合 | M16 / M18 / M20 |
+| — | **`df-downstream`** ✅ | Phase 2 下游訓練：分類（本機 38 canonical run）與分割（Colab 8×2 run）的組別展開、防洩漏 preflight、結果聚合；M16 分類 SOP 已由兩物件 smoke 驗證，M18 再補分割段 | M16 / M18 / M20 |
 | — | `df-report` | 圖表全套 + README 數字自動核對（`verify_readme.py`），含「負面結果照實寫」的檢查 | M21 / M23 |
 | `anomalygen-release` | `df-release` | 發佈前總驗收：照 [publish_spec.md](publish_spec.md) 的檢查表逐項跑，含 Contributors 紅線掃描 | M24 |
 

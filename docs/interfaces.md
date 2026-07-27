@@ -288,12 +288,31 @@ scripts/compare_diffusion.py
 --group STR                # real_only | std_aug | unfiltered_syn | filtered_syn | full_real
                            # | real_20 | real_60 | syn_125 | syn_250 | syn_500
                            # | src_procedural | src_copypaste | src_diffusion
-                           # | base_sdxl | procedural_norealstats | bucket_original
+                           # | base_sd2 | base_sdxl | procedural_norealstats
+                           # | bucket_original | bucket_searched
 --run-name STR             # 預設由 group+object+seed 組出
+--mode {development,final} # development 只允許 real_only 且不載 test
 --total-steps INT          # 固定 total steps 而非 epochs（公平性規則）
+--learning-rate FLOAT --weight-decay FLOAT  # development 候選；formal 取 frozen config
+--output-dir PATH
+--smoke                    # 1 step 真模型 smoke，不寫 classification.csv
+--dry-run                  # 完整資料展開與防洩漏檢查，不載模型
 ```
 產出：`${runs}/cls/<run-name>/`、附加一列到 `results/classification.csv`
-斷言：`df-guard` 的防洩漏檢查表全綠；訓練集 ∩ highshot test == ∅
+斷言：`df-guard` 的防洩漏檢查表全綠；development 的 test inventory 必須為空；
+formal 訓練集 ∩ highshot test == ∅。每個 run 保存 portable `data_manifest.json`、
+`run_config.json`、`training_report.json` 與 model safetensors；CSV 每個 run name 唯一。
+alias `real_60` / `syn_500` / `base_sd2` 只引用 canonical run，不重跑。
+
+兩物件 smoke 的 CPU-only 重驗：
+```text
+scripts/verify_classifier_smoke.py
+  --paths configs/paths.yaml
+  --config configs/classifier.yaml
+  --output reports/classifier_smoke_validation.json
+```
+驗 model/revision/base hash、1 step、portable data manifest hash、validation real-only、
+test inventory 為空、sample exposure、peak VRAM 與輸出 model hash；不載模型或配置 GPU。
 
 ### M15 `scripts/verify_phase1.py`
 ```text

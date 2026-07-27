@@ -69,6 +69,18 @@
 | **3-seed 複跑** | +2 × 2 × 2 = 8 | 只對 **Real-only** 與**最佳 Filtered 組**補到 3 seeds |
 | **合計** | **約 40 run** | ConvNeXt-Tiny 小資料，單 run 估 5–15 分鐘 → 本機約 4–8 小時 |
 
+### 3.2 Canonical run 與 alias（[ADR-020](decisions.md#adr-020)）
+
+同一份資料定義不為了湊數重跑：`real_60` 引用 `full_real`、`syn_500` 引用
+`filtered_syn`、`base_sd2` 引用 `bucket_searched`。seed 42 實跑 15 個 canonical
+group × 2 物件，再為事前指定的 `real_only` 與主結果 `filtered_syn` 各補 seeds 43、
+44，共 **38 個實跑**。
+
+`filtered_syn` / `unfiltered_syn` / `{125,250,500}` 使用 source×defect-type 的決定性
+分層抽樣；三個來源消融各用該來源原始 500 張；`bucket_original` /
+`bucket_searched` 與 `base_sdxl` 固定 250 張原始 diffusion，讓 refine 與底模比較不被
+不同過濾通過率混淆。任何缺少的來源都 fail closed。
+
 ---
 
 ## 4. 分割實驗（Colab T4）
@@ -118,7 +130,8 @@ notebook 用 `--group` 參數切換，可平行開多本（各自唯一 `runs/` 
 
 - **對齊訓練預算**：合成資料使訓練集變大時，用**固定 total optimizer steps** 而非固定 epochs；
   報表要註明每組的「真實樣本曝光次數」
-- **Seed 策略**：所有組合先跑 1 個 seed；只對 **Real-only** 與**最佳 Filtered 組**補到 3 seeds，
+- **Seed 策略**：所有組合先跑 1 個 seed；只對 **Real-only** 與事前指定的主
+  **Filtered Synthetic 組**補到 3 seeds，
   報 mean ± std。Test 只有 40 張瑕疵／物件，**不要對 <1% 的差異下結論**
 - **超參數**：所有組共用同一組超參，由 Real-only 組在 validation 上調出來後**凍結**。
   **不准為 Filtered 組單獨調參**

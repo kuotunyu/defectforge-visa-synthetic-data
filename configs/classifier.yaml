@@ -1,0 +1,131 @@
+schema_version: 1
+pipeline_version: "0.1.0"
+hyperparameters_frozen: false
+
+model:
+  name: convnext_tiny.fb_in1k
+  repository: timm/convnext_tiny.fb_in1k
+  revision: b43a6303c9fcf176d2d707478a128c2c91e93528
+  filename: model.safetensors
+  sha256: 08b9dc9c3a3a29421de7996761e176501896d1ae7fc3085cf56a643772329276
+  input_size: 384
+  num_classes: 2
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+
+training:
+  batch_size: 16
+  total_steps: 300
+  learning_rate: 0.00003
+  weight_decay: 0.05
+  warmup_steps: 20
+  gradient_clip_norm: 1.0
+  label_smoothing: 0.1
+  eval_every_steps: 25
+  early_stopping_patience: 4
+  amp: true
+  num_workers: 0
+
+standard_augmentation:
+  random_resized_crop_scale: [0.80, 1.00]
+  random_resized_crop_ratio: [0.90, 1.10]
+  horizontal_flip_probability: 0.5
+  rotation_degrees: 10.0
+  translation_fraction: 0.03
+  scale: [0.95, 1.05]
+  color_jitter: [0.15, 0.15, 0.10, 0.03]
+
+# Every group includes all high-shot train normals. Unless real_bad is "full",
+# its real anomaly set is nested and frozen by fewshot_selection.json.
+groups:
+  real_only:
+    real_bad: seed10
+    standard_augmentation: false
+  std_aug:
+    real_bad: seed10
+    standard_augmentation: true
+  unfiltered_syn:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: unfiltered
+      count: 500
+  filtered_syn:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: filtered
+      count: 500
+  full_real:
+    real_bad: full
+    standard_augmentation: false
+  real_20:
+    real_bad: pool20
+    standard_augmentation: false
+  real_60:
+    alias_of: full_real
+  syn_125:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: filtered
+      count: 125
+  syn_250:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: filtered
+      count: 250
+  syn_500:
+    alias_of: filtered_syn
+  src_procedural:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: unfiltered
+      inputs: [stageA_procedural]
+      count: 500
+  src_copypaste:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: unfiltered
+      inputs: [stageA_copypaste]
+      count: 500
+  src_diffusion:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: unfiltered
+      inputs: [stageB_sd2/searched]
+      count: 500
+  procedural_norealstats:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: stageA_procedural_norealstats
+      count: 500
+  bucket_original:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: stageB_sd2/original
+      count: 250
+  bucket_searched:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: stageB_sd2/searched
+      count: 250
+  base_sd2:
+    alias_of: bucket_searched
+  base_sdxl:
+    real_bad: seed10
+    standard_augmentation: false
+    synthetic:
+      view: stageB_sdxl/searched
+      count: 250
+
+output:
+  run_subdirectory: cls
+  results_csv: results/classification.csv

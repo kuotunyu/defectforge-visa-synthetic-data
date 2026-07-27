@@ -303,6 +303,41 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 21：M16 guarded ConvNeXt trainer 與兩物件真模型 smoke
+
+### 做了什麼
+- 執行 `df-guard`：manifest 1,806 張、1,805 個 pHash 群、0 crossing group、
+  blocklist 803 unique hashes；GPU free 23.15 GB，D 槽 free 1.675 TB
+- 新增 `configs/classifier.yaml` 與 `classifier_data.py`：development 完全不建立 test
+  inventory，formal 才載 frozen high-shot test；每筆 synthetic 保留 train-side manifest
+  provenance 並逐檔 SHA256 防洩漏
+- 新增 ConvNeXt-Tiny @384 trainer：鎖定 HF revision 與 114,374,272-byte
+  safetensors SHA256，label-balanced sampler、固定 optimizer steps、real/synthetic
+  exposure、Macro-F1／anomaly F1／AUROC／normal FPR
+- 新增 ADR-020，預註冊 15 canonical groups、3 個 alias 與 38 個正式實跑；三 seed 主結果
+  事前固定為 `real_only` 與 `filtered_syn`，不看 test 後換組
+- 依路線圖建立並通過官方 validator 的 `df-downstream` skill
+
+### Smoke 與資料 dry-run
+- pcb1 Real-only development：552 train、66 real-only validation、test inventory 0；
+  1 step training 7.25 s、peak 2.963 GiB
+- capsules：335 train、42 real-only validation、test inventory 0；
+  1 step training 3.58 s、peak 2.963 GiB
+- CPU-only smoke verifier 驗 locked base hash、data manifest、model hash、exposure 與
+  test 未載入，`status=passed`
+- `filtered_syn/pcb1` formal dry-run：612 real + 500 deterministic filtered synthetic，
+  frozen test 442，train/test SHA overlap 0
+
+### 下一步
+只用 Real-only validation 跑共同 learning-rate／step-budget 調校；凍結後才准啟動
+formal groups。另需先用 M11 adapters 補齊 `stageB_sdxl/searched` 250 張／物件，
+否則 `base_sdxl` 依規格 fail closed。
+
+### 換你做
+目前沒有；本機 smoke 與下一階段調校都不需要 Colab 或人工操作。
+
+---
+
 ## 2026-07-27 — Session 20：M15 Phase 1 獨立驗收與交接邊界修正
 
 ### 做了什麼
