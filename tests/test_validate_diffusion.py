@@ -46,6 +46,7 @@ def metadata_record(placement: dict[str, object]) -> dict[str, object]:
         bucket="original",
         image_path="images/pcb1__type0__0000__00.png",
         mask_path="masks/pcb1__type0__0000__00.png",
+        generator_name="stageB_sd2",
         model_id="model",
         adapter_path="adapter",
         description="object",

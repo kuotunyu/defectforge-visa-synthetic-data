@@ -3,11 +3,13 @@ from pathlib import Path
 import numpy as np
 
 from src.synthetic.generate_diffusion import (
+    DiffusionGenerationError,
     blend_patch,
     build_metadata,
     candidate_parameters,
     derived_seed,
     feather_alpha_mask,
+    logical_adapter_path,
     rebuild_metadata,
     score_candidate,
     write_json_atomic,
@@ -101,6 +103,7 @@ def test_build_metadata_uses_full_resolution_crop_coordinates() -> None:
         bucket="original",
         image_path="images/pcb1__type0__0000__00.png",
         mask_path="masks/pcb1__type0__0000__00.png",
+        generator_name="stageB_sd2",
         model_id="sd2-community/stable-diffusion-2-inpainting",
         adapter_path="runs/lora_sd2/pcb1/seed_42/final",
         description="a printed circuit board",
@@ -116,6 +119,7 @@ def test_build_metadata_uses_full_resolution_crop_coordinates() -> None:
     )
 
     assert record["sample_id"] == "pcb1__type0__0000__00"
+    assert record["generator"] == "stageB_sd2"
     assert record["generation"]["crop_bbox"] == [1, 2, 8, 8]
     assert record["generation"]["seed"] == 123
     assert record["placement"]["mask_bbox"] == [2, 2, 4, 4]
@@ -153,6 +157,7 @@ def test_rebuild_metadata_sorts_sidecars_by_object_and_index(tmp_path: Path) -> 
         bucket="original",
         image_path="images/first.png",
         mask_path="masks/first.png",
+        generator_name="stageB_sd2",
         model_id="model",
         adapter_path="adapter",
         description="object",
@@ -173,6 +178,7 @@ def test_rebuild_metadata_sorts_sidecars_by_object_and_index(tmp_path: Path) -> 
         bucket="original",
         image_path="images/second.png",
         mask_path="masks/second.png",
+        generator_name="stageB_sd2",
         model_id="model",
         adapter_path="adapter",
         description="object",
@@ -201,3 +207,34 @@ def test_rebuild_metadata_sorts_sidecars_by_object_and_index(tmp_path: Path) -> 
         "pcb1__type0__0000__00",
         "pcb1__type0__0001__00",
     ]
+
+
+def test_logical_adapter_path_never_leaks_local_absolute_path(tmp_path: Path) -> None:
+    class FakePaths:
+        runs = tmp_path / "data" / "runs"
+        project_root = tmp_path / "project"
+
+    paths = FakePaths()
+
+    assert (
+        logical_adapter_path(
+            paths,  # type: ignore[arg-type]
+            paths.runs / "lora_sd2" / "pcb1" / "seed_42" / "final",
+        )
+        == "runs/lora_sd2/pcb1/seed_42/final"
+    )
+    assert (
+        logical_adapter_path(
+            paths,  # type: ignore[arg-type]
+            paths.project_root / "results" / "colab" / "lora_sdxl" / "pcb1" / "final",
+        )
+        == "results/colab/lora_sdxl/pcb1/final"
+    )
+
+    outside = tmp_path / "outside" / "adapter"
+    try:
+        logical_adapter_path(paths, outside)  # type: ignore[arg-type]
+    except DiffusionGenerationError:
+        pass
+    else:
+        raise AssertionError("Expected an out-of-project adapter path to be rejected")

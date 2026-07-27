@@ -20,10 +20,15 @@ import cv2
 import numpy as np
 import torch
 import yaml
-from diffusers import AutoencoderKL, StableDiffusionInpaintPipeline, UNet2DConditionModel
+from diffusers import (
+    AutoencoderKL,
+    StableDiffusionInpaintPipeline,
+    StableDiffusionXLInpaintPipeline,
+    UNet2DConditionModel,
+)
 from peft import PeftModel
 from PIL import Image, ImageDraw
-from transformers import CLIPTextModel, CLIPTokenizer
+from transformers import CLIPTextModel, CLIPTextModelWithProjection, CLIPTokenizer
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -296,51 +301,76 @@ def resolve_adapter(
     object_config: dict[str, Any],
     override: Path | None,
 ) -> Path:
-    adapter = (
-        override.resolve(strict=False)
-        if override is not None
-        else (paths.runs / str(object_config["adapter"])).resolve(strict=False)
-    )
-    required = (
+    if override is not None:
+        adapter = override.resolve(strict=False)
+    else:
+        adapter_roots = {
+            "runs": paths.runs,
+            "colab_results": paths.colab_results,
+        }
+        root_name = str(object_config.get("adapter_root", "runs"))
+        try:
+            adapter_root = adapter_roots[root_name]
+        except KeyError as error:
+            raise DiffusionGenerationError(
+                f"Unsupported adapter_root {root_name!r}; expected one of {sorted(adapter_roots)}"
+            ) from error
+        adapter = (adapter_root / str(object_config["adapter"])).resolve(strict=False)
+    required = [
         "unet_adapter/adapter_config.json",
         "unet_adapter/adapter_model.safetensors",
         "text_token_adapter/adapter_config.json",
         "text_token_adapter/adapter_model.safetensors",
         "tokenizer/tokenizer.json",
         "trainer_state.json",
-    )
+    ]
+    if "text_token_adapter_2_sha256" in object_config:
+        required.extend(
+            [
+                "text_token_adapter_2/adapter_config.json",
+                "text_token_adapter_2/adapter_model.safetensors",
+                "tokenizer_2/tokenizer.json",
+            ]
+        )
     for relative in required:
         if not (adapter / relative).is_file():
             raise DiffusionGenerationError(f"Missing adapter bundle file: {adapter / relative}")
     observed = {
-        "unet_adapter_sha256": sha256_file(
-            adapter / "unet_adapter" / "adapter_model.safetensors"
-        ),
+        "unet_adapter_sha256": sha256_file(adapter / "unet_adapter" / "adapter_model.safetensors"),
         "text_token_adapter_sha256": sha256_file(
             adapter / "text_token_adapter" / "adapter_model.safetensors"
         ),
     }
+    if "text_token_adapter_2_sha256" in object_config:
+        observed["text_token_adapter_2_sha256"] = sha256_file(
+            adapter / "text_token_adapter_2" / "adapter_model.safetensors"
+        )
     for key, digest in observed.items():
         if digest != str(object_config[key]):
             raise DiffusionGenerationError(f"Frozen {key} mismatch: {adapter}")
     report = load_json(adapter.parent / "training_report.json")
     if report.get("status") != "passed" or int(report.get("global_step", -1)) != 400:
-        raise DiffusionGenerationError(f"Adapter training report is not a passed M10 run: {adapter}")
+        raise DiffusionGenerationError(
+            f"Adapter training report is not a passed 400-step run: {adapter}"
+        )
     return adapter
 
 
 def load_pipeline(
     *,
+    paths: Paths,
     config: dict[str, Any],
     adapter: Path,
     device: torch.device,
-) -> StableDiffusionInpaintPipeline:
-    if str(config["model"]["family"]) != "sd2":
-        raise DiffusionGenerationError("This implementation currently accepts SD2 bundles only")
+) -> StableDiffusionInpaintPipeline | StableDiffusionXLInpaintPipeline:
+    family = str(config["model"]["family"])
+    if family not in {"sd2", "sdxl"}:
+        raise DiffusionGenerationError(f"Unsupported model family: {family}")
     model_id = str(config["model"]["id"])
     revision = str(config["model"]["revision"])
     dtype = torch.float16 if device.type == "cuda" else torch.float32
     common: dict[str, Any] = {
+        "cache_dir": str(paths.cache / "huggingface" / "hub"),
         "revision": revision,
         "torch_dtype": dtype,
         "use_safetensors": True,
@@ -365,23 +395,58 @@ def load_pipeline(
         base_text,
         str(adapter / "text_token_adapter"),
     )
+    text_encoder_2: PeftModel | None = None
+    tokenizer_2: CLIPTokenizer | None = None
+    if family == "sdxl":
+        tokenizer_2 = CLIPTokenizer.from_pretrained(adapter / "tokenizer_2")
+        base_text_2 = CLIPTextModelWithProjection.from_pretrained(
+            model_id,
+            subfolder="text_encoder_2",
+            **common,
+        )
+        base_text_2.resize_token_embeddings(len(tokenizer_2))
+        text_encoder_2 = PeftModel.from_pretrained(
+            base_text_2,
+            str(adapter / "text_token_adapter_2"),
+        )
     vae = AutoencoderKL.from_pretrained(
         model_id,
         subfolder="vae",
         **common,
     )
-    pipeline = StableDiffusionInpaintPipeline.from_pretrained(
-        model_id,
-        revision=revision,
-        torch_dtype=dtype,
-        use_safetensors=True,
-        unet=unet,
-        text_encoder=text_encoder,
-        tokenizer=tokenizer,
-        vae=vae,
-        safety_checker=None,
-        requires_safety_checker=False,
-    )
+    pipeline_kwargs: dict[str, Any] = {
+        "cache_dir": str(paths.cache / "huggingface" / "hub"),
+        "revision": revision,
+        "torch_dtype": dtype,
+        "use_safetensors": True,
+        "unet": unet,
+        "text_encoder": text_encoder,
+        "tokenizer": tokenizer,
+        "vae": vae,
+    }
+    pipeline_class: type[StableDiffusionInpaintPipeline | StableDiffusionXLInpaintPipeline]
+    if family == "sdxl":
+        if text_encoder_2 is None or tokenizer_2 is None:
+            raise DiffusionGenerationError(
+                "SDXL inference requires both text encoders and tokenizers"
+            )
+        pipeline_class = StableDiffusionXLInpaintPipeline
+        pipeline_kwargs.update(
+            {
+                "text_encoder_2": text_encoder_2,
+                "tokenizer_2": tokenizer_2,
+                "add_watermarker": False,
+            }
+        )
+    else:
+        pipeline_class = StableDiffusionInpaintPipeline
+        pipeline_kwargs.update(
+            {
+                "safety_checker": None,
+                "requires_safety_checker": False,
+            }
+        )
+    pipeline = pipeline_class.from_pretrained(model_id, **pipeline_kwargs)
     pipeline.set_progress_bar_config(disable=True)
     pipeline.to(device)
     return pipeline
@@ -506,7 +571,7 @@ def score_candidate(
 
 def render_candidate(
     *,
-    pipeline: StableDiffusionInpaintPipeline,
+    pipeline: StableDiffusionInpaintPipeline | StableDiffusionXLInpaintPipeline,
     background_image: Image.Image,
     mask_image: Image.Image,
     prompt: str,
@@ -536,7 +601,7 @@ def render_candidate(
     vae_dtype = next(pipeline.vae.parameters()).dtype
 
     def cast_sampling_latents(
-        _pipeline: StableDiffusionInpaintPipeline,
+        _pipeline: StableDiffusionInpaintPipeline | StableDiffusionXLInpaintPipeline,
         _step_index: int,
         _timestep: torch.Tensor,
         callback_kwargs: dict[str, torch.Tensor],
@@ -579,7 +644,12 @@ def logical_adapter_path(paths: Paths, adapter: Path) -> str:
     try:
         return (Path("runs") / adapter.relative_to(paths.runs)).as_posix()
     except ValueError:
-        return adapter.as_posix()
+        try:
+            return adapter.relative_to(paths.project_root).as_posix()
+        except ValueError as error:
+            raise DiffusionGenerationError(
+                f"Adapter must live under runs or the project root: {adapter}"
+            ) from error
 
 
 def build_metadata(
@@ -588,6 +658,7 @@ def build_metadata(
     bucket: str,
     image_path: str,
     mask_path: str,
+    generator_name: str,
     model_id: str,
     adapter_path: str,
     description: str,
@@ -622,7 +693,7 @@ def build_metadata(
             "seed": generator_seed,
             "strength": strength,
         },
-        "generator": "stageB_sd2",
+        "generator": generator_name,
         "image_path": image_path,
         "mask_path": mask_path,
         "object": str(placement["object"]),
@@ -750,9 +821,7 @@ def create_contact_sheet(
             mask = handle.convert("RGB")
         with Image.open(output_root / record["image_path"]) as handle:
             generated = handle.convert("RGB")
-        x, y, width, height = (
-            int(value) for value in record["generation"]["crop_bbox"]
-        )
+        x, y, width, height = (int(value) for value in record["generation"]["crop_bbox"])
         crop = (x, y, x + width, y + height)
         background = background.crop(crop)
         mask = mask.crop(crop)
@@ -792,7 +861,7 @@ def main() -> int:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
     started = time.perf_counter()
-    pipeline: StableDiffusionInpaintPipeline | None = None
+    pipeline: StableDiffusionInpaintPipeline | StableDiffusionXLInpaintPipeline | None = None
     try:
         paths = load_paths(args.paths)
         config = load_config(args.config)
@@ -907,9 +976,7 @@ def main() -> int:
             torch.backends.cudnn.benchmark = False
             torch.backends.cudnn.deterministic = True
             torch.cuda.reset_peak_memory_stats(device)
-        prompt = (
-            f"a photo of {{token}} defect on {object_config['description']}"
-        )
+        prompt = f"a photo of {{token}} defect on {object_config['description']}"
         logical_lora = logical_adapter_path(paths, adapter)
         generated = 0
         skipped = 0
@@ -933,9 +1000,7 @@ def main() -> int:
                 "num_inference_steps": num_inference_steps,
                 "num_search_run": num_search_run if args.refine else 1,
                 "resolution": resolution,
-                "score_version": (
-                    str(refine_config["score_version"]) if args.refine else None
-                ),
+                "score_version": (str(refine_config["score_version"]) if args.refine else None),
                 "strength": strength,
             }
             expected_sidecar = {
@@ -964,10 +1029,7 @@ def main() -> int:
             with Image.open(paths.visa_raw / str(placement["background_image"])) as handle:
                 background_image = handle.convert("RGB")
             placement_mask_path = (
-                paths.synthetic
-                / "placements"
-                / args.object
-                / str(placement["mask_path"])
+                paths.synthetic / "placements" / args.object / str(placement["mask_path"])
             )
             with Image.open(placement_mask_path) as handle:
                 mask_image = handle.convert("L")
@@ -989,7 +1051,12 @@ def main() -> int:
                 parameters = [(guidance_scale, crop_ratio)]
 
             if pipeline is None:
-                pipeline = load_pipeline(config=config, adapter=adapter, device=device)
+                pipeline = load_pipeline(
+                    paths=paths,
+                    config=config,
+                    adapter=adapter,
+                    device=device,
+                )
             candidate_evidence: list[dict[str, Any]] = []
             selected_image: np.ndarray | None = None
             selected_crop_bbox: tuple[int, int, int, int] | None = None
@@ -1055,6 +1122,7 @@ def main() -> int:
                 bucket=bucket,
                 image_path=image_relative,
                 mask_path=mask_relative,
+                generator_name=str(config["output"]["name"]),
                 model_id=model_id,
                 adapter_path=logical_lora,
                 description=str(object_config["description"]),
@@ -1101,9 +1169,7 @@ def main() -> int:
                 )
 
         all_records = rebuild_metadata(output_root)
-        object_records = [
-            record for record in all_records if str(record["object"]) == args.object
-        ]
+        object_records = [record for record in all_records if str(record["object"]) == args.object]
         if len(object_records) != n:
             raise DiffusionGenerationError(
                 f"Expected {n} completed records for {args.object}, found {len(object_records)}"
@@ -1127,9 +1193,7 @@ def main() -> int:
             "elapsed_seconds": elapsed,
             "generated": generated,
             "peak_vram_gib": (
-                torch.cuda.max_memory_allocated(device) / 1024**3
-                if device.type == "cuda"
-                else 0.0
+                torch.cuda.max_memory_allocated(device) / 1024**3 if device.type == "cuda" else 0.0
             ),
             "records": len(object_records),
             "skipped": skipped,

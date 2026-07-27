@@ -1,0 +1,53 @@
+model:
+  id: diffusers/stable-diffusion-xl-1.0-inpainting-0.1
+  revision: 115134f363124c53c7d878647567d04daf26e41e
+  family: sdxl
+  resolution: 1024
+  expected_files:
+    text_encoder/model.safetensors: 79f531155c765c22c89e23328793a2e91a1178070af961c57e2eae5f0509b65b
+    text_encoder_2/model.safetensors: 283bb90f987a133dec11947571aca17692ed32f3fff708441ac8eedcfa4a040e
+    unet/diffusion_pytorch_model.safetensors: df858870144f8af28e1d23aaf92a5238bfb5e3809775eca4e04b80516412c327
+    vae/diffusion_pytorch_model.safetensors: 98a14dc6fe8d71c83576f135a87c61a16561c9c080abba418d2cc976ee034f88
+
+objects:
+  pcb1:
+    description: a printed circuit board
+    adapter_root: colab_results
+    adapter: lora_sdxl/pcb1/final
+    unet_adapter_sha256: af124d460c44341012e0034a8da02100c203ebec1284cc40bf23e6d3199f5582
+    text_token_adapter_sha256: 09f52b40e3f59f416e0255433f67a84d3bbf189e3ff34946b4c72e424a4a6f42
+    text_token_adapter_2_sha256: 2ff88cef857959dd90ee2ad769fe54804b6e76a3da54c4b547d9819f115e0c03
+    placements_sha256: 58532c6da7795bc97cb9f5dee5193a7f2f3ba208e1c350e70d63130782c141d5
+  capsules:
+    description: green capsules on inspection cloth
+    adapter_root: colab_results
+    adapter: lora_sdxl/capsules/final
+    unet_adapter_sha256: 6a84185f531ad664f7f0ff729a1e8ad8a2a8395253b38a8c5072e48482093f75
+    text_token_adapter_sha256: 2b020eb6f8866224b335075ee800a4f289892348402e3290767b90004cb0567a
+    text_token_adapter_2_sha256: 01a7fa219885167e699aeb277e3b5a3dc17adf89c7bf01eccb93dfdef1a4494b
+    placements_sha256: 148f427ec3549f2f187b13afc6ec0ade8589842b0a977ca10786d391f01ea323
+
+generation:
+  n: 250
+  num_inference_steps: 40
+  guidance_scale: 7.5
+  crop_ratio: 2.5
+  strength: 1.0
+  negative_prompt: text, letters, logo, watermark, signature, duplicated object, deformed object
+  blend: feather_alpha
+  blend_dilation_px: 2
+  blend_feather_sigma: 3.0
+
+refine:
+  score_version: boundary-gradient-v2
+  num_search_run: 4
+  guidance_grid: [5.0, 7.5, 10.0, 12.5]
+  crop_ratio_grid: [1.8, 2.5, 3.5]
+  visible_change_target: 0.12
+  visible_change_tolerance: 0.10
+  visible_change_weight: 0.25
+  seam_weight: 0.65
+  artifact_weight: 0.10
+
+output:
+  name: stageB_sdxl
