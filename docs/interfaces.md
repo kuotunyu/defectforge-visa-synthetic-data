@@ -396,6 +396,12 @@ scripts/package_m18_colab.py
 
 scripts/validate_m18_colab_notebook.py
 
+scripts/verify_segmenter_smoke.py
+  --paths configs/paths.yaml
+  --config configs/segmenter.yaml
+  [--run-root PATH]
+  --output reports/segmenter_smoke_validation.json
+
 scripts/validate_segmenter_runs.py
   --paths configs/paths.yaml
   --config configs/segmenter.yaml
