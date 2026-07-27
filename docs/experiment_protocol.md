@@ -164,6 +164,12 @@ notebook 用 `--group` 參數切換，可平行開多本（各自唯一 `runs/` 
 用最佳的分類器 + 分割模型。錄成 GIF 放 README，GIF 存 `assets/demo.gif`。
 Demo 只在本機跑，**不部署到公開空間**（除非使用者另外要求）。
 
+「最佳」只用於 M22 的事後展示選模，不改寫 M16/M20 報告：每物件限 seed 42
+formal physical runs，分類依 Macro-F1 → AUROC → run name，分割依
+Dice → AUPRO → run name 決定。`all_mixed` 是 alias，不得因同分重複入選。
+CLI 的 `--object` 模式必須把 CSV SHA、raw report SHA 與 model SHA 寫入
+`reports/demo_checkpoint_selection.json`。
+
 ---
 
 ## 9. 報告規則

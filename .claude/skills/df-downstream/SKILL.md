@@ -102,6 +102,21 @@ per object.
 
 At M20, rebuild `results/segmentation.csv` from raw metrics rather than notebook output text.
 
+## M22 local demo
+
+Do not hand-pick checkpoint paths after inspecting screenshots. Once M20 is verified, run:
+
+```powershell
+uv run --frozen python src/inference/demo_gradio.py --object pcb1 --inbrowser
+```
+
+The object mode must require the complete 38-row M16 CSV and 18-row M20 CSV. It selects only
+seed-42 physical runs: classifier by Macro-F1 then AUROC, segmenter by Dice then AUPRO, with
+run name as the deterministic final tie-break. It must rebind the selected CSV row to the raw
+training report, run signature, SafeTensors SHA256, and matching object before allocating CUDA.
+`all_mixed` remains a logical alias and is not a second checkpoint candidate. The selection is
+for the post-evaluation local demo only and must not alter reported experiment tables.
+
 ## Closeout
 
 Run Ruff, full pytest, the independent M16 verifier, Contributor audit, and secret scan. Inspect

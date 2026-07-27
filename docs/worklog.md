@@ -533,6 +533,35 @@ capsules；完成後把兩個未改名的結果 ZIP 放到 `results/colab/segmen
 
 ---
 
+## 2026-07-28 — Session 27：M22 自動選模與 raw checkpoint 綁定
+
+### 做了什麼
+- 新增 ADR-022，明定 M22「最佳模型」只是正式評估後的展示選擇，不得改稱 M16/M20
+  主結果或改寫負面結論
+- `demo_gradio.py --object {pcb1,capsules}` 現在要求完整 38-row M16 與 18-row M20
+  CSV，自動選 seed-42 physical runs
+- 固定排序：分類 Macro-F1 → AUROC → run name；分割 Dice → AUPRO → run name。
+  `all_mixed` alias 不重複列為候選
+- 入選 CSV row 必須逐項吻合 raw report 的 object、seed、canonical group、
+  run signature、metrics 與 SafeTensors SHA256，才會配置 CUDA
+- selection evidence 保存 CSV／report／model hashes 與
+  `selection_is_post_evaluation_demo_only=true`，不保存本機絕對 checkpoint 路徑
+
+### 真實 CPU-only preflight
+- 目前本機 GPU 被另一 Python 工作占用約 23.6/24.6 GiB；未啟動或終止任何 CUDA 工作
+- 真實 38-row M16 選模成功：
+  - pcb1 → `m16_full_real_pcb1_seed_42`，Macro-F1 0.682569、AUROC 0.929415
+  - capsules → `m16_full_real_capsules_seed_42`，Macro-F1 0.674849、AUROC 0.858299
+- 真實 `--object pcb1` 在缺 `results/segmentation.csv` 時於 CUDA 前 fail closed，
+  exit 1 且沒有寫出半份 `reports/demo_checkpoint_selection.json`
+- Ruff passed、164 tests passed
+
+### 換你做
+仍只需要完成 M19 並放回兩個原始結果 ZIP；M20 通過後可直接用
+`uv run python src/inference/demo_gradio.py --object pcb1 --inbrowser` 啟動 M22。
+
+---
+
 ## 2026-07-27 — Session 20：M15 Phase 1 獨立驗收與交接邊界修正
 
 ### 做了什麼

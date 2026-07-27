@@ -486,8 +486,12 @@ image、mask 與成圖 SHA256，並標記 `visual_inspection_required=true`。
 
 ### M22 `src/inference/demo_gradio.py`
 ```
---paths --cls-ckpt PATH --seg-ckpt PATH --port INT --share   # --share 預設 off，不對外開放
+--paths --object {pcb1,capsules} --port INT --share
+# 或顯式指定：--cls-ckpt PATH --seg-ckpt PATH
+# --share 預設 off，不對外開放
 ```
+`--object` 會從完整正式 CSV 自動選 seed-42 physical checkpoint，逐項綁回 raw
+training report，並保存不含本機絕對路徑的 selection evidence。
 
 ### 驗證用腳本
 | 腳本 | 用途 |

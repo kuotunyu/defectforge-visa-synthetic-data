@@ -797,3 +797,33 @@ checkpoint、binary head 口徑、optimizer-step 預算與 Colab 交接方式。
 - [Transformers image segmentation recipe](https://huggingface.co/docs/transformers/main/tasks/semantic_segmentation)
 - [locked SegFormer-B0 checkpoint](https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512/tree/489d5cd81a0b59fab9b7ea758d3548ebe99677da)
 - [locked SafeTensors file and SHA256](https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512/blob/489d5cd81a0b59fab9b7ea758d3548ebe99677da/model.safetensors)
+
+---
+
+<a id="adr-022"></a>
+## ADR-022 — M22 展示模型使用固定事後排序，不能改寫正式結果
+
+**狀態：Accepted**（2026-07-28）
+
+### 背景
+M22 要求用「最佳」分類器與分割模型做本機 Demo，但 M16 的主線比較已事前指定
+`filtered_syn`，不能因看到 test 後把較高分組改稱主結果。另一方面，要求使用者手動從
+數十個 D 槽／Colab run 猜 checkpoint 路徑，容易選到 smoke、alias 或不同物件模型。
+
+### 決策
+- Demo 選模是正式評估完成後的展示行為，**不改變** M16/M20 表格、主線組或結論。
+- 每物件只納入 seed 42 的 formal physical runs。分類依
+  Macro-F1 → AUROC → run name；分割依 Dice → AUPRO → run name 排序。
+- 分割 `all_mixed → filtered_syn` 是 logical alias，不作第二個 physical candidate。
+- 自動選模前要求完整 38-row classification CSV 與 18-row segmentation CSV，
+  並把入選 row 綁回 raw `training_report.json` 的 object、seed、canonical group、
+  run signature、metrics 與 SafeTensors SHA256。
+- `--object` 模式保存 CSV／report／model hashes，但不把本機絕對 checkpoint 路徑寫入
+  tracked evidence。顯式 `--cls-ckpt`／`--seg-ckpt` 仍保留給診斷用途。
+
+### 後果
+- M22 的 UI 可用一個物件參數重現，不需要人工作業挑路徑。
+- 若 M20 缺檔、CSV 不完整、alias 被重跑、row 與 raw report 不一致或模型 hash 改變，
+  Demo 在配置 GPU 前 fail closed。
+- 排名使用 test 指標只服務展示模型，因此必須標記
+  `selection_is_post_evaluation_demo_only=true`，不得拿選模後分數另立新實驗結論。

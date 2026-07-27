@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
+import math
+import os
 import sys
 import time
 from collections.abc import Sequence
@@ -60,6 +63,34 @@ class VerifiedCheckpoint:
     model_sha256: str
 
 
+@dataclass(frozen=True, slots=True)
+class SelectedCheckpoint:
+    """A deterministic post-evaluation choice bound back to one raw run."""
+
+    checkpoint: VerifiedCheckpoint
+    role: str
+    run_name: str
+    group_name: str
+    primary_metric: str
+    primary_value: float
+    secondary_metric: str
+    secondary_value: float
+
+    def evidence(self) -> dict[str, Any]:
+        return {
+            "role": self.role,
+            "run_name": self.run_name,
+            "group_name": self.group_name,
+            "object": self.checkpoint.object_name,
+            "primary_metric": self.primary_metric,
+            "primary_value": self.primary_value,
+            "secondary_metric": self.secondary_metric,
+            "secondary_value": self.secondary_value,
+            "model_sha256": self.checkpoint.model_sha256,
+            "training_report_sha256": sha256_file(self.checkpoint.report),
+        }
+
+
 def _load_mapping(path: Path) -> dict[str, Any]:
     require(path.is_file(), f"Missing JSON file: {path}")
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -108,6 +139,135 @@ def verify_checkpoint(path: Path, *, role: str) -> VerifiedCheckpoint:
         object_name=object_name,
         model_sha256=observed_sha256,
     )
+
+
+def _read_csv(path: Path) -> tuple[tuple[str, ...], list[dict[str, str]]]:
+    require(path.is_file(), f"Missing formal result CSV: {path}")
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        return tuple(reader.fieldnames or ()), list(reader)
+
+
+def _unit_metric(row: dict[str, str], metric: str, *, label: str) -> float:
+    try:
+        value = float(row[metric])
+    except (KeyError, TypeError, ValueError) as error:
+        raise DemoError(f"Invalid {label}/{metric}") from error
+    require(math.isfinite(value) and 0.0 <= value <= 1.0, f"Invalid {label}/{metric}")
+    return value
+
+
+def select_best_checkpoint(
+    *,
+    results_path: Path,
+    runs_root: Path,
+    object_name: str,
+    role: str,
+) -> SelectedCheckpoint:
+    """Select the best formal seed-42 physical run and rebind it to raw evidence."""
+
+    require(role in {"classifier", "segmenter"}, f"Unknown checkpoint role: {role}")
+    header, rows = _read_csv(results_path)
+    if role == "classifier":
+        required = {
+            "run_name",
+            "run_signature",
+            "canonical_group",
+            "object",
+            "seed",
+            "macro_f1",
+            "auroc",
+        }
+        require(required <= set(header), "Classification result schema is incomplete")
+        require(len(rows) == 38, "Classification selection requires all 38 formal rows")
+        object_rows = [row for row in rows if row["object"] == object_name]
+        require(len(object_rows) == 19, "Classification object inventory is incomplete")
+        candidates = [row for row in object_rows if int(row["seed"]) == 42]
+        require(len(candidates) == 15, "Classification seed-42 inventory is incomplete")
+        primary_metric, secondary_metric = "macro_f1", "auroc"
+    else:
+        required = {
+            "run_name",
+            "run_signature",
+            "logical_group",
+            "canonical_group",
+            "physical_run",
+            "object",
+            "seed",
+            "dice",
+            "aupro",
+        }
+        require(required <= set(header), "Segmentation result schema is incomplete")
+        require(len(rows) == 18, "Segmentation selection requires all 18 logical rows")
+        object_rows = [row for row in rows if row["object"] == object_name]
+        require(len(object_rows) == 9, "Segmentation object inventory is incomplete")
+        require(
+            all(int(row["seed"]) == 42 for row in object_rows),
+            "Segmentation selection requires seed 42",
+        )
+        candidates = [row for row in object_rows if row["physical_run"] == "true"]
+        require(len(candidates) == 8, "Segmentation physical-run inventory is incomplete")
+        primary_metric, secondary_metric = "dice", "aupro"
+    require(
+        len({row["run_name"] for row in candidates}) == len(candidates),
+        f"{role} candidate run names are not unique",
+    )
+    scored = [
+        (
+            _unit_metric(row, primary_metric, label=row["run_name"]),
+            _unit_metric(row, secondary_metric, label=row["run_name"]),
+            row,
+        )
+        for row in candidates
+    ]
+    primary_value, secondary_value, selected = min(
+        scored,
+        key=lambda item: (-item[0], -item[1], item[2]["run_name"]),
+    )
+    checkpoint = verify_checkpoint(
+        runs_root / selected["run_name"],
+        role=role,
+    )
+    require(checkpoint.object_name == object_name, f"{role} selected the wrong object")
+    report = _load_mapping(checkpoint.report)
+    require(report.get("run_name") == selected["run_name"], f"{role} run name changed")
+    require(report.get("run_signature") == selected["run_signature"], f"{role} signature changed")
+    require(int(report.get("seed", -1)) == 42, f"{role} selected a non-seed-42 run")
+    require(
+        report.get("canonical_group") == selected["canonical_group"],
+        f"{role} canonical group changed",
+    )
+    report_metrics = report.get("metrics")
+    require(isinstance(report_metrics, dict), f"{role} report has no metrics")
+    for metric, expected in (
+        (primary_metric, primary_value),
+        (secondary_metric, secondary_value),
+    ):
+        observed = float(report_metrics.get(metric, math.nan))
+        require(
+            math.isclose(observed, expected, rel_tol=0.0, abs_tol=1e-12),
+            f"{role} result CSV differs from its raw report for {metric}",
+        )
+    return SelectedCheckpoint(
+        checkpoint=checkpoint,
+        role=role,
+        run_name=selected["run_name"],
+        group_name=selected["canonical_group"],
+        primary_metric=primary_metric,
+        primary_value=primary_value,
+        secondary_metric=secondary_metric,
+        secondary_value=secondary_value,
+    )
+
+
+def atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    os.replace(temporary, path)
 
 
 def _as_rgb_array(image: Image.Image | np.ndarray) -> np.ndarray:
@@ -381,8 +541,33 @@ def build_app(runtime: InspectionRuntime) -> Any:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--paths", type=Path, default=Path("configs/paths.yaml"))
-    parser.add_argument("--cls-ckpt", type=Path, required=True)
-    parser.add_argument("--seg-ckpt", type=Path, required=True)
+    parser.add_argument(
+        "--object",
+        choices=("pcb1", "capsules"),
+        help="Auto-select both best formal checkpoints for this object",
+    )
+    parser.add_argument("--cls-ckpt", type=Path)
+    parser.add_argument("--seg-ckpt", type=Path)
+    parser.add_argument(
+        "--classification-results",
+        type=Path,
+        default=Path("results/classification.csv"),
+    )
+    parser.add_argument(
+        "--segmentation-results",
+        type=Path,
+        default=Path("results/segmentation.csv"),
+    )
+    parser.add_argument(
+        "--segmentation-runs-root",
+        type=Path,
+        default=Path("results/colab/segmentation"),
+    )
+    parser.add_argument(
+        "--selection-out",
+        type=Path,
+        default=Path("reports/demo_checkpoint_selection.json"),
+    )
     parser.add_argument("--port", type=int, default=7860)
     parser.add_argument("--share", action="store_true", help="Explicitly allow a Gradio share URL")
     parser.add_argument("--inbrowser", action="store_true")
@@ -392,10 +577,50 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     require(1 <= args.port <= 65535, "Port must be between 1 and 65535")
-    classifier_checkpoint = verify_checkpoint(args.cls_ckpt, role="classifier")
-    segmenter_checkpoint = verify_checkpoint(args.seg_ckpt, role="segmenter")
+    paths = load_paths(args.paths)
+    if args.object is not None:
+        require(
+            args.cls_ckpt is None and args.seg_ckpt is None,
+            "--object cannot be mixed with explicit checkpoints",
+        )
+        classifier_config = load_classifier_config(paths.configs / "classifier.yaml")
+        classifier_selection = select_best_checkpoint(
+            results_path=args.classification_results,
+            runs_root=paths.runs / str(classifier_config["output"]["run_subdirectory"]),
+            object_name=args.object,
+            role="classifier",
+        )
+        segmenter_selection = select_best_checkpoint(
+            results_path=args.segmentation_results,
+            runs_root=args.segmentation_runs_root / args.object / "runs",
+            object_name=args.object,
+            role="segmenter",
+        )
+        classifier_checkpoint = classifier_selection.checkpoint
+        segmenter_checkpoint = segmenter_selection.checkpoint
+        atomic_write_json(
+            args.selection_out,
+            {
+                "status": "passed",
+                "schema_version": 1,
+                "selection_is_post_evaluation_demo_only": True,
+                "changes_reported_metrics": False,
+                "object": args.object,
+                "classification_results_sha256": sha256_file(args.classification_results),
+                "segmentation_results_sha256": sha256_file(args.segmentation_results),
+                "classifier": classifier_selection.evidence(),
+                "segmenter": segmenter_selection.evidence(),
+            },
+        )
+    else:
+        require(
+            args.cls_ckpt is not None and args.seg_ckpt is not None,
+            "Pass --object or both --cls-ckpt and --seg-ckpt",
+        )
+        classifier_checkpoint = verify_checkpoint(args.cls_ckpt, role="classifier")
+        segmenter_checkpoint = verify_checkpoint(args.seg_ckpt, role="segmenter")
     runtime = InspectionRuntime(
-        paths=load_paths(args.paths),
+        paths=paths,
         classifier_checkpoint=classifier_checkpoint,
         segmenter_checkpoint=segmenter_checkpoint,
         device=torch.device("cuda"),
