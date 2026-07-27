@@ -363,13 +363,54 @@ Colab 交接與三支獨立 validator。另逐 commit 檢查 author／committer 
 
 ### M18 `src/training/train_segmenter.py`
 ```
-（同 M16 的共用參數）
+--paths configs/paths.yaml
+--config configs/segmenter.yaml
+--object {pcb1,capsules}
 --group STR                # real_only | std_aug | unfiltered_syn | filtered_syn | full_real
                            # | procedural_only | copypaste_only | diffusion_only
---drive-sync PATH          # Colab 專用
---smoke
+--seed INT                 # default: 42
+--run-name STR
+--mode {development,final}
+--total-steps INT --learning-rate FLOAT --weight-decay FLOAT
+--output-dir PATH
+--drive-sync PATH          # exact Drive mirror directory
+--resume-from-checkpoint {latest,PATH}
+--smoke                    # real_only + development only, exactly 1 step
+--dry-run                  # full data/hash preflight; never loads CUDA
 ```
-產出：`${runs}/seg/<run-name>/`、`results/segmentation.csv`
+產出：`${runs}/seg/<run-name>/{data_manifest.json,run_config.json,training_report.json,final/}`；
+formal final run 另 append `results/segmentation.csv`。模型鎖定
+`nvidia/segformer-b0-finetuned-ade-512-512@489d5cd...` SafeTensors、512 input、
+binary Dice+BCE、batch 4、500 optimizer steps。normal image 的 target 是動態建立的
+全零 mask；所有 anomaly mask 以 `>0` binary 化。development 只允許 `real_only` 且
+test list 必須為空。
+
+Colab 交接：
+```text
+scripts/package_m18_colab.py
+  --paths configs/paths.yaml
+  --config configs/segmenter.yaml
+  [--object pcb1] [--object capsules]
+  [--output-dir PATH]
+  [--dry-run]
+
+scripts/validate_m18_colab_notebook.py
+
+scripts/validate_segmenter_runs.py
+  --paths configs/paths.yaml
+  --config configs/segmenter.yaml
+  --run-root PATH
+  --object {pcb1,capsules}
+  [--reload]
+  --output PATH
+```
+package 產一份 `defectforge_m18_source.zip` 與每物件一份
+`m18_seg_<object>.zip`；data ZIP 只包含本機已展開／雜湊的 exact formal selections、
+該物件完整 real train/test 與 pooled metadata。Notebook 每次跑一個物件的八個
+canonical group，並下載 `m18_seg_results_<object>.zip`。獨立 validator 從 raw run
+目錄驗 run signature、model hash、exact frozen test、blocklist、零 train/test overlap、
+`procedural_only` 零 real defect 與 final model fresh reload。
+
 註：第 9 組「全部混合」**＝ `filtered_syn`，直接引用不重跑**
 
 ### M22 `src/inference/demo_gradio.py`

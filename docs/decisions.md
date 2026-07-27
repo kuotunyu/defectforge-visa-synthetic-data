@@ -746,3 +746,54 @@ Phase 2 原協定寫「約 40 run」，但 `real_60` 與五組中的 `full_real`
 - [timm Quickstart](https://huggingface.co/docs/timm/main/quickstart)
 - [timm model factory reference](https://huggingface.co/docs/timm/reference/models)
 - [locked ConvNeXt-Tiny model card](https://huggingface.co/timm/convnext_tiny.fb_in1k)
+
+---
+
+<a id="adr-021"></a>
+## ADR-021 — M18 鎖定 SafeTensors SegFormer-B0、固定步數與每物件最小 Colab bundle
+
+**狀態：Accepted**（2026-07-27）
+
+### 背景
+M18 已凍結為 SegFormer-B0 @512、Dice+BCE、九組分割比較，但尚未決定可重現的公開
+checkpoint、binary head 口徑、optimizer-step 預算與 Colab 交接方式。若每一組在 Colab
+重新從完整 D 槽資料選樣，不只要上傳所有合成池，也無法證明 Notebook 讀到的 500 張
+就是本機預註冊的同一批。
+
+### 決策
+- 基底鎖定 `nvidia/segformer-b0-finetuned-ade-512-512` immutable revision
+  `489d5cd81a0b59fab9b7ea758d3548ebe99677da`；只載入 SafeTensors，
+  `model.safetensors` SHA256
+  `6ae39addd01de6b1b8bde2cf677d43a5cd733424b8d186de3f95d1c51fee23f9`。
+- 保留 pretrained encoder 與 MLP decode head，只把 ADE20K 的 150-class 最後
+  `1×1` classifier 重建為一個 defect logit。loss 在 shared trainer 中明確計算
+  `Dice + BCEWithLogits`，不依賴 Transformers 內建多類別 CrossEntropy。
+- 輸入 512、batch 4、learning rate `6e-5`、weight decay `0.01`、500 個
+  optimizer steps、50-step warmup；`6e-5` 來自官方 SegFormer semantic
+  segmentation recipe。這套設定在讀 test 前即凍結，八個 formal group 完全共用，
+  不依 synthetic group 的結果再調參。
+- normal image 在載入時建立同尺寸全零 mask；VisA 的 instance-valued anomaly mask
+  與所有 synthetic mask 都用 `>0` 轉成 binary target。paired crop／flip／affine
+  同步作用於 image 與 mask，color jitter 只作用於 image。
+- 正式實跑八組 × 兩物件；`all_mixed → filtered_syn` 是第九組的引用，不建立另一個
+  run。`procedural_only` 的 train set 只含真實 normal + 500 張程序化 synthetic，
+  validator 必須證明 real-defect train image 數為 0。
+- Colab 使用一份 source ZIP + 每物件一份 data ZIP。package script 先在本機展開並
+  雜湊正式 group，再把精確 sample ID 寫入 bundle；Notebook 只把這些 ID 注入
+  `sample_ids_by_object`，不在 Colab 重新抽樣。訓練資料先解壓到 `/content`，
+  checkpoint 才同步到 Drive。
+- 每個 run 保存 portable `data_manifest.json`、`run_config.json`、raw
+  `training_report.json` 與 final SafeTensors。M20 必須從這些 raw report 重建
+  `results/segmentation.csv`，不把 notebook 輸出文字當資料來源。
+
+### 後果
+- M18 model lock 只有約 15 MB，且是安全的 SafeTensors；不需要 Colab Secret。
+- packaged selection 可以比完整 synthetic pool 小很多，但仍保留原影像位元、
+  mask、來源 view、train-side provenance 與凍結 test inventory。
+- 本機 one-step smoke 完成前不得把 Notebook 交給使用者；smoke 後再把實測 peak
+  VRAM、時間與最後五項交接填入 `instructions_for_me.md`。
+
+### 來源
+- [Transformers image segmentation recipe](https://huggingface.co/docs/transformers/main/tasks/semantic_segmentation)
+- [locked SegFormer-B0 checkpoint](https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512/tree/489d5cd81a0b59fab9b7ea758d3548ebe99677da)
+- [locked SafeTensors file and SHA256](https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512/blob/489d5cd81a0b59fab9b7ea758d3548ebe99677da/model.safetensors)

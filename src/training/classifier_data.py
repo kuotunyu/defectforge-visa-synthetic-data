@@ -185,6 +185,7 @@ def _load_synthetic_records(
     view: str,
     object_name: str,
     inputs: set[str] | None,
+    sample_ids: set[str] | None = None,
 ) -> list[tuple[Mapping[str, Any], Path, str]]:
     root = (paths.synthetic / view).resolve(strict=False)
     metadata_path = root / "metadata.jsonl"
@@ -197,6 +198,8 @@ def _load_synthetic_records(
             raw = json.loads(line)
             require(isinstance(raw, dict), f"Invalid metadata line {view}:{line_number}")
             if raw.get("object") != object_name:
+                continue
+            if sample_ids is not None and str(raw.get("sample_id")) not in sample_ids:
                 continue
             input_name = _synthetic_input_name(raw)
             if inputs is not None and input_name not in inputs:
@@ -455,13 +458,38 @@ def build_classification_group(
         view = str(synthetic_config["view"])
         inputs_value = synthetic_config.get("inputs")
         inputs = None if inputs_value is None else {str(value) for value in inputs_value}
+        sample_ids_by_object = synthetic_config.get("sample_ids_by_object")
+        sample_ids: set[str] | None = None
+        if sample_ids_by_object is not None:
+            require(
+                isinstance(sample_ids_by_object, dict),
+                "sample_ids_by_object must be a mapping",
+            )
+            object_sample_ids = sample_ids_by_object.get(object_name)
+            require(
+                isinstance(object_sample_ids, list)
+                and all(isinstance(value, str) for value in object_sample_ids),
+                f"sample_ids_by_object is missing {object_name}",
+            )
+            sample_ids = set(object_sample_ids)
+            require(
+                len(sample_ids) == len(object_sample_ids),
+                f"Duplicate packaged sample IDs for {object_name}",
+            )
         count = int(synthetic_config["count"])
         raw_records = _load_synthetic_records(
             paths,
             view=view,
             object_name=object_name,
             inputs=inputs,
+            sample_ids=sample_ids,
         )
+        if sample_ids is not None:
+            observed_ids = {str(record[0]["sample_id"]) for record in raw_records}
+            require(
+                observed_ids == sample_ids,
+                f"Packaged sample IDs are incomplete for {canonical_group}/{object_name}",
+            )
         selected = stratified_select(
             raw_records,
             count=count,
