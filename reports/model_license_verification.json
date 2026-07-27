@@ -1,0 +1,44 @@
+{
+  "models": {
+    "diffusers/stable-diffusion-xl-1.0-inpainting-0.1": {
+      "disabled": false,
+      "gated": false,
+      "license": "openrail++",
+      "private": false,
+      "revision": "115134f363124c53c7d878647567d04daf26e41e",
+      "role": "SDXL inpainting base",
+      "url": "https://huggingface.co/diffusers/stable-diffusion-xl-1.0-inpainting-0.1"
+    },
+    "facebook/dinov2-base": {
+      "disabled": false,
+      "gated": false,
+      "license": "apache-2.0",
+      "private": false,
+      "revision": "f9e44c814b77203eaa57a6bdbbd535f21ede1415",
+      "role": "quality and filtering encoder",
+      "url": "https://huggingface.co/facebook/dinov2-base"
+    },
+    "nvidia/segformer-b0-finetuned-ade-512-512": {
+      "disabled": false,
+      "gated": false,
+      "license": "other",
+      "private": false,
+      "revision": "489d5cd81a0b59fab9b7ea758d3548ebe99677da",
+      "role": "segmentation initialization",
+      "url": "https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512"
+    },
+    "sd2-community/stable-diffusion-2-inpainting": {
+      "disabled": false,
+      "gated": false,
+      "license": "openrail++",
+      "private": false,
+      "revision": "5f74973cbb64c8568780732c17f43eb269d63a0d",
+      "role": "SD2 inpainting base",
+      "url": "https://huggingface.co/sd2-community/stable-diffusion-2-inpainting"
+    }
+  },
+  "schema_version": 1,
+  "source": "Hugging Face Hub model_info API",
+  "status": "passed",
+  "verified_at": "2026-07-27T17:04:56.462151+00:00"
+}

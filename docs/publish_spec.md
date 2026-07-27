@@ -129,6 +129,7 @@ trigger token 清單與對應的瑕疵型別、推論範例程式碼（含 crop-
 **授權**
 - [ ] §2 的授權表在 README、dataset card、model card 三處一致
 - [ ] 兩個底模的 HF 頁面授權已重新查證，未變更
+- [ ] `uv run python scripts/verify_model_licenses.py` 重查 pinned revision、license、public／ungated 狀態
 - [ ] VisA 的 CC BY 4.0 標註完整
 
 **安全**
