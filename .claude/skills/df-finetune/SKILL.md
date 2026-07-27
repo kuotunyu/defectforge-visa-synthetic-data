@@ -125,6 +125,20 @@ Colab Secrets, copy data to `/content` before training, require an L4-class GPU,
 Drive checkpoint roots, automatically choose fresh versus `latest` resume, and run the same
 independent validator with `configs/lora_sdxl.yaml`.
 
+After downloading the result ZIP, validate the ignored local payload without loading base
+weights or reserving GPU memory:
+
+```powershell
+uv run --frozen python scripts/verify_colab_lora_results.py `
+  --archive C:/path/to/downloaded/lora_sdxl.zip
+```
+
+Require ZIP CRC and safe members, 49 result files, both formal reports, final dual-token
+adapter bundles, all sample sidecars/panel/background hashes, zero blocklist hits, the exact
+Colab checkpoint inventory, and Colab-recorded fresh `PeftModel` reloads. Preserve the
+downloaded weights under ignored paths and commit only the machine-readable import validation
+and report.
+
 Do not mark M11 complete until the real immutable SDXL model has completed one local smoke,
 fresh/no-checkpoint and checkpoint-resume branches have both run, saved adapters reload, and
 peak VRAM is recorded. A tiny or structural test is useful evidence but does not replace this.

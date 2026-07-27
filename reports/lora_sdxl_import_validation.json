@@ -1,0 +1,118 @@
+{
+  "archive": {
+    "bytes": 147164017,
+    "file": "lora_sdxl-20260727T054640Z-1-001.zip",
+    "members": 49,
+    "sha256": "9b4ff4f06cc2e0d3fdde84c257d0b709b8c2ac81487e0bc5ca8a89dec9da8660"
+  },
+  "base_model": "diffusers/stable-diffusion-xl-1.0-inpainting-0.1",
+  "base_model_revision": "115134f363124c53c7d878647567d04daf26e41e",
+  "colab_validation_sha256": "e3a05e5862d0be97fe8caccf5d8a7d325dd6dd7afbbad4d030ed29cd3a958093",
+  "frozen_sha256": {
+    "defect_types_sha256": "0c7669287fb1b8f48b3f6aff202eaefc914e8bfc1d892b9e63f88b20996cb41a",
+    "manifest_sha256": "3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c",
+    "selection_sha256": "7021234d0bef51926832591d60c205fa7273e0cc32fd0ae5348740094b060ea2"
+  },
+  "objects": {
+    "capsules": {
+      "adapter_hashes": {
+        "text_token_adapter_2_sha256": "01a7fa219885167e699aeb277e3b5a3dc17adf89c7bf01eccb93dfdef1a4494b",
+        "text_token_adapter_sha256": "2b020eb6f8866224b335075ee800a4f289892348402e3290767b90004cb0567a",
+        "unet_adapter_sha256": "6a84185f531ad664f7f0ff729a1e8ad8a2a8395253b38a8c5072e48482093f75"
+      },
+      "backgrounds_checked": 1,
+      "checkpoint_names_verified_by_colab": [
+        "checkpoint-000100",
+        "checkpoint-000200",
+        "checkpoint-000300",
+        "checkpoint-000400"
+      ],
+      "component_samples": 12,
+      "peak_vram_gib": 9.680204391479492,
+      "reload_class_verified_by_colab": "PeftModel",
+      "samples": [
+        {
+          "file": "samples/step_000100.png",
+          "panel_sha256": "d3bc6da054181fb841d1061143a75b3907a7e5a5f7807c7a3a8afce536741bba",
+          "placement_id": "capsules__type0__001__00",
+          "trigger_token": "<capsules-type0>"
+        },
+        {
+          "file": "samples/step_000200.png",
+          "panel_sha256": "cd4d2f1f296ef4a330635d977b40e9de8defc0a4cc81ed3ecf6253c9343c9ee7",
+          "placement_id": "capsules__type1__001__01",
+          "trigger_token": "<capsules-type1>"
+        },
+        {
+          "file": "samples/step_000300.png",
+          "panel_sha256": "a4c163a937d978045571a2103de80c4ec0d4f017496c29d2e3c173bea6124303",
+          "placement_id": "capsules__type0__001__00",
+          "trigger_token": "<capsules-type0>"
+        },
+        {
+          "file": "samples/step_000400.png",
+          "panel_sha256": "dd9af14192070b14258649dd9ffe855a7881384a3344a211f730e1e984ba1e2d",
+          "placement_id": "capsules__type1__001__01",
+          "trigger_token": "<capsules-type1>"
+        }
+      ],
+      "source_images": 10,
+      "steps": 400,
+      "training_elapsed_seconds": 830.6088319589999,
+      "wall_clock_seconds": 846.2110893939998
+    },
+    "pcb1": {
+      "adapter_hashes": {
+        "text_token_adapter_2_sha256": "2ff88cef857959dd90ee2ad769fe54804b6e76a3da54c4b547d9819f115e0c03",
+        "text_token_adapter_sha256": "09f52b40e3f59f416e0255433f67a84d3bbf189e3ff34946b4c72e424a4a6f42",
+        "unet_adapter_sha256": "af124d460c44341012e0034a8da02100c203ebec1284cc40bf23e6d3199f5582"
+      },
+      "backgrounds_checked": 1,
+      "checkpoint_names_verified_by_colab": [
+        "checkpoint-000100",
+        "checkpoint-000200",
+        "checkpoint-000300",
+        "checkpoint-000400"
+      ],
+      "component_samples": 23,
+      "peak_vram_gib": 9.680204391479492,
+      "reload_class_verified_by_colab": "PeftModel",
+      "samples": [
+        {
+          "file": "samples/step_000100.png",
+          "panel_sha256": "c9e911278e358675b1371192a4fdb0962906df0efaf483ee99fd3e72ded7b389",
+          "placement_id": "pcb1__type0__0000__00",
+          "trigger_token": "<pcb1-type0>"
+        },
+        {
+          "file": "samples/step_000200.png",
+          "panel_sha256": "03525b9d7bfa2e6b46157eeb094ba661746da535abfe36dc3bcaadb34767ac9c",
+          "placement_id": "pcb1__type1__0000__01",
+          "trigger_token": "<pcb1-type1>"
+        },
+        {
+          "file": "samples/step_000300.png",
+          "panel_sha256": "0909ff35143c3286d8042bbedd321b9b724d076fe6ea521f5fb41a136020da64",
+          "placement_id": "pcb1__type0__0000__00",
+          "trigger_token": "<pcb1-type0>"
+        },
+        {
+          "file": "samples/step_000400.png",
+          "panel_sha256": "e0b6d30889c7fa7e9dec2a6c6849f573899a9a8a1a5224f3da39e2ac38269209",
+          "placement_id": "pcb1__type1__0000__01",
+          "trigger_token": "<pcb1-type1>"
+        }
+      ],
+      "source_images": 10,
+      "steps": 400,
+      "training_elapsed_seconds": 826.2769739749999,
+      "wall_clock_seconds": 910.9075404950001
+    }
+  },
+  "pipeline_version": "0.3.0",
+  "results_files": 49,
+  "results_root": "results/colab/lora_sdxl",
+  "status": "passed",
+  "test_blocklist_hits": 0,
+  "validated_at": "2026-07-27T07:07:20.667319+00:00"
+}

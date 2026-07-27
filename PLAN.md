@@ -102,6 +102,9 @@
   - **無人值守**：notebook 與 `--smoke` 本機驗證可自動做完；**實際 Colab 訓練必須等人**
   - **驗證**：`--max-train-steps 1 --smoke` 跑通薄封裝並存出權重檔；斷點續跑分支（有／無 checkpoint）
     各跑一次；notebook 內無明文 token；峰值 VRAM 記進 `instructions_for_me.md`
+  - **目前證據**：Colab L4 正式 fresh run 已完成兩物件各 400 steps、四個 checkpoints、
+    三份 adapters、8 張 sample 與 fresh `PeftModel` reload；峰值 9.680 GiB，CPU import
+    verifier 全綠。仍缺本機 one-step smoke 與實際 checkpoint resume，故保持未勾。
 
 - [x] **M12** 👀 `src/synthetic/generate_diffusion.py` — SD2 生成 **500 張／物件** ＋ refine 搜尋
   - **無人值守**：SD2 部分可跑到底；**SDXL 部分等 M11 的 Colab 權重回來才做**

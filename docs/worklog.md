@@ -303,6 +303,39 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 18：M11 SDXL Colab 正式 fresh run 回收與 CPU 驗收
+
+### 做了什麼
+- 使用者在 Colab L4 跑完 `01_train_inpaint_lora_sdxl.ipynb`；pcb1 / capsules 各
+  400 steps，wrapper 分別 922.2 / 855.8 秒
+- 下載 147,164,017-byte、49-member 結果 ZIP，SHA256
+  `9b4ff4f06cc2e0d3fdde84c257d0b709b8c2ac81487e0bc5ca8a89dec9da8660`
+- 新增 `verify_colab_lora_results.py`，在不載入 SDXL、不配置 GPU 的情況下重驗 ZIP、
+  frozen locks、adapter/tokenizer bundles、reports、sidecars、panel/background hashes
+  與 803-entry test blocklist
+- 逐張打開 8 張 3072×1024 sample panel，完整保留 raw artifact 的負面證據
+
+### 正式結果
+- pipeline 0.3.0、locked revision `115134f...e41e`、兩物件各 4 checkpoints
+- pcb1：training 826.28 s、wall 910.91 s、0.4841 steps/s、peak 9.680 GiB
+- capsules：training 830.61 s、wall 846.21 s、0.4816 steps/s、peak 9.680 GiB
+- 兩物件 UNet + text encoder 1/2 adapters hashes 逐檔相符，fresh `PeftModel` reload
+  由 Colab validator 通過；本機 CPU import validator `status=passed`、blocklist hits=0
+- raw panel 非 seed copy，但 PCB 有文字／走線變形，capsules type0 有圓環、刻度、
+  綠色球狀 artifact，type1 偏弱；不得宣稱可直接發佈
+
+### 未完成與下一步
+- M11 仍不勾：正式 run 只走 fresh branch，沒有實跑 checkpoint restore；PLAN 也明文
+  要求本機 one-step smoke
+- FormosaNLU 仍占用本機 GPU，因此現在只完成 CPU closeout；GPU 釋放後跑短 smoke +
+  controlled resume，再決定是否勾 M11
+- 不需再跑正式 Colab；Drive `runs/lora_sdxl/` checkpoints 暫時保留
+
+### 換你做
+目前沒有。不要再開 Colab，也不要中止 FormosaNLU；等 GPU 解除通知。
+
+---
+
 ## 2026-07-27 — Session 16：M14 mask-centered 生成品質評估與 sanity gate
 
 ### 做了什麼

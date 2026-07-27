@@ -1,9 +1,8 @@
 # 換你做：Colab 操作手冊
 
-> **狀態：部分完成。** Notebook 1（M11 SDXL）的離線 bundle 與操作欄位已備妥，
-> 但 real-model smoke、峰值 VRAM 與 Colab 正式 run 尚未執行；Notebook 2（M18
-> SegFormer）尚未建立。在 M11 通過 real-model smoke 且跨專案 GPU 鎖解除前，
-> 請先不要執行 Notebook 1。
+> **狀態：部分完成。** Notebook 1（M11 SDXL）的 Colab L4 正式 fresh run 與本機
+> artifact import 已通過，不需再跑正式 Colab；仍缺本機 one-step smoke 與 checkpoint
+> resume。Notebook 2（M18 SegFormer）尚未建立。本機 GPU 鎖解除前不要啟動 CUDA。
 
 ## 通用流程（每本 notebook 都一樣）
 
@@ -44,8 +43,8 @@ fresh reload 與驗證都已通過，因此沒有 `01_train_inpaint_lora_sd2.ipy
 | 1. 上 Colab 方式 | 把 `D:\sdg-data\01-defectforge\colab\m11\` 的兩個 zip 上傳到 `MyDrive/sdg-portfolio/01-defectforge-visa/`，再從 Drive 開 notebook |
 | 2. Runtime 選型 | **L4 GPU（24 GB）**；notebook 會在總 VRAM <20 GiB 時先停止 |
 | 3. 需要的 Colab Secrets | `HF_TOKEN`，只由 `google.colab.userdata` 讀取；notebook 無明文 token |
-| 4. 預估時數與 compute units | 400 steps × 2 objects；實際時數、峰值 VRAM 與 CU 差額待第一次 Colab 正式 run 填回，未實測前不猜數字 |
-| 5. 跑完要下載哪些檔案 / 放回哪個路徑 | Drive `results/lora_sdxl/` 內 validation JSON、兩物件 `training_report.json`、`final/`、`samples/`；下載到本機 `results/colab/lora_sdxl/` |
+| 4. 實測時數與 compute units | pcb1 wrapper 922.2 s、capsules 855.8 s，合計 29 分 38 秒；正式 training 826.28 / 830.61 s；peak VRAM 皆 9.680 GiB。執行前未記 CU，無法誠實回推 |
+| 5. 跑完要下載哪些檔案 / 放回哪個路徑 | **已完成**：validation JSON、兩物件 `training_report.json`、`final/`、`samples/` 共 49 files，已放回本機 `results/colab/lora_sdxl/`；Drive checkpoints 暫不刪 |
 
 ## Notebook 2 — M18 SegFormer（尚未建立）
 
