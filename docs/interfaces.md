@@ -448,6 +448,20 @@ Notebook 畫面和每個 Colab runtime 自己 append 的暫存 CSV 都不當數�
 16 列 `physical_run=true` 與兩列 `all_mixed` 邏輯 alias（共 18 列），並保存 16 個
 raw report SHA256。
 
+### M21 `scripts/build_phase2_figures.py`
+```text
+--classification results/classification.csv
+--segmentation results/segmentation.csv
+--output-dir reports/figures
+--validation-out reports/phase2_figures_validation.json
+```
+從 verified CSV 建 `real_scaling_curve.png`、`synthetic_volume_curve.png`、
+`main_comparison_table.png`、`segmentation_table.png`。Filtered Syn 的「相當於幾張
+真實瑕疵」先以 Real-only 的 10／20／60 raw 點做單調 isotonic fit，再在 fitted
+Macro-F1 上分段內插；低於／高於觀察範圍只報 `≤10`／`≥60`，不做無界外插。validator
+保存兩份輸入 CSV 與四張圖的 SHA256，且 `visual_inspection_required=true`；M21 勾選前
+仍必須逐張實際開圖。
+
 ### M22 `src/inference/demo_gradio.py`
 ```
 --paths --cls-ckpt PATH --seg-ckpt PATH --port INT --share   # --share 預設 off，不對外開放
