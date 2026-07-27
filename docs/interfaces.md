@@ -419,6 +419,21 @@ canonical group，並下載 `m18_seg_results_<object>.zip`。獨立 validator �
 
 註：第 9 組「全部混合」**＝ `filtered_syn`，直接引用不重跑**
 
+### M20 `scripts/aggregate_segmentation.py`
+```text
+--paths configs/paths.yaml
+--config configs/segmenter.yaml
+--results-root results/colab/segmentation
+--output results/segmentation.csv
+--report reports/segmentation_results.md
+--validation-out reports/segmentation_validation.json
+```
+先對兩物件各自的八個 raw run 呼叫獨立 M18 validator，再只從
+`training_report.json` + `data_manifest.json` 重建 long-format CSV 與 Markdown；
+Notebook 畫面和每個 Colab runtime 自己 append 的暫存 CSV 都不當數據源。輸出包含
+16 列 `physical_run=true` 與兩列 `all_mixed` 邏輯 alias（共 18 列），並保存 16 個
+raw report SHA256。
+
 ### M22 `src/inference/demo_gradio.py`
 ```
 --paths --cls-ckpt PATH --seg-ckpt PATH --port INT --share   # --share 預設 off，不對外開放
