@@ -417,6 +417,34 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-27 — Session 14：M13 filtering 純規則與校準 foundation
+
+### 做了什麼
+- M12 乾淨提交後沒有停在里程碑邊界，直接稽核三個 formal input、legal ROI 重建路徑、
+  frozen M9 DINO score cache、35 個真實 component embedding 與 real mask 統計
+- 新增 `configs/filters.yaml`，鎖六道規則初值、DINO revision、輸出與 contact-sheet 契約
+- 新增 `src/filtering/metrics.py`：ROI containment、log-reference area/aspect z-score、
+  clipped square context、局部 pHash、外環帶 gradient-histogram normalized
+  Wasserstein seam score
+- 新增 `src/filtering/rules.py`：文件指定的八個拒絕 enum、固定 funnel 順序、
+  per-rule disable 與 previously-accepted pHash 最近距離
+- seam 測試發現 mask 內平滑改色也會因 Sobel 支撐域在外環帶留下小梯度；保留正確演算法，
+  把測試從錯誤的 `score == 1` 改為「高分且顯著高於人工硬接縫」
+
+### 驗證
+- filtering foundation Ruff 全綠、9 tests 全過
+- 無 GPU／filesystem side effect；尚未假裝 M13 runner 或全量校準已完成
+- M13 PLAN 維持未勾選，直到 DINO、atomic filtered/unfiltered、漏斗 verifier 與目視全綠
+
+### 下一步
+接上 frozen real-reference DINO calibration、`run_filters.py` 與 `verify_filter_report.py`，
+先 fresh smoke 再跑 Stage A / Stage B 全量。
+
+### 換你做
+目前沒有；這一層不需要使用者操作。
+
+---
+
 ## 2026-07-27 — Session 10：M8 程序化 Stage A 與 no-real-stats 對照
 
 ### 做了什麼

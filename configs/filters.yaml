@@ -1,0 +1,38 @@
+schema_version: 1
+
+inputs:
+  - stageA_copypaste
+  - stageA_procedural
+  - stageB_sd2/searched
+
+rules:
+  roi:
+    minimum_containment: 1.0
+  area:
+    maximum_abs_zscore: 2.5
+    enforce_real_quantiles: true
+  aspect:
+    maximum_abs_zscore: 2.5
+  phash:
+    hash_size: 8
+    minimum_hamming_distance: 5
+  dinov2:
+    model_id: facebook/dinov2-base
+    revision: f9e44c814b77203eaa57a6bdbbd535f21ede1415
+    batch_size: 8
+    crop_ratio: 2.5
+    tau_low_quantile: 0.05
+    tau_copy: 0.98
+    outlier_quantile: 0.95
+  seam:
+    band_px: 5
+    histogram_bins: 64
+    minimum_score: 0.85
+
+output:
+  link_mode: hardlink
+  report: reports/filter_report.md
+  validation: reports/filter_validation.json
+  accepted_contact_sheet: reports/figures/filter_accepted.png
+  rejected_contact_sheet: reports/figures/filter_rejected.png
+  contact_sheet_n: 12
