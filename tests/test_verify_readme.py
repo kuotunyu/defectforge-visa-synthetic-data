@@ -12,6 +12,7 @@ from scripts.run_classifier_matrix import matrix_plan
 from scripts.verify_readme import (
     BLOCK_NAMES,
     ReadmeVerificationError,
+    main,
     render_blocks,
     replace_block,
     validate_classification_rows,
@@ -140,3 +141,44 @@ def test_csv_fixture_columns_remain_serializable(tmp_path: Path) -> None:
         writer.writeheader()
         writer.writerows(_classification_rows())
     assert path.read_text(encoding="utf-8").startswith("requested_group,")
+
+
+def test_write_mode_validates_candidate_before_changing_readme(tmp_path: Path) -> None:
+    classification = tmp_path / "classification.csv"
+    with classification.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=CLASSIFICATION_FIELDS)
+        writer.writeheader()
+        writer.writerows(_classification_rows())
+    segmentation = tmp_path / "segmentation.csv"
+    with segmentation.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=SEGMENTATION_FIELDS)
+        writer.writeheader()
+        writer.writerows(_segmentation_rows())
+    readme = tmp_path / "README.md"
+    original = "# Project\n\n## Results\n\n"
+    for name in BLOCK_NAMES:
+        original += (
+            f"<!-- BEGIN VERIFIED {name} -->\n"
+            "stale\n"
+            f"<!-- END VERIFIED {name} -->\n\n"
+        )
+    readme.write_text(original, encoding="utf-8")
+    validation = tmp_path / "readme_validation.json"
+
+    with pytest.raises(ReadmeVerificationError, match="Limitations"):
+        main(
+            [
+                "--readme",
+                str(readme),
+                "--classification",
+                str(classification),
+                "--segmentation",
+                str(segmentation),
+                "--validation-out",
+                str(validation),
+                "--write",
+            ]
+        )
+
+    assert readme.read_text(encoding="utf-8") == original
+    assert not validation.exists()

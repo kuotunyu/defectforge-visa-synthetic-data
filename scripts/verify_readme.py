@@ -405,8 +405,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.write:
         for name in BLOCK_NAMES:
             readme = replace_block(readme, name, blocks[name])
-        atomic_write_text(args.readme, readme)
     verify_readme(readme, blocks)
+    if args.write:
+        atomic_write_text(args.readme, readme)
 
     validation = {
         "status": "passed",
