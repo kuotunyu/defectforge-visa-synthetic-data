@@ -755,6 +755,10 @@ footer { display: none !important; }
     --grid-cols: 2 !important;
     --grid-rows: 3 !important;
   }
+  #df-examples .caption-label {
+    max-width: 100% !important;
+    padding: .35rem .45rem !important;
+  }
   .df-examples-intro {
     align-items: flex-start;
     flex-direction: column;
