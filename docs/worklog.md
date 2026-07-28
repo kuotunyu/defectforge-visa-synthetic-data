@@ -303,6 +303,36 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-28 — Session 43：M33 Mask 結果引導與探索模式
+
+### 做了什麼
+- 將 Mask threshold 從上傳前的「進階顯示設定」移到瑕疵定位結果旁，改為兩個使用者
+  可直接理解的模式：「正式結果 0.50」與「探索弱訊號 0.20」
+- 預設仍執行 preregistered threshold 0.50；切換探索模式會自動重新產生結果，不需
+  回到輸入區或再次按主按鈕，也不會改變 classification 或已發布的正式指標
+- 推論 evidence 新增 pixel probability minimum、mean、p95、p99、maximum；正式
+  Mask 全黑時，介面直接顯示「不是操作失敗」、最高分數與下一步
+- 新增動態定位說明：空 Mask、正式定位、探索弱訊號各有不同狀態文案，並附 Binary
+  mask 黑白圖例與 heatmap 藍綠至黃紅色階說明
+- 將結果摘要的 `Mask coverage` 改成正體中文 `Mask 覆蓋率`
+
+### 驗證
+- 新增 `localization_statistics()` 單元測試，驗證同一 probability map 在 0.50 為
+  0% coverage、在 0.20 可顯示探索區域
+- Playwright 完成「正式全黑 → 探索有 Mask → 切回正式 → 再切探索」完整互動
+- 桌機 1680×1100、手機 390×844 均無水平溢位，browser console error 0
+- 193 項完整測試與發布稽核通過
+
+### 決策
+- 不為了展示效果偷偷降低正式 threshold；0.50 永遠是預設與正式結果
+- 探索 0.20 是 contextual onboarding，只協助使用者讀取未達正式門檻的弱訊號
+- 不新增強制教學或 modal；說明只在使用者看到定位結果的當下出現
+
+### 換你做
+目前不用操作；公開 Space 更新後，可直接用 PCB 瑕疵 B 驗證兩種模式。
+
+---
+
 ## 2026-07-28 — Session 42：M32 流程精準對齊與結果報告重構
 
 ### 做了什麼

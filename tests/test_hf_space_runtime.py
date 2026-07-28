@@ -9,7 +9,12 @@ import numpy as np
 import pytest
 import yaml
 
-from deploy.hf_space.runtime import SpaceContractError, load_manifest, render_outputs
+from deploy.hf_space.runtime import (
+    SpaceContractError,
+    load_manifest,
+    localization_statistics,
+    render_outputs,
+)
 from src.common.integrity import sha256_file
 
 
@@ -81,6 +86,15 @@ def test_space_render_outputs_respects_visualization_threshold() -> None:
     assert heatmap.shape == image.shape
 
 
+def test_space_localization_statistics_explain_an_empty_formal_mask() -> None:
+    probability = np.asarray([[0.08, 0.12], [0.18, 0.24]], dtype=np.float32)
+    formal = localization_statistics(probability, threshold=0.50)
+    exploratory = localization_statistics(probability, threshold=0.20)
+    assert formal["maximum"] == pytest.approx(0.24)
+    assert formal["coverage_percent"] == 0.0
+    assert exploratory["coverage_percent"] == 25.0
+
+
 @pytest.mark.parametrize("script", ["package_hf_space.py", "publish_hf_space.py"])
 def test_space_scripts_expose_help(script: str) -> None:
     root = Path(__file__).resolve().parents[1]
@@ -134,6 +148,14 @@ def test_space_app_is_zh_tw_first_and_has_guided_empty_state() -> None:
     assert "height: 80px !important" in source
     assert 'elem_id="df-result-overview"' in source
     assert "df-confidence-bars" in source
+    assert "如何閱讀 Mask 與 heatmap" in source
+    assert "正式結果 · 0.50" in source
+    assert "探索弱訊號 · 0.20" in source
+    assert "threshold.input(" in source
+    assert "目前沒有白色定位區域" in source
+    assert "pixel_probability_maximum" in (
+        root / "deploy/hf_space/runtime.py"
+    ).read_text(encoding="utf-8")
     assert ".df-decision h3 {" in source
     assert "color: #fff !important" in source
     assert "gr.Markdown(" not in source

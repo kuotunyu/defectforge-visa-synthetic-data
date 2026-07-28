@@ -321,8 +321,7 @@ body.dark .gradio-container {
 #df-object,
 #df-upload,
 #df-probabilities,
-.df-output-image,
-#df-advanced {
+.df-output-image {
   border-color: var(--df-border) !important;
   border-radius: var(--df-radius-sm) !important;
 }
@@ -343,8 +342,7 @@ body.dark .gradio-container {
   border: 0 !important;
   box-shadow: none !important;
 }
-#df-object > .wrap,
-#df-advanced > .wrap {
+#df-object > .wrap {
   padding: 0 !important;
   background: transparent !important;
   border: 0 !important;
@@ -765,6 +763,146 @@ button#df-run:active {
   color: var(--df-muted);
   font-size: 1.1875rem !important;
 }
+#df-localization-controls {
+  display: grid !important;
+  grid-template-columns: minmax(260px, .8fr) minmax(420px, 1.2fr);
+  align-items: center !important;
+  gap: 1rem !important;
+  margin: .75rem 0 !important;
+  padding: 1rem !important;
+  background: var(--df-surface-muted) !important;
+  border: 0 !important;
+  border-radius: var(--df-radius-sm) !important;
+}
+.df-threshold-copy h3 {
+  margin: 0 0 .2rem;
+  color: var(--df-ink);
+  font-size: 1.375rem;
+  font-weight: 800;
+}
+.df-threshold-copy p {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--df-muted);
+  font-size: 1.125rem !important;
+  line-height: 1.5;
+}
+#df-threshold-mode {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#df-threshold-mode > .wrap {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: .65rem !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+#df-threshold-mode .wrap label {
+  min-height: 56px !important;
+  padding: .65rem .8rem !important;
+  background: var(--df-surface) !important;
+  border: 0 !important;
+  border-radius: var(--df-radius-sm) !important;
+  cursor: pointer;
+}
+#df-threshold-mode .wrap label:has(input:checked) {
+  background: var(--df-primary-soft) !important;
+  box-shadow: inset 0 0 0 2px var(--df-primary) !important;
+}
+#df-threshold-mode .wrap label:has(input:focus-visible) {
+  outline: 3px solid color-mix(in srgb, var(--df-focus) 55%, transparent) !important;
+  outline-offset: 2px !important;
+}
+#df-threshold-mode .wrap label span {
+  color: var(--df-ink) !important;
+  font-size: 1.125rem !important;
+  font-weight: 750 !important;
+  line-height: 1.35 !important;
+}
+#df-threshold-mode .info-text {
+  color: var(--df-muted) !important;
+  font-size: 1.125rem !important;
+  line-height: 1.45 !important;
+}
+#df-localization-guide {
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+.df-location-guide {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: .75rem;
+  padding: 1rem;
+  color: var(--df-ink);
+}
+.df-location-guide--empty {
+  background: var(--df-surface-peach);
+}
+.df-location-guide--explore {
+  background: var(--df-surface-blue);
+}
+.df-location-guide--formal {
+  background: var(--df-surface-soft);
+}
+.df-location-guide h3 {
+  margin: 0 0 .25rem;
+  color: var(--df-ink);
+  font-size: 1.375rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.df-location-guide p {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--df-muted);
+  font-size: 1.125rem !important;
+  line-height: 1.5 !important;
+}
+.df-location-guide strong {
+  color: var(--df-primary-strong);
+}
+.df-location-legend {
+  display: grid;
+  gap: .55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.df-location-legend li {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  align-items: center;
+  gap: .7rem;
+  color: var(--df-ink);
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+.df-mask-key,
+.df-heatmap-key {
+  display: block;
+  width: 78px;
+  height: 18px;
+}
+.df-mask-key {
+  background: linear-gradient(90deg, #070b0e 0 50%, #fff 50% 100%);
+  box-shadow: inset 0 0 0 1px var(--df-border-strong);
+}
+.df-heatmap-key {
+  background: linear-gradient(
+    90deg,
+    rgb(5 18 27),
+    rgb(13 91 120),
+    rgb(61 202 170),
+    rgb(250 194 63),
+    rgb(239 73 51)
+  );
+}
 #df-localization {
   gap: var(--df-space-md) !important;
   padding: 1rem !important;
@@ -831,15 +969,23 @@ button#df-run:active {
 footer { display: none !important; }
 @media (max-width: 900px) {
   #df-input-grid,
-  #df-result-overview {
+  #df-result-overview,
+  #df-localization-controls {
     align-items: stretch !important;
     flex-direction: column !important;
   }
   #df-input-grid > *,
-  #df-result-overview > * {
+  #df-result-overview > *,
+  #df-localization-controls > * {
     flex: 1 1 auto !important;
     width: 100% !important;
     min-width: 0 !important;
+  }
+  #df-localization-controls {
+    display: flex !important;
+  }
+  .df-location-guide {
+    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 760px) {
@@ -906,6 +1052,9 @@ footer { display: none !important; }
   #df-localization {
     flex-direction: column !important;
   }
+  #df-threshold-mode > .wrap {
+    grid-template-columns: 1fr !important;
+  }
   .df-examples-intro {
     align-items: flex-start;
     flex-direction: column;
@@ -965,7 +1114,7 @@ def _result_summary_html(
         f"<div><dt>物件</dt><dd>{escaped_object}</dd></div>"
         f"<div><dt>執行裝置</dt><dd>{device}</dd></div>"
         f"<div><dt>耗時</dt><dd>{elapsed_ms:.0f} ms</dd></div>"
-        f"<div><dt>Mask coverage</dt><dd>{coverage:.2f}%</dd></div>"
+        f"<div><dt>Mask 覆蓋率</dt><dd>{coverage:.2f}%</dd></div>"
         "</dl>"
         f"<p class='df-decision-threshold'>顯示 threshold：{threshold:.2f}</p>"
         "</section>"
@@ -996,6 +1145,55 @@ def _confidence_html(probabilities: dict[str, float]) -> str:
     )
 
 
+def _localization_guide_html(evidence: dict[str, object]) -> str:
+    inference = evidence.get("inference", {})
+    if not isinstance(inference, dict):
+        inference = {}
+    threshold = float(inference.get("visualization_threshold", 0.5))
+    formal_threshold = float(inference.get("formal_threshold", 0.5))
+    coverage = float(inference.get("mask_coverage_percent", 0.0))
+    maximum = float(inference.get("pixel_probability_maximum", 0.0))
+    is_exploratory = threshold < formal_threshold - 1e-6
+    if coverage <= 0.0:
+        tone = "empty"
+        title = "目前沒有白色定位區域"
+        message = (
+            f"這不是操作失敗。最高 pixel probability 為 <strong>{maximum:.2f}</strong>，"
+            f"沒有像素達到目前的 <strong>{threshold:.2f}</strong> 門檻。"
+        )
+        if not is_exploratory:
+            message += " 請選擇「探索弱訊號 · 0.20」查看模型尚未達正式門檻的線索。"
+        else:
+            message += " 這張影像在探索模式下仍沒有可顯示的區域。"
+    elif is_exploratory:
+        tone = "explore"
+        title = "正在查看探索弱訊號"
+        message = (
+            f"白色區域是 pixel probability ≥ <strong>{threshold:.2f}</strong> 的位置，"
+            f"目前覆蓋影像 <strong>{coverage:.2f}%</strong>。"
+            f"這只協助閱讀弱訊號；正式結果仍以 {formal_threshold:.2f} 為準。"
+        )
+    else:
+        tone = "formal"
+        title = "已產生正式定位結果"
+        message = (
+            f"白色區域是 pixel probability ≥ <strong>{threshold:.2f}</strong> 的位置，"
+            f"目前覆蓋影像 <strong>{coverage:.2f}%</strong>。"
+        )
+    return (
+        f"<section class='df-location-guide df-location-guide--{tone}' "
+        "lang='zh-Hant-TW' role='status'>"
+        "<div><h3>"
+        f"{title}</h3><p>{message}</p></div>"
+        "<ul class='df-location-legend' aria-label='定位圖例'>"
+        "<li><span class='df-mask-key' aria-hidden='true'></span>"
+        "<span><strong>Binary mask</strong>：白色是達門檻區域</span></li>"
+        "<li><span class='df-heatmap-key' aria-hidden='true'></span>"
+        "<span><strong>Heatmap</strong>：由藍綠到黃紅代表分數升高</span></li>"
+        "</ul></section>"
+    )
+
+
 def _run(image: object, object_name: str, threshold: float) -> tuple[object, ...]:
     try:
         probabilities, mask, heatmap, _summary, evidence = predict(
@@ -1005,6 +1203,7 @@ def _run(image: object, object_name: str, threshold: float) -> tuple[object, ...
         )
         summary = _result_summary_html(probabilities, object_name, evidence)
         confidence = _confidence_html(probabilities)
+        localization_guide = _localization_guide_html(evidence)
         return (
             gr.Column(visible=True),
             gr.HTML(
@@ -1018,6 +1217,10 @@ def _run(image: object, object_name: str, threshold: float) -> tuple[object, ...
             gr.Column(visible=True),
             gr.Accordion(
                 "查看模型證據與 checkpoint provenance",
+                visible=True,
+            ),
+            gr.HTML(
+                value=localization_guide,
                 visible=True,
             ),
         )
@@ -1035,6 +1238,8 @@ def _clear_results() -> tuple[object, ...]:
         {},
         gr.Column(visible=False),
         gr.Accordion(visible=False),
+        gr.HTML(visible=False),
+        gr.Radio(value=0.50),
     )
 
 
@@ -1101,20 +1306,6 @@ def build_app() -> gr.Blocks:
                             "<p class='df-object-help' lang='zh-Hant-TW'>"
                             "支援 JPEG、PNG；單張上限 20 MB。</p>"
                         )
-                        with gr.Accordion(
-                            "進階顯示設定",
-                            open=False,
-                            elem_id="df-advanced",
-                        ):
-                            threshold = gr.Slider(
-                                minimum=0.05,
-                                maximum=0.95,
-                                value=0.50,
-                                step=0.05,
-                                label="Mask 顯示 threshold",
-                                info="正式 preregistered threshold 為 0.50。此設定只改變畫面上的 "
-                                "binary mask，不會改寫已發布指標。",
-                            )
                     with gr.Column(scale=7, min_width=340):
                         image = gr.Image(
                             label="上傳影像",
@@ -1185,10 +1376,32 @@ def build_app() -> gr.Blocks:
                     gr.HTML(
                         "<div class='df-section-heading' lang='zh-Hant-TW'>"
                         "<span class='df-result-section-kicker'>瑕疵定位</span>"
-                        "<h2>Mask 與 heatmap</h2>"
-                        "<p>Binary mask 顯示超過 threshold 的區域；"
-                        "heatmap 保留完整機率分布。</p>"
+                        "<h2>如何閱讀 Mask 與 heatmap</h2>"
+                        "<p>先看 Binary mask 的白色區域；若全黑，再切換探索模式查看弱訊號。</p>"
                         "</div>"
+                    )
+                    with gr.Row(elem_id="df-localization-controls"):
+                        gr.HTML(
+                            "<div class='df-threshold-copy' lang='zh-Hant-TW'>"
+                            "<h3>選擇定位顯示模式</h3>"
+                            "<p>第一次先看正式結果；只有在 Mask 全黑時，"
+                            "才需要切換探索模式。</p></div>"
+                        )
+                        threshold = gr.Radio(
+                            choices=[
+                                ("正式結果 · 0.50", 0.50),
+                                ("探索弱訊號 · 0.20", 0.20),
+                            ],
+                            value=0.50,
+                            label="定位顯示模式",
+                            info="切換後會重新產生定位圖。探索模式不會改變 classification "
+                            "結果或已發布的正式指標。",
+                            elem_id="df-threshold-mode",
+                        )
+                    localization_guide = gr.HTML(
+                        "<p>完成檢測後，這裡會直接說明定位結果。</p>",
+                        elem_id="df-localization-guide",
+                        visible=False,
                     )
                     with gr.Row(elem_id="df-localization"):
                         mask = gr.Image(
@@ -1229,24 +1442,36 @@ def build_app() -> gr.Blocks:
             f"<a href='{DATASET_URL}' target='_blank' rel='noopener'>Hugging Face Dataset</a>"
             "</span></div>"
         )
+        run_outputs = [
+            result_panel,
+            probabilities,
+            mask,
+            heatmap,
+            summary,
+            evidence,
+            output_details,
+            evidence_panel,
+            localization_guide,
+        ]
         run.click(
             fn=_run,
             inputs=[image, object_name, threshold],
-            outputs=[
-                result_panel,
-                probabilities,
-                mask,
-                heatmap,
-                summary,
-                evidence,
-                output_details,
-                evidence_panel,
-            ],
+            outputs=run_outputs,
             concurrency_limit=1,
             concurrency_id="model-inference",
             show_progress="full",
             api_visibility="private",
             scroll_to_output=True,
+        )
+        threshold.input(
+            fn=_run,
+            inputs=[image, object_name, threshold],
+            outputs=run_outputs,
+            concurrency_limit=1,
+            concurrency_id="model-inference",
+            show_progress="minimal",
+            api_visibility="private",
+            scroll_to_output=False,
         )
         examples.select(
             fn=_select_example,
@@ -1260,16 +1485,7 @@ def build_app() -> gr.Blocks:
             component.change(
                 fn=_clear_results,
                 inputs=None,
-                outputs=[
-                    result_panel,
-                    probabilities,
-                    mask,
-                    heatmap,
-                    summary,
-                    evidence,
-                    output_details,
-                    evidence_panel,
-                ],
+                outputs=[*run_outputs, threshold],
                 show_progress="hidden",
                 api_visibility="private",
                 trigger_mode="always_last",

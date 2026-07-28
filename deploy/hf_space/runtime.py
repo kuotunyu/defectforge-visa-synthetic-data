@@ -243,6 +243,30 @@ def _colorize_probability(probability: np.ndarray) -> np.ndarray:
     return np.rint(stops[lower] * (1.0 - fraction) + stops[upper] * fraction).astype(np.uint8)
 
 
+def localization_statistics(
+    pixel_probability: np.ndarray,
+    *,
+    threshold: float,
+) -> dict[str, float]:
+    """Summarize the raw pixel scores used to render a localization result."""
+    probability = np.asarray(pixel_probability, dtype=np.float32)
+    require(probability.ndim == 2 and probability.size > 0, "Pixel probability map is invalid")
+    require(np.isfinite(probability).all(), "Pixel probability contains non-finite values")
+    require(0.0 <= threshold <= 1.0, "Visualization threshold is outside [0, 1]")
+    require(
+        float(probability.min()) >= 0.0 and float(probability.max()) <= 1.0,
+        "Pixel probability is outside [0, 1]",
+    )
+    return {
+        "minimum": float(probability.min()),
+        "mean": float(probability.mean()),
+        "p95": float(np.quantile(probability, 0.95)),
+        "p99": float(np.quantile(probability, 0.99)),
+        "maximum": float(probability.max()),
+        "coverage_percent": float((probability >= threshold).mean()) * 100.0,
+    }
+
+
 def render_outputs(
     image: Image.Image | np.ndarray,
     *,
@@ -324,7 +348,11 @@ def predict(
         pixel_probability=pixel_probability,
         threshold=float(visualization_threshold),
     )
-    coverage = float((mask > 0).mean()) * 100.0
+    localization = localization_statistics(
+        pixel_probability,
+        threshold=float(visualization_threshold),
+    )
+    coverage = localization["coverage_percent"]
     decision = "Defect（異常）" if anomaly_probability >= 0.5 else "Normal（正常）"
     summary = (
         f"### 檢測完成：{decision}\n"
@@ -342,6 +370,11 @@ def predict(
             "visualization_threshold": float(visualization_threshold),
             "formal_threshold": bundle.formal_threshold,
             "mask_coverage_percent": round(coverage, 4),
+            "pixel_probability_minimum": round(localization["minimum"], 6),
+            "pixel_probability_mean": round(localization["mean"], 6),
+            "pixel_probability_p95": round(localization["p95"], 6),
+            "pixel_probability_p99": round(localization["p99"], 6),
+            "pixel_probability_maximum": round(localization["maximum"], 6),
         },
     }
     return probabilities, mask, heatmap, summary, evidence
