@@ -181,7 +181,7 @@
   - **驗證**：`verify_readme.py` 跑過，README 每張表的數字都能從 `results/` 重算出來且完全相符；
     負面結果（若有）已寫進 Limitations；防洩漏聲明與授權表齊全
 
-- [ ] **M24** 🙋 發佈（**轉 public 前一定要使用者過目**）
+- [x] **M24** 🙋 發佈（**轉 public 前一定要使用者過目**）
   - **驗證**：照 [docs/publish_spec.md](docs/publish_spec.md) 的檢查表逐項打勾；
     全 repo 掃過無 API key／絕對路徑／個資；commit 無 `Co-Authored-By`；
     HF dataset card 與 model card 完整；使用者說 OK 才轉 public

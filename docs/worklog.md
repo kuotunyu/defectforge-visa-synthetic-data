@@ -303,6 +303,57 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-28 — Session 32：M24 GitHub／Hugging Face 正式公開
+
+### 使用者授權與 Contributors 紅線
+- 使用者再次明確要求 GitHub Contributors 只能有 `kuotunyu`，並授權在此前提下完成
+  專案內後續動作
+- 發佈前逐欄稽核 65 個 commits：author / committer 全部是
+  `kuotunyu <61350295+kuotunyu@users.noreply.github.com>`；`Co-Authored-By` = 0
+- GitHub CLI 登入帳號為 `kuotunyu`（account id `61350295`）
+
+### GitHub 發佈
+- 建立並公開 `https://github.com/kuotunyu/01-defectforge-visa`
+- 初次推送後 `main` remote HEAD 與本機
+  `779b4918f434096a9d39d8793e2e9f1dc3d7ecfd` 相同
+- GitHub Contributors API 始終只回傳精確一筆 `kuotunyu / User`；
+  contributions 數只隨本專案自己的後續提交增加
+- 發佈後再次查詢仍只有 `kuotunyu`，沒有 bot 或第二位 contributor
+
+### Hugging Face 發佈
+- HF CLI 身分確認為文件指定的 `steven0226`
+- 既有 bundle 重新核對目前 frozen sources：
+  - dataset：15,555 bundle files、14,115,088,771 bytes、7,770 image/mask views，
+    release manifest SHA256
+    `ab1202f69890947e1f0abfeb4837899f618fbb176fe1f5af979854f3f2dcb08d`
+  - model：38 bundle files、75,457,038 bytes、10 safetensors，
+    release manifest SHA256
+    `acc3f8dd260ebb44b85198d5edb80077ed45ecfd64dd98472baf602d0360fa37`
+- 先上傳至 private repos，遠端精確 inventory 只比 bundle 多 HF 自動建立的
+  `.gitattributes`
+- 從遠端重新下載 image、mask、metadata、test blocklist、兩張 card、
+  release manifests 與 SD2／SDXL safetensors；SHA256 全部等於本機 manifest
+- 驗收後公開：
+  - `https://huggingface.co/datasets/steven0226/defectforge-visa-synthetic`
+    （15,556 remote files；revision
+    `c1c929d34a554133e380567afc306e11e54f4f95`）
+  - `https://huggingface.co/steven0226/defectforge-visa-lora`
+    （39 remote files；revision
+    `d915a7878159e29a6de66285378c7ea0eeb275f2`）
+- 最後以 `token=False` 匿名重新讀取 repo inventory 與 README，兩者皆 public、
+  ungated、可下載
+
+### 安全與執行狀態
+- 上傳腳本第一次因未注入 `HF_TOKEN` 在網路寫入前 fail closed；之後只把本機憑證庫
+  token 傳入子程序記憶體，沒有輸出或寫入 token
+- 本次發布不使用 GPU，也沒有修改 FormosaNLU
+
+### 下一步／換你做
+M24 已完成；目前不需 Colab、GPU 或人工上傳。之後若接受外部 PR，合併前仍必須檢查
+commit author，否則 GitHub Contributors 可能不再只有 `kuotunyu`。
+
+---
+
 ## 2026-07-28 — Session 30：M19 L4 回收、M20 raw 聚合與 M21 正式圖表
 
 ### 做了什麼

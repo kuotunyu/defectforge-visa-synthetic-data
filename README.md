@@ -1,8 +1,12 @@
 # DefectForge-VisA
 
-> **Status: Reproducible release candidate; M0–M23 verified locally.**
+> **Status: Published; M0–M24 verified.**
 > Both downstream result tables and the outcome statement are generated atomically from
 > independently validated CSVs. Numbers are never typed by hand — see `scripts/verify_readme.py`.
+
+Published artifacts:
+[synthetic dataset](https://huggingface.co/datasets/steven0226/defectforge-visa-synthetic) ·
+[SD2/SDXL LoRA weights](https://huggingface.co/steven0226/defectforge-visa-lora)
 
 **Can synthetic defect images improve few-shot industrial anomaly classification and
 segmentation?** An open-source replication of the NVIDIA GTC 2026 course

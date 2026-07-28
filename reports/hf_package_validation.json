@@ -50,17 +50,8 @@
     "unique_generated_samples": 6000,
     "view_files": 15554
   },
-  "materialization": {
-    "dataset": {
-      "copied": 8,
-      "hardlinked": 15546
-    },
-    "model": {
-      "copied": 23,
-      "hardlinked": 14
-    }
-  },
-  "mode": "build",
+  "existing_bundle_verified": true,
+  "mode": "dry_run",
   "model": {
     "bytes": 75449968,
     "families": {
@@ -107,6 +98,10 @@
   },
   "output_root": "D:\\sdg-data\\01-defectforge\\publish",
   "publishes_or_uploads": false,
+  "release_manifest_sha256": {
+    "dataset": "ab1202f69890947e1f0abfeb4837899f618fbb176fe1f5af979854f3f2dcb08d",
+    "model": "acc3f8dd260ebb44b85198d5edb80077ed45ecfd64dd98472baf602d0360fa37"
+  },
   "schema_version": 1,
   "status": "passed"
 }
