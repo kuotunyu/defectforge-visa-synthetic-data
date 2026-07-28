@@ -1297,7 +1297,8 @@ release candidate；建立 GitHub repo、push 與轉 public 必須等使用者�
 - 新增 `scripts/package_hf_space.py`：白名單打包四個 checkpoint、raw reports、
   configs、manifest 與第三方授權；秘密、絕對本機路徑、symlink、hash 不符都 fail closed
 - 新增 `scripts/publish_hf_space.py`：預設 dry-run，必須顯式 `--confirm-upload`；
-  先建立 private CPU Basic、上傳及驗證後才可轉 public，並設定一小時閒置休眠
+  先建立 private CPU Basic、上傳及驗證後才可轉 public；CPU Basic 依平台固定規則在
+  48 小時無活動後休眠
 - 新增六個 Space runtime／packager 契約測試；真實 pcb1 與 capsules 異常影像皆完成
   CPU 模型 smoke，輸出 shape、分類、mask 與 heatmap 正確
 - 使用隔離的 7864 port 完成 Playwright 端到端測試：上傳真實 pcb1、執行、等待四項輸出、

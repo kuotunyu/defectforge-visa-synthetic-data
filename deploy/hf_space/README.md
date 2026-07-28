@@ -8,7 +8,7 @@ sdk_version: 6.20.0
 app_file: app.py
 pinned: false
 license: other
-short_description: Verified few-shot industrial defect classification and segmentation.
+short_description: Verified VisA defect classification and segmentation.
 ---
 
 # DefectForge · VisA Inspection Console

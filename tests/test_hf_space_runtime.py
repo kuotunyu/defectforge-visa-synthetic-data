@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import yaml
 
 from deploy.hf_space.runtime import SpaceContractError, load_manifest, render_outputs
 from src.common.integrity import sha256_file
@@ -96,3 +97,12 @@ def test_space_requirements_are_fully_pinned() -> None:
     lines = [line for line in requirements.splitlines() if line.strip()]
     assert lines
     assert all("==" in line for line in lines)
+
+
+def test_space_card_metadata_meets_hub_limits() -> None:
+    root = Path(__file__).resolve().parents[1]
+    readme = (root / "deploy/hf_space/README.md").read_text(encoding="utf-8")
+    _, front_matter, _ = readme.split("---", maxsplit=2)
+    metadata = yaml.safe_load(front_matter)
+    assert metadata["sdk"] == "gradio"
+    assert len(metadata["short_description"]) <= 60

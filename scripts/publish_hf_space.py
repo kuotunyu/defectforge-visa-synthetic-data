@@ -76,14 +76,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--repo-id", default="steven0226/defectforge-visa-demo")
     parser.add_argument("--confirm-upload", action="store_true")
     parser.add_argument("--make-public", action="store_true")
-    parser.add_argument("--sleep-time", type=int, default=3600)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     require("/" in args.repo_id and not args.repo_id.startswith("/"), "Invalid Space repo ID")
-    require(args.sleep_time >= 300, "Space sleep time must be at least 300 seconds")
     marker = validate_package(args.source)
     plan = {
         "status": "dry-run" if not args.confirm_upload else "ready",
@@ -93,7 +91,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "file_count": marker["file_count"],
         "total_bytes": marker["total_bytes"],
         "hardware": "cpu-basic",
-        "sleep_time": args.sleep_time,
+        "sleep_policy": "cpu-basic-default-48h-inactivity",
         "make_public": args.make_public,
     }
     if not args.confirm_upload:
@@ -114,7 +112,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             private=True,
             space_sdk="gradio",
             space_hardware=SpaceHardware.CPU_BASIC,
-            space_sleep_time=args.sleep_time,
             token=token,
         )
         created = True
@@ -129,7 +126,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     runtime = api.request_space_hardware(
         repo_id=args.repo_id,
         hardware=SpaceHardware.CPU_BASIC,
-        sleep_time=args.sleep_time,
         token=token,
     )
     if args.make_public:
