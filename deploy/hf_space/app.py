@@ -581,6 +581,7 @@ def build_app() -> gr.Blocks:
                     type="pil",
                     sources=["upload", "clipboard"],
                     image_mode="RGB",
+                    placeholder="將圖片拖放到這裡，或點擊上傳",
                     buttons=["fullscreen"],
                     height=420,
                     elem_id="df-upload",

@@ -117,6 +117,7 @@ def test_space_app_is_zh_tw_first_and_has_guided_empty_state() -> None:
     assert "瑕疵影像檢測 Demo" in source
     assert "整個流程只需要三個步驟" in source
     assert "尚未開始檢測" in source
+    assert "placeholder=\"將圖片拖放到這裡，或點擊上傳\"" in source
     assert "請先上傳一張待檢影像" in (
         root / "deploy/hf_space/runtime.py"
     ).read_text(encoding="utf-8")
