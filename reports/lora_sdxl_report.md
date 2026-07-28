@@ -113,5 +113,5 @@ assessment above.
 
 The formal no-checkpoint branch, both local one-step smoke runs, actual checkpoint restoration,
 saved dual token adapters, samples, peak VRAM recording and fresh reloads have all passed.
-`PLAN.md` can therefore mark M11 complete. No additional M11 Colab or local GPU run is needed;
+M11 is therefore complete. No additional M11 Colab or local GPU run is needed;
 all large caches, checkpoints, adapters and panels remain in ignored D-drive/result paths.

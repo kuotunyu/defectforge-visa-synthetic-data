@@ -48,7 +48,7 @@ spot-diff 的 split CSV 欄位是 `object, set, label, image_path, mask_path`，
 
 ## 2. 下載與校驗（M2）
 
-1. **先跟使用者報備大小（1.80 GB）再下載**（[CLAUDE.md](../CLAUDE.md) 工作方式）
+1. **先跟使用者報備大小（1.80 GB）再下載**
 2. 下載到 `${data_root}/raw/VisA_20220922.tar`
 3. 斷言檔案大小 `== 1929840640` bytes，不符即停
 4. 計算 SHA256 寫進 `splits/source_checksums.json`

@@ -1,4 +1,4 @@
-"""Write the one-page M24 acceptance report after every other local gate passes."""
+"""Write the one-page public Repository acceptance report after local gates pass."""
 
 from __future__ import annotations
 
@@ -55,10 +55,9 @@ def render_acceptance(
         name for name, value in sorted(checks.items()) if name not in SELF_CHECKS and value is True
     ]
     lines = [
-        "# DefectForge Pre-publication Acceptance",
+        "# DefectForge Public Repository Acceptance",
         "",
-        "> Local acceptance only. This report does not publish, upload, create a repository,",
-        "> or change visibility. External actions remain gated on explicit user approval.",
+        "> Read-only local audit. This command does not publish, upload, or change visibility.",
         "",
         "## Passed",
         "",
@@ -70,15 +69,15 @@ def render_acceptance(
         "",
         "- [x] Frozen evidence bytes survive Windows, Linux, clone, and GitHub Source ZIP.",
         "- [x] M18 source packaging works without `.git` and excludes outputs and secrets.",
-        "- [x] Phase 1 handoff verification accepts completed M18 without weakening M15.",
-        "- [x] M24 gate binds final reports, figures, README, demo, licenses, and HF dry-run.",
+        "- [x] Owner-only workflow files are excluded from the public Git tree.",
+        "- [x] Final reports, figures, README, demo, licenses, and HF dry-run remain hash-bound.",
         "",
         "## Residual risks",
         "",
         "- [x] Scope is limited to VisA `pcb1` and `capsules` with ten defect seeds each.",
         "- [x] Pseudo-types are not official VisA per-image defect labels.",
         "- [x] Negative or null synthetic-data outcomes are retained in README Limitations.",
-        "- [x] GitHub/Hugging Face writes and public visibility still require user approval.",
+        "- [x] Public Demo remains a research/evaluation tool rather than production AOI.",
         "",
     ]
     return "\n".join(lines)
@@ -120,7 +119,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     output = args.output if args.output.is_absolute() else repo / args.output
     atomic_write(output, text)
-    print(f"Wrote local pre-publication acceptance: {output}")
+    print(f"Wrote public Repository acceptance: {output}")
     return 0
 
 

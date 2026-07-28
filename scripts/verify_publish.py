@@ -1,4 +1,4 @@
-"""Run the fail-closed M24 GitHub publication audit without publishing anything."""
+"""Run the fail-closed public Repository audit without publishing anything."""
 
 from __future__ import annotations
 
@@ -20,7 +20,6 @@ EXPECTED_NAME = "kuotunyu"
 EXPECTED_EMAIL = "61350295+kuotunyu@users.noreply.github.com"
 MAX_TRACKED_BYTES = 10 * 1024 * 1024
 MODEL_LICENSE_MAX_AGE = timedelta(hours=24)
-PREPUBLICATION_MILESTONES = frozenset(range(24))
 FINAL_FIGURES = (
     "reports/figures/real_scaling_curve.png",
     "reports/figures/synthetic_volume_curve.png",
@@ -46,8 +45,6 @@ FINAL_EVIDENCE_REPORTS = (
 )
 REQUIRED_PATHS = (
     "README.md",
-    "PLAN.md",
-    "CLAUDE.md",
     "LICENSE",
     "CITATION.cff",
     "THIRD_PARTY_NOTICES.md",
@@ -81,12 +78,24 @@ REQUIRED_PATHS = (
     "hf_cards/model/README.md",
     "assets/demo.gif",
     "assets/github-social-preview.png",
-    "assets/github-social-preview.philosophy.md",
-    ".github/ISSUE_TEMPLATE/bug-report.yml",
-    ".github/ISSUE_TEMPLATE/config.yml",
-    ".github/PULL_REQUEST_TEMPLATE.md",
-    ".claude/skills",
     *FINAL_FIGURES,
+)
+OWNER_LOCAL_PATHS = (
+    ".claude/",
+    ".github/",
+    "CLAUDE.md",
+    "PLAN.md",
+    "PRODUCT.md",
+    "instructions_for_me.md",
+    "docs/autonomy_policy.md",
+    "docs/publish_spec.md",
+    "docs/skills_roadmap.md",
+    "docs/worklog.md",
+    "reports/handoff/",
+    "assets/github-social-preview.philosophy.md",
+    "scripts/verify_phase1.py",
+    "tests/test_verify_phase1.py",
+    "tests/test_ci_workflow.py",
 )
 SECRET_PATTERNS = {
     "github_token": re.compile(r"gh[oprsu]_[A-Za-z0-9]{20,}"),
@@ -96,7 +105,6 @@ SECRET_PATTERNS = {
 }
 PERSONAL_WINDOWS_PATH = re.compile(r"(?i)[A-Z]:[\\/]+Users[\\/]+[^<%\\/][^\\/]*[\\/]")
 COAUTHOR_TRAILER = re.compile(r"(?im)^Co-Authored-By:\s")
-MILESTONE_ROW = re.compile(r"^- \[(?P<state>[ x])\] \*\*M(?P<number>\d+)\*\*", re.MULTILINE)
 
 
 class PublishVerificationError(RuntimeError):
@@ -196,34 +204,40 @@ def audit_identities(repo: Path) -> dict[str, Any]:
 
 def audit_required_paths(repo: Path) -> dict[str, Any]:
     missing = [value for value in REQUIRED_PATHS if not (repo / value).exists()]
-    skills = sorted(
-        path.parent.name
-        for path in (repo / ".claude" / "skills").glob("*/SKILL.md")
-        if path.is_file()
+    tracked = {
+        value
+        for value in _git(repo, "ls-files", "-z").split("\0")
+        if value
+    }
+
+    def is_tracked(value: str) -> bool:
+        path = repo / value
+        if path.is_dir():
+            prefix = value.rstrip("/") + "/"
+            return any(item.startswith(prefix) for item in tracked)
+        return value in tracked
+
+    untracked_required = [
+        value for value in REQUIRED_PATHS if (repo / value).exists() and not is_tracked(value)
+    ]
+    owner_local_tracked = sorted(
+        item
+        for item in tracked
+        if any(
+            item.startswith(value) if value.endswith("/") else item == value
+            for value in OWNER_LOCAL_PATHS
+        )
     )
     return {
         "missing": missing,
-        "skill_count": len(skills),
-        "skills": skills,
-        "skill_count_valid": len(skills) == 13,
+        "untracked_required": untracked_required,
+        "owner_local_tracked": owner_local_tracked,
     }
 
 
 def audit_plan_and_readme(repo: Path) -> dict[str, Any]:
-    plan_path = repo / "PLAN.md"
     readme_path = repo / "README.md"
-    plan = plan_path.read_text(encoding="utf-8") if plan_path.is_file() else ""
     readme = readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
-    milestone_rows = [
-        (int(match.group("number")), match.group("state") == "x")
-        for match in MILESTONE_ROW.finditer(plan)
-    ]
-    counts: dict[int, int] = {}
-    for number, _ in milestone_rows:
-        counts[number] = counts.get(number, 0) + 1
-    checked = {number for number, state in milestone_rows if state}
-    duplicate_rows = sorted(number for number, count in counts.items() if count != 1)
-    missing_prepublication = sorted(PREPUBLICATION_MILESTONES - checked)
     required_sections = (
         "## 研究問題",
         "## 方法與系統架構",
@@ -234,14 +248,6 @@ def audit_plan_and_readme(repo: Path) -> dict[str, Any]:
         "## 授權與引用",
     )
     return {
-        "checked_milestones": sorted(checked),
-        "missing_prepublication_milestones": missing_prepublication,
-        "duplicate_or_missing_canonical_rows": duplicate_rows,
-        "prepublication_complete": (
-            not missing_prepublication
-            and not duplicate_rows
-            and set(range(25)) <= set(counts)
-        ),
         "readme_has_required_sections": all(section in readme for section in required_sections),
         "readme_has_no_tbd_or_todo": "TBD" not in readme and "TODO" not in readme,
         "readme_status_is_final": "pending" not in readme[:500].lower(),
@@ -646,7 +652,7 @@ def audit_closeout_metadata(repo: Path) -> dict[str, Any]:
         and citation.get("type") == "software"
         and citation.get("repository-code") == expected_repository
         and citation.get("license") == "MIT"
-        and str(citation.get("version")) == "1.2.0"
+        and str(citation.get("version")) == "1.2.1"
         and "kuotunyu" in author_names
     )
     standard_mit = bool(
@@ -701,14 +707,13 @@ def build_audit(repo: Path) -> dict[str, Any]:
     closeout = audit_closeout_metadata(repo)
     acceptance = audit_release_acceptance(repo)
     checks = {
-        "required_paths": not required["missing"],
-        "thirteen_skills": required["skill_count_valid"],
+        "required_paths": not required["missing"] and not required["untracked_required"],
+        "owner_local_files_untracked": not required["owner_local_tracked"],
         "no_secret_or_personal_path": not tree["secret_or_path_findings"],
         "no_tracked_env": not tree["tracked_env"],
         "no_oversized_tracked_files": not tree["oversized"],
         "single_git_identity": not identities["invalid_rows"],
         "no_coauthor_trailers": identities["coauthor_trailer_count"] == 0,
-        "prepublication_milestones_complete": content["prepublication_complete"],
         "readme_final": (
             content["readme_has_required_sections"]
             and content["readme_has_no_tbd_or_todo"]
@@ -783,7 +788,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(audit["checks"], indent=2, sort_keys=True))
         print(f"M24 remains incomplete; checkpoint report: {args.output}")
         return 0 if args.allow_incomplete else 1
-    print(f"M24 publication audit passed: {args.output}")
+    print(f"Publication audit passed: {args.output}")
     return 0
 
 

@@ -26,7 +26,7 @@ Vulnerability Reporting。
    committer。
 2. 不加入 `Co-Authored-By` 或任何生成器署名。
 3. 不改寫 v1 凍結表格、Test Protocol 或負面結果。
-4. 通過 Ruff、完整 Pytest、Publication Audit 與 GitHub Actions。
+4. 通過 Ruff、完整 Pytest 與 Publication Audit。
 5. 若更動 README、License Chain 或公開 Artifact，必須重新產生對應 SHA256
    evidence。
 

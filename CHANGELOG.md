@@ -2,6 +2,14 @@
 
 本專案採用 [Semantic Versioning](https://semver.org/) 管理公開 Release。
 
+## [1.2.1] - 2026-07-29
+
+- 精簡 README，保留研究問題、防洩漏設計、正式結果、限制、重現與授權資訊。
+- Owner 工作規則、Milestone、Agent Skills、Worklog 與 Colab 交接文件改為本機保存，
+  不再出現在公開 Repository。
+- 移除已完成階段的 GitHub Workflow／Template、Handoff 與重複佔位檔。
+- Publication Audit 新增公開版面檢查，防止 Owner-only 檔案再次被 Git 追蹤。
+
 ## [1.2.0] - 2026-07-29
 
 ### 新增

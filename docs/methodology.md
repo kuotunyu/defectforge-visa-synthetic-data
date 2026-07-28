@@ -101,14 +101,14 @@ Has CAD ?
 
 | 課程解法 | Pros / Cons（課程原話重點） | 我們的實作 |
 |---|---|---|
-| 1. Visual inspection | 有 domain knowhow，但難量化、無法自動化（HIL） | 每個生成階段都產 contact sheet / grid，**由我自己先看過**，再交使用者確認（檢查點列在 `instructions_for_me.md`） |
+| 1. Visual inspection | 有 domain knowhow，但難量化、無法自動化（HIL） | 每個生成階段都產 contact sheet / grid，先完成內部目視，再交使用者確認 |
 | 2. Image based quality | 可量化、可整合進 SDG 流程，但指標可能有偏差 | `nn_score`、`mnn_score`、FID、KID —— 定義見 [ADR-006](decisions.md#adr-006)。**在瑕疵 crop 上算**，不是整張圖 |
 | 3. Downstream model improvement | 直接反映使用者目標，但每次評估等於一次下游微調，很耗時 | Phase 2 的五組對照實驗，含合成量 0.5×/1×/2× 掃描 |
 
 課程展示的下游成效形狀（mIoU 相對無 SDG 基準）：
 `+0.0519 @ +125 張`、`+0.0676 @ +250 張`、`+0.0851 @ +500 張`——
 **遞增但邊際遞減**。我們 Phase 2 的合成量掃描就是為了畫出同一條曲線；
-若我們的曲線是平的或往下，如實報告並分析（[CLAUDE.md](../CLAUDE.md) 實驗鐵律）。
+若我們的曲線是平的或往下，仍須如實報告並分析。
 
 ### 2.6 Agentic Flow（簡報 slide 10–11）
 
@@ -116,7 +116,7 @@ Has CAD ?
 `anomalygen-release`、`eval`、`finetune`、`prep-testcase`、`sdg-inference`、
 `sdg-refine`、`setup`）。這是課程的 Chapter 5，也是我們最容易做出差異化的地方：
 **我們用 Claude Code 的專案級 skills 復刻同一套 agentic flow**。
-對照表與建置時機見 [skills_roadmap.md](skills_roadmap.md)。
+開發期間使用的 Project-level Skills 屬 Owner 本機工作流程，不列入公開 Repository。
 
 ---
 

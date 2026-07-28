@@ -18,6 +18,7 @@ from scripts.verify_publish import (
     audit_final_media,
     audit_identities,
     audit_plan_and_readme,
+    audit_required_paths,
     scan_text,
     sha256_file,
 )
@@ -96,11 +97,7 @@ def test_identity_audit_detects_other_contributor_and_coauthor(tmp_path: Path) -
     assert rejected["coauthor_trailer_count"] == 1
 
 
-def test_plan_and_readme_audit_requires_all_prepublication_milestones(tmp_path: Path) -> None:
-    plan = "\n".join(
-        f"- [{'x' if number != 19 else ' '}] **M{number}** milestone" for number in range(25)
-    )
-    (tmp_path / "PLAN.md").write_text(plan, encoding="utf-8")
+def test_readme_audit_requires_public_sections_and_final_copy(tmp_path: Path) -> None:
     (tmp_path / "README.md").write_text(
         """# 專案
 ## 研究問題
@@ -109,29 +106,35 @@ def test_plan_and_readme_audit_requires_all_prepublication_milestones(tmp_path: 
 ## 實驗結果
 ## 限制與誠實揭露
 ## 重現方式
-## 授權與引用
+TODO
 """,
         encoding="utf-8",
     )
 
     incomplete = audit_plan_and_readme(tmp_path)
 
-    assert incomplete["missing_prepublication_milestones"] == [19]
-    assert incomplete["prepublication_complete"] is False
+    assert incomplete["readme_has_required_sections"] is False
+    assert incomplete["readme_has_no_tbd_or_todo"] is False
 
-    (tmp_path / "PLAN.md").write_text(
-        plan.replace("- [ ] **M19**", "- [x] **M19**"), encoding="utf-8"
+    (tmp_path / "README.md").write_text(
+        (tmp_path / "README.md").read_text(encoding="utf-8").replace(
+            "TODO", "## 授權與引用"
+        ),
+        encoding="utf-8",
     )
     complete = audit_plan_and_readme(tmp_path)
-    assert complete["prepublication_complete"] is True
+    assert complete["readme_has_required_sections"] is True
     assert complete["readme_has_no_tbd_or_todo"] is True
 
-    with_extension = (tmp_path / "PLAN.md").read_text(encoding="utf-8")
-    with_extension += "\n- [x] **M25** post-publication extension\n"
-    (tmp_path / "PLAN.md").write_text(with_extension, encoding="utf-8")
-    extended = audit_plan_and_readme(tmp_path)
-    assert extended["prepublication_complete"] is True
-    assert extended["checked_milestones"][-1] == 25
+
+def test_required_path_audit_rejects_owner_local_files_in_git(tmp_path: Path) -> None:
+    _git(tmp_path, "init")
+    (tmp_path / "CLAUDE.md").write_text("owner only\n", encoding="utf-8")
+    _git(tmp_path, "add", "CLAUDE.md")
+
+    audit = audit_required_paths(tmp_path)
+
+    assert audit["owner_local_tracked"] == ["CLAUDE.md"]
 
 
 def test_final_media_audit_rejects_single_frame_gif(tmp_path: Path) -> None:
@@ -187,7 +190,7 @@ authors:
   - name: "kuotunyu"
 repository-code: "https://github.com/kuotunyu/defectforge-visa-synthetic-data"
 license: MIT
-version: 1.2.0
+version: 1.2.1
 """,
         encoding="utf-8",
     )

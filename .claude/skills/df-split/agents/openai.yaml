@@ -1,4 +1,0 @@
-interface:
-  display_name: "DefectForge Split"
-  short_description: "Prepare and audit frozen VisA splits"
-  default_prompt: "Resume or audit DefectForge M3-M5 split preparation, manifest freezing, and deterministic few-shot selection."

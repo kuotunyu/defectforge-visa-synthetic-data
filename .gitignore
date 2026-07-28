@@ -36,8 +36,7 @@ kaggle.json
 # Ephemeral M24 checkpoint audit. The tracked one-page acceptance report is
 # generated only after every non-publication gate passes.
 /reports/publish_validation.json
-# results/ must stay tracked as a directory so results/colab/.gitkeep survives:
-# ignore its CONTENTS, not the directory itself.
+# Keep only frozen public result tables and the preregistered v2 pilot.
 /results/*
 !/results/generation_quality.csv
 !/results/classification.csv
@@ -45,9 +44,6 @@ kaggle.json
 !/results/v2/
 /results/v2/*
 !/results/v2/pilot_classification.json
-!/results/colab/
-/results/colab/*
-!/results/colab/.gitkeep
 
 *.tar
 *.tar.gz

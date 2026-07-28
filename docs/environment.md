@@ -15,7 +15,7 @@
 | uv | 0.11.18 |
 | git / git-lfs | 2.41.0.windows.1 / 已安裝 |
 | gh CLI | 已登入 **`kuotunyu`**（`gh api user` 回傳 id 61350295）。注意 `gh auth status` 顯示的是舊快取名稱 `tun0000`（帳號改過名），**以 `gh api user` 為準** |
-| git 身分 | repo-local 已鎖 `user.name=kuotunyu` / `user.email=61350295+kuotunyu@users.noreply.github.com`（見 [CLAUDE.md](../CLAUDE.md) 的 Git 署名規則） |
+| git 身分 | repo-local 已鎖 `user.name=kuotunyu` / `user.email=61350295+kuotunyu@users.noreply.github.com` |
 | C: 可用 | 182 GiB（M1 preflight） |
 | D: 可用 | 1728 GB |
 | Desktop | **未**被 OneDrive 接管（已查 `User Shell Folders`，OneDrive 程序未執行） |
@@ -167,7 +167,7 @@ headers。M8 的程序噪聲因此改由 NumPy/scikit-image 實作，避免為�
 | 平台 | 帳號 |
 |---|---|
 | GitHub | **`kuotunyu`**（repo `defectforge-visa-synthetic-data`） |
-| Hugging Face | **`steven0226`**（Phase 2 上傳合成資料集與 LoRA，見 [publish_spec.md](publish_spec.md)） |
+| Hugging Face | **`steven0226`**（公開 Synthetic Dataset、LoRA 與 Demo） |
 
 ---
 
@@ -198,7 +198,7 @@ headers。M8 的程序噪聲因此改由 NumPy/scikit-image 實作，避免為�
 | Checkpoint | 定期同步回 `MyDrive/sdg-portfolio/01-defectforge-visa/`，支援斷點續跑 |
 | 輸出目錄 | `runs/lora_<model>/<object>/seed_<n>/`，每本 notebook 唯一 |
 | Secrets | `from google.colab import userdata` 讀 `HF_TOKEN`，notebook 內無明文金鑰 |
-| 檔案回收 | 產出下載後放進 `results/colab/`，路徑寫在 `instructions_for_me.md` |
+| 檔案回收 | 產出下載後放進 `results/colab/` |
 
 **注意**：Colab 是 Linux，路徑分隔與大小寫規則與本機不同。跨平台的程式碼一律用
 `pathlib.Path`，不要用字串串接。

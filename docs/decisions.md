@@ -316,7 +316,7 @@ k=10  ⊂  fewshot_train(20)  ⊂  highshot_train(60)      ← 三者皆與 high
 **狀態**：Accepted ｜ **日期**：2026-07-27（使用者決定）
 
 ### 脈絡
-[CLAUDE.md](../CLAUDE.md) 的分工原則是「>30 分鐘的 GPU 訓練一律 Colab」。
+本機執行規範的分工原則是「>30 分鐘的 GPU 訓練一律 Colab」。
 但 SD2-inpainting 的 LoRA 訓練規模很小：UNet 865M、512 patch、只有 10 張訓練圖、
 只訓 LoRA 與 token embedding —— 在 4090 上估計 20–30 分鐘，**在本機門檻之內**。
 
@@ -375,7 +375,7 @@ SegFormer-B0 很小，T4 上估每組 20–40 分鐘、9 組約 5 小時 ≈ 9 C
 ### 後果
 - 分割的 Colab notebook 要能用 `--group` 參數跑任一組，並支援平行開多本
 - 第 6 組是本專案最有記憶點的結果，`reports/` 要專門為它做一組視覺化
-- 第 9 組直接引用第 4 組，`instructions_for_me.md` 要寫清楚只需跑 8 次
+- 第 9 組直接引用第 4 組，因此只需跑 8 次
 
 ---
 
@@ -453,11 +453,11 @@ Phase 2 的 prompt 寫「合成量 0.5x/1x/2x（相對真實正樣本數）」�
 可以自己決定什麼、必須停在哪裡、以及停下來時要留下什麼。
 
 ### 決策
-採**跑到底模式**：連續執行 M1 → M14，每個里程碑跑完 [PLAN.md](../PLAN.md) 的驗證欄，
+採**跑到底模式**：連續執行 M1 → M14，每個里程碑跑完對應的驗證欄，
 **全綠才前進**。任何一項不過就**立刻停止**，寫一份 handoff 報告，不得自行降低標準、
 不得跳過、不得「先繼續之後再回來修」。
 
-完整規則書寫在 [autonomy_policy.md](autonomy_policy.md)，重點：
+規則重點：
 - **可自己決定**：門檻校準、隨機種子以外的實作細節、重試暫時性錯誤、瑕疵型別的暫用命名
 - **必須停**：任何驗證失敗、需要花錢、>2GB 下載、任何 push/發佈、Colab 訓練、
   磁碟不足、生成結果目視明顯異常
@@ -465,7 +465,7 @@ Phase 2 的 prompt 寫「合成量 0.5x/1x/2x（相對真實正樣本數）」�
   使用者醒來只改**顯示名稱**（不動 token 字串，因此不需要重訓）
 
 ### 後果
-- [PLAN.md](../PLAN.md) 每個里程碑要標註「無人值守可跑 / 需要你在場」
+- 每個里程碑要標註「無人值守可跑 / 需要你在場」
 - 需要 `docs/interfaces.md` 把每支腳本的 CLI 契約寫死，agent 才不會自己發明參數
 - 每晚的執行結果落在 `reports/handoff/<date>.md`，早上一看就知道跑到哪、為什麼停
 
@@ -689,8 +689,8 @@ SegFormer notebook 的建立、`--group` 實作與本機 smoke 明確屬於 Phas
 ### 決策
 - M15 驗收 M0–M14 的凍結證據、M11 SDXL notebook 的五項完整交接、Phase 2 協定已
   事先凍結，以及 M0–M15 的 commit／Contributor 完整性。
-- M18 負責建立 SegFormer notebook、跑本機 1-step smoke，並在
-  `instructions_for_me.md` 填入它的五項**具體**操作資料；M19 才要求使用者上 Colab。
+- M18 負責建立 SegFormer notebook、跑本機 1-step smoke，並備妥五項
+  **具體**操作資料；M19 才要求使用者上 Colab。
 - M11 未在執行前記錄 Colab CU，因此只報實測 wall time、training time 與 peak VRAM，
   CU 明列 unavailable，不以第三方費率倒推成假精確數字。
 - `scripts/verify_phase1.py` 是 M15 的 CPU-only 獨立驗收入口；它同時逐 commit 驗證
@@ -790,8 +790,8 @@ checkpoint、binary head 口徑、optimizer-step 預算與 Colab 交接方式。
 - M18 model lock 只有約 15 MB，且是安全的 SafeTensors；不需要 Colab Secret。
 - packaged selection 可以比完整 synthetic pool 小很多，但仍保留原影像位元、
   mask、來源 view、train-side provenance 與凍結 test inventory。
-- 本機 one-step smoke 完成前不得把 Notebook 交給使用者；smoke 後再把實測 peak
-  VRAM、時間與最後五項交接填入 `instructions_for_me.md`。
+- 本機 one-step smoke 完成前不得把 Notebook 交給使用者；smoke 後再記錄實測 peak
+  VRAM、時間與最後五項交接。
 
 ### 來源
 - [Transformers image segmentation recipe](https://huggingface.co/docs/transformers/main/tasks/semantic_segmentation)

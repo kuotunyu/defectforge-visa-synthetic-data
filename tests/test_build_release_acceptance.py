@@ -43,4 +43,4 @@ def test_render_acceptance_has_required_sections_and_no_unchecked_items() -> Non
     assert "## Fixed" in report
     assert "## Residual risks" in report
     assert "- [ ]" not in report
-    assert "explicit user approval" in report
+    assert "does not publish, upload, or change visibility" in report

@@ -218,7 +218,7 @@ mask 的**面積 / 位置 / 長寬比分布**由真實 few-shot mask 的統計�
 
 **M11 驗證（SDXL，Colab）**：本機 `--max-train-steps 1 --smoke` 跑通薄封裝並存出權重檔；
 斷點續跑分支（有／無 checkpoint）各跑一次確認行為；notebook 內無明文 token；
-峰值 VRAM 記錄進 `instructions_for_me.md` 以佐證需要 L4。
+峰值 VRAM 記錄進對應 LoRA validation report，以佐證需要 L4。
 
 ### 4.3 批次生成（M12）— `src/synthetic/generate_diffusion.py`
 

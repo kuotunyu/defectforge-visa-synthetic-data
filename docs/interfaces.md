@@ -2,7 +2,7 @@
 
 > **這份是契約，不是建議。** 無人值守執行時 agent 一律照這裡的參數名稱呼叫，
 > **不准自己發明參數**。要新增或改語意，先更新這份文件並在 worklog 記一筆。
-> 對應規則見 [autonomy_policy.md §4](autonomy_policy.md)。
+> 對應決策見 [ADR-012](decisions.md#adr-012)。
 
 ---
 
@@ -47,7 +47,7 @@
 | 模組 | 提供 |
 |---|---|
 | `paths.py` | `load_paths(cfg="configs/paths.yaml") -> Paths`；`Paths.data_root`、`.visa_raw`、`.synthetic`、`.runs`… 已展開 `${data_root}` |
-| `guard.py` | `assert_not_test(path)`；`assert_manifest_frozen()`；`assert_disk_free(gb)`；`preflight(milestone)` — 對應 [autonomy_policy.md §2](autonomy_policy.md) |
+| `guard.py` | `assert_not_test(path)`；`assert_manifest_frozen()`；`assert_disk_free(gb)`；`preflight(milestone)` — 對應 [ADR-012](decisions.md#adr-012) |
 | `provenance.py` | `write_record(jsonl_path, record: dict)`；`validate_record(record) -> list[str]`（回傳缺漏欄位，空 list = 通過）。Schema 見 [synthesis_spec.md §1](synthesis_spec.md) |
 | `imaging.py` | `crop_to_roi`、`blend_back`（poisson / feather）、`connected_components`、`mask_morphology_features` |
 | `embed.py` | `dinov2_embed(images) -> np.ndarray`（`facebook/dinov2-base` CLS token、L2 normalized，含磁碟快取） |
@@ -522,7 +522,7 @@ validation 保存兩份 CSV、selection、GIF、test image 與輸出 array SHA25
 | `scripts/build_release_acceptance.py` | M24 一頁驗收報告：除自身檔案外任一 local gate 未過即拒寫；只記通過項、修正項、殘留風險，不發佈 |
 | `scripts/record_phase2_visual_review.py` | M21/M22 人工目視 evidence：所有正式 PNG/GIF 可解碼且實際逐張開啟後，需明確 confirmation 與觀察 note，保存目前檔案 SHA256 |
 | `scripts/package_hf_release.py` | M24 本機封裝：預設只讀 inventory；`--build` 才原子建立 D 槽 HF dataset／model bundles，不連網 |
-| `scripts/upload_hf.py` | 見 [publish_spec.md](publish_spec.md)；**預設 `--dry-run`，上傳要顯式加 `--confirm`** |
+| `scripts/upload_hf.py` | **預設 `--dry-run`，上傳要顯式加 `--confirm`** |
 
 ---
 
