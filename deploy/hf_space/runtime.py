@@ -262,7 +262,10 @@ def render_outputs(
     alpha = (0.14 + 0.58 * np.clip(probability, 0.0, 1.0))[..., None]
     heatmap = np.rint(rgb * (1.0 - alpha) + color * alpha).astype(np.uint8)
     return (
-        {"Defect": anomaly_probability, "Normal": 1.0 - anomaly_probability},
+        {
+            "Defect（異常）": anomaly_probability,
+            "Normal（正常）": 1.0 - anomaly_probability,
+        },
         mask,
         heatmap,
     )
@@ -274,7 +277,7 @@ def predict(
     object_name: str,
     visualization_threshold: float,
 ) -> tuple[dict[str, float], np.ndarray, np.ndarray, str, dict[str, Any]]:
-    require(image is not None, "Upload an inspection image first")
+    require(image is not None, "請先上傳一張待檢影像")
     bundle = load_bundle(object_name)
     rgb = _as_rgb_array(image)
     pil = Image.fromarray(rgb, mode="RGB")
@@ -322,12 +325,14 @@ def predict(
         threshold=float(visualization_threshold),
     )
     coverage = float((mask > 0).mean()) * 100.0
+    decision = "Defect（異常）" if anomaly_probability >= 0.5 else "Normal（正常）"
     summary = (
-        f"### Inspection complete\n"
-        f"`{object_name}` · `{bundle.device.type.upper()}` · **{elapsed_ms:.1f} ms**  \n"
-        f"Mask coverage **{coverage:.2f}%** at visualization threshold "
-        f"**{float(visualization_threshold):.2f}**. "
-        f"The preregistered formal threshold was **{bundle.formal_threshold:.2f}**."
+        f"### 檢測完成：{decision}\n"
+        f"物件 `{object_name}` · 執行裝置 `{bundle.device.type.upper()}` · "
+        f"耗時 **{elapsed_ms:.1f} ms**  \n"
+        f"在顯示 threshold **{float(visualization_threshold):.2f}** 下，"
+        f"binary mask 覆蓋影像 **{coverage:.2f}%**。"
+        f"正式 preregistered threshold 為 **{bundle.formal_threshold:.2f}**。"
     )
     evidence = {
         **bundle.evidence,

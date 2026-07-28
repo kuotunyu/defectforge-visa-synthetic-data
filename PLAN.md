@@ -208,6 +208,12 @@
     以凍結設定跑 3 seeds、最後一次性評估 test，輸出獨立 `results/v2/` 與報告；
     README 清楚並列 v1 與 v2，不能把探索性 pilot 當成預註冊主結果
 
+- [x] **M28** 🤖 公開 Demo 正體中文 UI／UX 改版
+  - **驗證**：介面以正體中文引導「選物件 → 上傳 → 檢測」，一般文字至少 16px、
+    輔助文字至少 14px；initial empty state 不顯示誤導性空白結果；真實影像可完成
+    classification、mask、heatmap 與 provenance；桌機／手機無水平溢位、console error，
+    核心文字與控制項對比達 WCAG 2.2 AA
+
 ---
 
 ## 交接與追蹤

@@ -72,7 +72,10 @@ def test_space_render_outputs_respects_visualization_threshold() -> None:
         pixel_probability=probability,
         threshold=0.5,
     )
-    assert labels == {"Defect": 0.7, "Normal": pytest.approx(0.3)}
+    assert labels == {
+        "Defect（異常）": 0.7,
+        "Normal（正常）": pytest.approx(0.3),
+    }
     assert mask.shape == (4, 6)
     assert set(np.unique(mask)) == {0, 255}
     assert heatmap.shape == image.shape
@@ -106,3 +109,18 @@ def test_space_card_metadata_meets_hub_limits() -> None:
     metadata = yaml.safe_load(front_matter)
     assert metadata["sdk"] == "gradio"
     assert len(metadata["short_description"]) <= 60
+
+
+def test_space_app_is_zh_tw_first_and_has_guided_empty_state() -> None:
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "deploy/hf_space/app.py").read_text(encoding="utf-8")
+    assert "瑕疵影像檢測 Demo" in source
+    assert "整個流程只需要三個步驟" in source
+    assert "尚未開始檢測" in source
+    assert "請先上傳一張待檢影像" in (
+        root / "deploy/hf_space/runtime.py"
+    ).read_text(encoding="utf-8")
+    assert "font-size: .72rem" not in source
+    assert "border-left: 7px" not in source
+    assert "border-left: 4px" not in source
+    assert "border-left: 3px" not in source

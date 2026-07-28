@@ -1504,6 +1504,43 @@ M26：在不讀 test 指標的前提下，加入 domain-balanced sampler，讓�
 
 ---
 
+## 2026-07-28 — Session 38：M28 公開 Demo 正體中文 UI／UX 改版
+
+### 做了什麼
+- 依公開工具的主要任務新增 `PRODUCT.md`，固定 product register、使用者、
+  正體中文語言策略、progressive disclosure 與 WCAG 2.2 AA 基準
+- 移除 terminal／cyberpunk 視覺、裝飾格線、超大英文 hero、過小全大寫文字與
+  空白 readout；改為 restrained light interface，保留 DefectForge teal 身分色
+- 首屏直接解釋用途，以真實三步驟「選擇物件 → 上傳影像 → 開始檢測」教會操作
+- Threshold 與 immutable evidence 收進 progressive disclosure；輸出在完成推論前
+  保持隱藏，切換影像或物件時會清除舊結果，避免 stale result 誤判
+- Runtime 的 classification label、summary 與 upload error 改為正體中文，
+  專有名詞 `pcb1`、`capsules`、classification、segmentation、mask、heatmap 保留原文
+- Hugging Face Space card 同步改為正體中文主敘事
+
+### 驗證
+- 正式 package 用 CPU Basic 啟動，真實 `pcb1` highshot test image 完成 upload、
+  classification、binary mask、probability heatmap 與 evidence；本機 warm inference
+  227.1 ms
+- Playwright 桌機 1600×1000 與手機 390×844：無 horizontal overflow、console error，
+  初始引導／主按鈕可見，完成後兩張輸出圖皆成功渲染
+- 主文字 16px、panel title 22px、主按鈕 17px／52px；輔助文字最低 14px
+- muted text、primary action 與研究用途提示的對比分別為 5.60、5.47、8.50:1
+- `ruff check .` 通過；pytest 191 passed；README、license chain 與 publication audit 通過
+
+### 決策
+- 日間、第一次使用與作品集審閱情境需要高可讀 light surface；不因 machine vision
+  類別而預設 dark terminal aesthetic
+- 初始畫面只展示任務與下一步；classification chart、localization images 與
+  provenance 在推論完成後才展開
+- 本次只改 interaction／presentation 與使用者可見文字，四個 formal checkpoint、
+  preprocess、模型輸出與 v1／v2 結論完全不變
+
+### 換你做
+目前沒有；公開 Space 更新後可直接重整原網址查看。
+
+---
+
 ## 2026-07-27 — Session 06：M4 pHash 分群、manifest 凍結與防洩漏 guard
 
 ### 做了什麼
