@@ -303,6 +303,39 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-28 — Session 42：M32 流程精準對齊與結果報告重構
+
+### 做了什麼
+- 將 `01／02／03` 三個流程項目改為固定 42px 編號欄與 7.5rem 文字欄，三格同為
+  80px 高；桌機與手機都使用同一條視覺軸線，不再只是各自大致置中
+- 拆除「輸入／結果左右互擠」結構：輸入區永遠保持全寬，完成後結果在下方以全寬
+  report 展開，避免物件卡片被擠成直排文字
+- 將原本淡紫結果面板重構為深綠模型判定摘要與粉藍分類信心區；移除 Gradio 原生
+  classification 白色內卡、重複標題與 dotted leader，改為自訂、可控制的雙信心條
+- 判定摘要只保留決策、分類信心、物件、裝置、耗時、mask coverage 與 threshold；
+  mask／heatmap 以並排影像證據呈現，完整 checkpoint provenance 仍採折疊層級
+- 手機版結果摘要改為 2×2 metrics，信心文字採短標籤，mask／heatmap 垂直排列
+
+### 驗證
+- Playwright 1680×958：三格寬度均為 432px、高度均為 80px，number X、text X、
+  number center Y 與 text center Y 三格誤差皆為 0px
+- 輸入與結果區寬度均為 1296px；判定與信心區為 682.3px／554.5px，層級清楚且
+  不再壓縮輸入表單
+- 手機 390×844：document width 390px，判定與信心區皆為 254px，無水平溢位
+- 範例點選、物件自動切換、判定摘要、confidence bars、mask 與 heatmap 全流程通過；
+  browser console error 0
+
+### 決策
+- 「對齊」改以可量測的固定 grid track 與同高規則驗證，不再以肉眼判斷大致置中
+- 檢測後的核心任務是閱讀報告，因此結果不再和操作表單競爭同一橫向空間
+- 信心分布改用受控 HTML/CSS 呈現，以確保中英文標籤在桌機與手機都不被原生元件
+  強制換行或套入多餘卡片層級
+
+### 換你做
+目前沒有；公開 Space 部署完成後可直接用五張範例檢查新版結果報告。
+
+---
+
 ## 2026-07-28 — Session 41：M31 物件選擇與範例體驗精修
 
 ### 做了什麼

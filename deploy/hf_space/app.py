@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import os
 from pathlib import Path
 
@@ -228,18 +229,24 @@ body.dark .gradio-container {
 .df-flow ol {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 80px;
+  align-items: stretch;
   gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .df-flow li {
-  display: flex;
+  display: grid;
+  grid-template-columns: 42px 7.5rem;
   align-items: center;
   justify-content: center;
-  gap: .7rem;
-  min-height: 64px;
-  padding: .85rem 1.5rem;
+  gap: .8rem;
+  width: 100%;
+  height: 80px !important;
+  min-height: 80px !important;
+  padding: 0 1.5rem;
+  box-sizing: border-box;
   color: var(--df-ink);
   font-size: 1.25rem;
   font-weight: 700;
@@ -255,25 +262,31 @@ body.dark .gradio-container {
 }
 .df-flow li span {
   color: var(--df-ink) !important;
+  text-align: left;
+  white-space: nowrap;
 }
 .df-flow li + li::before {
   content: none;
 }
 .df-flow b {
   display: inline-grid;
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   place-items: center;
-  flex: 0 0 auto;
   border-radius: 2px;
   background: var(--df-surface);
   color: var(--df-primary-strong);
   font-size: 1.25rem;
 }
 #df-workspace {
+  flex-direction: column !important;
   gap: var(--df-space-md) !important;
-  align-items: flex-start !important;
+  align-items: stretch !important;
   margin-top: 0 !important;
+}
+#df-workspace > * {
+  width: 100% !important;
+  min-width: 0 !important;
 }
 .df-panel {
   min-width: 0 !important;
@@ -284,7 +297,10 @@ body.dark .gradio-container {
   box-shadow: var(--df-shadow) !important;
 }
 #df-result-panel {
-  background: var(--df-result-soft) !important;
+  margin-top: .25rem !important;
+  padding-top: 1rem !important;
+  border-top: 6px solid var(--df-primary) !important;
+  background: var(--df-surface) !important;
 }
 .df-panel-heading {
   margin-bottom: .85rem;
@@ -584,38 +600,156 @@ button#df-run:active {
   transform: translateY(0);
 }
 #df-summary {
-  min-height: 116px;
-  padding: .9rem 1rem !important;
-  background: var(--df-surface-lilac) !important;
+  padding: 0 !important;
+  background: transparent !important;
   border: 0 !important;
   border-radius: 0 !important;
 }
-#df-summary h3 {
-  margin: 0 0 .25rem !important;
-  color: var(--df-primary-strong) !important;
-  font-size: 1.5625rem !important;
-  font-weight: 800 !important;
+#df-result-overview {
+  align-items: stretch !important;
+  gap: var(--df-space-md) !important;
 }
-#df-summary p {
-  margin: 0 !important;
-  color: var(--df-muted) !important;
-  font-size: 1.1875rem !important;
+#df-result-overview > * {
+  min-width: 0 !important;
 }
-#df-summary code {
-  padding: .1rem .35rem;
-  border-radius: 4px;
-  background: var(--df-surface-soft);
-  color: var(--df-primary-strong);
-  font-size: 1.1875rem;
+#df-decision-card,
+#df-confidence-card {
+  min-height: 250px !important;
+  padding: 1.35rem !important;
+  border: 0 !important;
+  border-radius: var(--df-radius-sm) !important;
+}
+#df-decision-card {
+  justify-content: center !important;
+  background: var(--df-primary-strong) !important;
+  color: #fff !important;
+}
+#df-confidence-card {
+  background: var(--df-surface-blue) !important;
+}
+.df-decision {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 200px;
+}
+.df-decision-kicker,
+.df-confidence-title span,
+.df-result-section-kicker {
+  color: oklch(86% .07 172);
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.df-decision h3 {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  margin: .55rem 0 .25rem;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+.df-decision-dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  background: var(--df-accent);
+  box-shadow: 0 0 0 6px oklch(78% .12 72 / .16);
+}
+.df-decision-label {
+  margin: 0 0 1.15rem;
+  color: oklch(94% .025 180);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.df-result-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .65rem;
+  margin: 0;
+}
+.df-result-metrics div {
+  padding-top: .65rem;
+  border-top: 1px solid oklch(92% .04 177 / .28);
+}
+.df-result-metrics dt {
+  color: oklch(84% .035 180);
+  font-size: 1.0625rem;
+}
+.df-result-metrics dd {
+  margin: .2rem 0 0;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.df-decision-threshold {
+  margin: .75rem 0 0;
+  color: oklch(84% .035 180);
+  font-size: 1.0625rem;
+}
+.df-confidence-title {
+  margin-bottom: 1rem;
+}
+.df-confidence-title span {
+  color: var(--df-primary);
+}
+.df-confidence-title h3 {
+  margin: .25rem 0 .15rem;
+  color: var(--df-ink);
+  font-size: 1.625rem;
+  font-weight: 800;
+}
+.df-confidence-title p {
+  margin: 0;
+  color: var(--df-muted);
+  font-size: 1.125rem;
 }
 #df-probabilities {
-  min-height: 210px !important;
-  margin-top: .75rem !important;
-  background: var(--df-surface) !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
   border: 0 !important;
+  box-shadow: none !important;
 }
-#df-probabilities .label-wrap {
-  background: var(--df-surface) !important;
+.df-confidence-bars {
+  display: grid;
+  gap: 1rem;
+}
+.df-confidence-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--df-ink);
+  font-size: 1.1875rem;
+}
+.df-confidence-row strong {
+  color: var(--df-primary-strong);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.df-confidence-track {
+  overflow: hidden;
+  height: 10px;
+  margin-top: .4rem;
+  background: oklch(88% .025 220);
+}
+.df-confidence-track span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--df-primary);
+}
+.df-confidence-item:nth-child(2) .df-confidence-track span {
+  background: oklch(70% .065 230);
+}
+.df-result-heading .df-result-section-kicker,
+.df-section-heading .df-result-section-kicker {
+  color: var(--df-primary);
 }
 .df-section-heading {
   margin: 1.15rem 0 .65rem;
@@ -633,12 +767,15 @@ button#df-run:active {
 }
 #df-localization {
   gap: var(--df-space-md) !important;
+  padding: 1rem !important;
+  background: var(--df-canvas) !important;
 }
 .df-output-image {
   overflow: hidden !important;
   background: var(--df-surface) !important;
-  border: 1px solid var(--df-border) !important;
+  border: 0 !important;
   border-radius: var(--df-radius-sm) !important;
+  box-shadow: var(--df-shadow) !important;
 }
 .df-output-image .label-wrap {
   background: var(--df-surface) !important;
@@ -693,13 +830,13 @@ button#df-run:active {
 }
 footer { display: none !important; }
 @media (max-width: 900px) {
-  #df-workspace,
-  #df-input-grid {
+  #df-input-grid,
+  #df-result-overview {
     align-items: stretch !important;
     flex-direction: column !important;
   }
-  #df-workspace > *,
-  #df-input-grid > * {
+  #df-input-grid > *,
+  #df-result-overview > * {
     flex: 1 1 auto !important;
     width: 100% !important;
     min-width: 0 !important;
@@ -740,7 +877,7 @@ footer { display: none !important; }
     grid-template-columns: 1fr;
   }
   .df-flow li {
-    justify-content: flex-start;
+    justify-content: center;
   }
   #df-object .wrap {
     grid-template-columns: 1fr !important;
@@ -758,6 +895,16 @@ footer { display: none !important; }
   #df-examples .caption-label {
     max-width: 100% !important;
     padding: .35rem .45rem !important;
+  }
+  .df-result-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #df-decision-card,
+  #df-confidence-card {
+    min-height: 0 !important;
+  }
+  #df-localization {
+    flex-direction: column !important;
   }
   .df-examples-intro {
     align-items: flex-start;
@@ -791,20 +938,78 @@ footer { display: none !important; }
 """
 
 
+def _result_summary_html(
+    probabilities: dict[str, float],
+    object_name: str,
+    evidence: dict[str, object],
+) -> str:
+    anomaly_probability = float(probabilities.get("Defect（異常）", 0.0))
+    inference = evidence.get("inference", {})
+    if not isinstance(inference, dict):
+        inference = {}
+    is_defect = anomaly_probability >= 0.5
+    title = "偵測到瑕疵" if is_defect else "判定為正常"
+    decision = "Defect" if is_defect else "Normal"
+    device = html.escape(str(evidence.get("device", "unknown")).upper())
+    escaped_object = html.escape(object_name)
+    elapsed_ms = float(inference.get("elapsed_ms", 0.0))
+    threshold = float(inference.get("visualization_threshold", 0.5))
+    coverage = float(inference.get("mask_coverage_percent", 0.0))
+    return (
+        "<section class='df-decision' lang='zh-Hant-TW'>"
+        "<span class='df-decision-kicker'>模型判定</span>"
+        f"<h3><span class='df-decision-dot' aria-hidden='true'></span>{title}</h3>"
+        f"<p class='df-decision-label'>{decision} · 分類信心 "
+        f"{anomaly_probability:.0%}</p>"
+        "<dl class='df-result-metrics'>"
+        f"<div><dt>物件</dt><dd>{escaped_object}</dd></div>"
+        f"<div><dt>執行裝置</dt><dd>{device}</dd></div>"
+        f"<div><dt>耗時</dt><dd>{elapsed_ms:.0f} ms</dd></div>"
+        f"<div><dt>Mask coverage</dt><dd>{coverage:.2f}%</dd></div>"
+        "</dl>"
+        f"<p class='df-decision-threshold'>顯示 threshold：{threshold:.2f}</p>"
+        "</section>"
+    )
+
+
+def _confidence_html(probabilities: dict[str, float]) -> str:
+    defect = min(1.0, max(0.0, float(probabilities.get("Defect（異常）", 0.0))))
+    normal = min(1.0, max(0.0, float(probabilities.get("Normal（正常）", 0.0))))
+    rows = (
+        ("Defect｜異常", defect),
+        ("Normal｜正常", normal),
+    )
+    items = "".join(
+        "<div class='df-confidence-item' role='listitem'>"
+        "<div class='df-confidence-row'>"
+        f"<span>{label}</span><strong>{value:.0%}</strong>"
+        "</div>"
+        "<div class='df-confidence-track' aria-hidden='true'>"
+        f"<span style='width:{value * 100:.1f}%'></span>"
+        "</div></div>"
+        for label, value in rows
+    )
+    return (
+        "<div class='df-confidence-bars' role='list' "
+        "aria-label='Classification confidence'>"
+        f"{items}</div>"
+    )
+
+
 def _run(image: object, object_name: str, threshold: float) -> tuple[object, ...]:
     try:
-        probabilities, mask, heatmap, summary, evidence = predict(
+        probabilities, mask, heatmap, _summary, evidence = predict(
             image,
             object_name,
             threshold,
         )
+        summary = _result_summary_html(probabilities, object_name, evidence)
+        confidence = _confidence_html(probabilities)
         return (
             gr.Column(visible=True),
-            gr.Label(
-                value=probabilities,
+            gr.HTML(
+                value=confidence,
                 visible=True,
-                label="Classification confidence（分類信心）",
-                num_top_classes=2,
             ),
             mask,
             heatmap,
@@ -823,13 +1028,10 @@ def _run(image: object, object_name: str, threshold: float) -> tuple[object, ...
 def _clear_results() -> tuple[object, ...]:
     return (
         gr.Column(visible=False),
-        gr.Label(visible=False),
+        gr.HTML(visible=False),
         None,
         None,
-        (
-            "### 等待檢測\n"
-            "重新按下「開始檢測」後，結果會顯示在這裡。"
-        ),
+        "<p>重新按下「開始檢測」後，結果會顯示在這裡。</p>",
         {},
         gr.Column(visible=False),
         gr.Accordion(visible=False),
@@ -872,10 +1074,8 @@ def build_app() -> gr.Blocks:
             "</ol></nav>"
             "</section>"
         )
-        with gr.Row(equal_height=False, elem_id="df-workspace"):
+        with gr.Column(elem_id="df-workspace"):
             with gr.Column(
-                scale=5,
-                min_width=420,
                 elem_id="df-input-panel",
                 elem_classes=["df-panel"],
             ):
@@ -951,59 +1151,70 @@ def build_app() -> gr.Blocks:
                 )
                 run = gr.Button("開始檢測", variant="primary", elem_id="df-run")
             with gr.Column(
-                scale=4,
-                min_width=340,
                 visible=False,
                 elem_id="df-result-panel",
                 elem_classes=["df-panel"],
             ) as result_panel:
                 gr.HTML(
-                    "<div class='df-panel-heading' lang='zh-Hant-TW'>"
+                    "<div class='df-panel-heading df-result-heading' lang='zh-Hant-TW'>"
+                    "<span class='df-result-section-kicker'>03 · 檢測輸出</span>"
                     "<h2>檢測結果</h2>"
+                    "<p>先確認模型判定與分類信心，再查看瑕疵位置。</p>"
                     "</div>"
                 )
-                summary = gr.Markdown(
-                    "### 等待檢測\n"
-                    "按下「開始檢測」後，結果會顯示在這裡。",
-                    elem_id="df-summary",
-                )
-                probabilities = gr.Label(
-                    label="Classification confidence（分類信心）",
-                    num_top_classes=2,
-                    elem_id="df-probabilities",
+                with gr.Row(equal_height=True, elem_id="df-result-overview"):
+                    with gr.Column(scale=5, elem_id="df-decision-card"):
+                        summary = gr.HTML(
+                            "<p>按下「開始檢測」後，結果會顯示在這裡。</p>",
+                            elem_id="df-summary",
+                        )
+                    with gr.Column(scale=4, elem_id="df-confidence-card"):
+                        gr.HTML(
+                            "<div class='df-confidence-title' lang='zh-Hant-TW'>"
+                            "<span>分類信心</span>"
+                            "<h3>Confidence distribution</h3>"
+                            "<p>數值越高，代表模型越偏向該分類。</p>"
+                            "</div>"
+                        )
+                        probabilities = gr.HTML(
+                            "<div class='df-confidence-bars'></div>",
+                            elem_id="df-probabilities",
+                            visible=False,
+                        )
+                with gr.Column(visible=False) as output_details:
+                    gr.HTML(
+                        "<div class='df-section-heading' lang='zh-Hant-TW'>"
+                        "<span class='df-result-section-kicker'>瑕疵定位</span>"
+                        "<h2>Mask 與 heatmap</h2>"
+                        "<p>Binary mask 顯示超過 threshold 的區域；"
+                        "heatmap 保留完整機率分布。</p>"
+                        "</div>"
+                    )
+                    with gr.Row(elem_id="df-localization"):
+                        mask = gr.Image(
+                            label="Binary mask",
+                            image_mode="L",
+                            buttons=["download", "fullscreen"],
+                            height=390,
+                            elem_classes=["df-output-image"],
+                        )
+                        heatmap = gr.Image(
+                            label="Probability heatmap",
+                            buttons=["download", "fullscreen"],
+                            height=390,
+                            elem_classes=["df-output-image"],
+                        )
+                with gr.Accordion(
+                    "查看模型證據與 checkpoint provenance",
+                    open=False,
                     visible=False,
-                )
-        with gr.Column(visible=False) as output_details:
-            gr.HTML(
-                "<div class='df-section-heading' lang='zh-Hant-TW'>"
-                "<h2>瑕疵位置視覺化</h2>"
-                "<p>Binary mask 顯示超過 threshold 的區域；"
-                "heatmap 保留完整機率分布。</p>"
-                "</div>"
-            )
-            with gr.Row(elem_id="df-localization"):
-                mask = gr.Image(
-                    label="Binary defect mask（二值瑕疵遮罩）",
-                    image_mode="L",
-                    buttons=["download", "fullscreen"],
-                    elem_classes=["df-output-image"],
-                )
-                heatmap = gr.Image(
-                    label="Defect probability heatmap（瑕疵機率熱圖）",
-                    buttons=["download", "fullscreen"],
-                    elem_classes=["df-output-image"],
-                )
-        with gr.Accordion(
-            "查看模型證據與 checkpoint provenance",
-            open=False,
-            visible=False,
-            elem_id="df-evidence",
-        ) as evidence_panel:
-            evidence = gr.JSON(
-                value={},
-                label="Immutable evidence（不可變證據）",
-                open=True,
-            )
+                    elem_id="df-evidence",
+                ) as evidence_panel:
+                    evidence = gr.JSON(
+                        value={},
+                        label="Immutable evidence（不可變證據）",
+                        open=True,
+                    )
         gr.HTML(
             "<aside class='df-boundary' lang='zh-Hant-TW'>"
             "<strong>研究用途聲明：</strong>這是公開 research / evaluation Demo，"
