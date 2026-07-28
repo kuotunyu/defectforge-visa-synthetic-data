@@ -6,7 +6,6 @@ import argparse
 import hashlib
 import json
 import re
-import subprocess
 import sys
 import tempfile
 import zipfile
@@ -56,6 +55,20 @@ REQUIRED_UNTRACKED = (
     Path("src/training/segmenter_data.py"),
     Path("src/training/train_segmenter.py"),
 )
+SOURCE_ROOT_FILES = (
+    Path("LICENSE"),
+    Path("README.md"),
+    Path("pyproject.toml"),
+    Path("uv.lock"),
+)
+SOURCE_DIRECTORIES = (
+    Path("configs"),
+    Path("notebooks"),
+    Path("scripts"),
+    Path("splits"),
+    Path("src"),
+)
+SOURCE_FILE_LIMIT_BYTES = 10 * 1024 * 1024
 
 
 class M18PackageError(RuntimeError):
@@ -67,22 +80,52 @@ def require(condition: bool, message: str) -> None:
         raise M18PackageError(message)
 
 
-def tracked_files() -> list[Path]:
-    result = subprocess.run(
-        ["git", "ls-files", "-z"],
-        cwd=PROJECT_ROOT,
-        check=True,
-        capture_output=True,
+def _is_source_noise(path: Path) -> bool:
+    return (
+        path.name == ".gitkeep"
+        or "__pycache__" in path.parts
+        or path.suffix.lower() in {".pyc", ".pyo"}
     )
-    relatives = [Path(raw.decode("utf-8")) for raw in result.stdout.split(b"\0") if raw]
+
+
+def source_files(project_root: Path = PROJECT_ROOT) -> list[Path]:
+    """Return the deterministic, secret-safe source set required by M18 Colab.
+
+    A fixed allowlist keeps the bundle reproducible in a Git checkout, a GitHub
+    source archive, or any ordinary extracted directory. It also prevents
+    unrelated reports, results, virtual environments, or model weights from
+    entering the upload bundle.
+    """
+
+    relative_files = list(SOURCE_ROOT_FILES)
+    for relative_directory in SOURCE_DIRECTORIES:
+        directory = project_root / relative_directory
+        require(directory.is_dir(), f"Source directory is missing: {relative_directory}")
+        relative_files.extend(
+            path.relative_to(project_root)
+            for path in directory.rglob("*")
+            if path.is_file() and not _is_source_noise(path.relative_to(project_root))
+        )
     for relative in REQUIRED_UNTRACKED:
-        if relative not in relatives:
-            relatives.append(relative)
-    files = sorted(PROJECT_ROOT / relative for relative in relatives)
+        if relative not in relative_files:
+            relative_files.append(relative)
+
+    files = sorted({project_root / relative for relative in relative_files})
     require(all(path.is_file() for path in files), "Source archive contains a missing file")
+    require(not any(path.is_symlink() for path in files), "Source archive would contain a symlink")
     require(
-        not any(".env" in path.name.lower() or ".git" in path.parts for path in files),
+        not any(
+            ".env" in path.name.lower()
+            or "secret" in path.name.lower()
+            or "credential" in path.name.lower()
+            or ".git" in path.parts
+            for path in files
+        ),
         "Source archive would contain a secret or Git internals",
+    )
+    require(
+        all(path.stat().st_size <= SOURCE_FILE_LIMIT_BYTES for path in files),
+        f"Source archive contains a file larger than {SOURCE_FILE_LIMIT_BYTES} bytes",
     )
     return files
 
@@ -96,7 +139,9 @@ def _metadata_index(root: Path) -> dict[str, Mapping[str, Any]]:
             if not line.strip():
                 continue
             record = json.loads(line)
-            require(isinstance(record, dict), f"Invalid metadata line {metadata_path}:{line_number}")
+            require(
+                isinstance(record, dict), f"Invalid metadata line {metadata_path}:{line_number}"
+            )
             image_path = str(record["image_path"]).replace("\\", "/")
             require(image_path not in index, f"Duplicate synthetic image path: {image_path}")
             index[image_path] = record
@@ -173,7 +218,9 @@ def _synthetic_pool(
             if view not in indexes:
                 indexes[view] = _metadata_index(paths.synthetic / view)
             source_record = indexes[view].get(sample.image_path)
-            require(source_record is not None, f"Missing source metadata: {view}/{sample.image_path}")
+            require(
+                source_record is not None, f"Missing source metadata: {view}/{sample.image_path}"
+            )
             original_id = str(source_record["sample_id"])
             pool_id = _safe_pool_id(view, original_id)
             selected_ids.append(pool_id)
@@ -283,7 +330,7 @@ def main() -> int:
     source_zip = output_dir / "defectforge_m18_source.zip"
     source_members = [
         (path, (Path("defectforge") / path.relative_to(PROJECT_ROOT)).as_posix())
-        for path in tracked_files()
+        for path in source_files()
     ]
     if not args.dry_run:
         write_zip(source_zip, source_members)

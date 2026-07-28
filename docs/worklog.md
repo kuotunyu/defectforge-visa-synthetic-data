@@ -562,6 +562,36 @@ capsules；完成後把兩個未改名的結果 ZIP 放到 `results/colab/segmen
 
 ---
 
+## 2026-07-28 — Session 28：GitHub Source ZIP 位元重現與 M18 最小 source bundle
+
+### 做了什麼
+- 從 staged tree 建立完全不含 `.git` 的獨立 archive，並在其中新建 Python 3.12
+  `.venv`、依 `uv.lock` 安裝 171 packages，模擬日後 GitHub Source ZIP 使用者
+- 發現 frozen JSON 在 Windows 工作樹與 Git blob 間被 CRLF→LF 轉換，造成
+  `MANIFEST.sha256` 在公開 archive 失配；新增 ADR-023 並以 `.gitattributes`
+  對凍結證據保存原始位元
+- 發現 `package_m18_colab.py` 依賴 `git ls-files`，在 Source ZIP 無法執行；
+  改為 deterministic allowlist，排除 reports、results、`.venv`、模型與秘密檔
+- 新增無 `.git`、排除非白名單輸出及拒絕秘密命名的測試
+
+### 全新 archive 驗證
+- staged-tree `split_manifest.json` SHA256：
+  `3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c`
+- Ruff passed、166 tests passed、`verify_splits.py` passed
+- M18 package dry-run exit 0：
+  - source：97 files / 2,330,613 uncompressed bytes
+  - pcb1：5,206 files / 3,769,958,779 bytes / 2,000 pooled synthetic records
+  - capsules：4,804 files / 3,953,298,637 bytes / 2,000 pooled synthetic records
+  - 兩物件 training blocklist hits = 0，frozen test 僅供 evaluation
+- 測試期間誤啟動的重複 DefectForge CPU dry-run 已精確終止；最後只保留一份受控
+  session 並取得 exit 0。未終止或修改 FormosaNLU 程序，也未配置 GPU。
+
+### 換你做
+仍只需要完成 M19，將 Colab 下載的 `m18_seg_results_pcb1.zip` 與
+`m18_seg_results_capsules.zip` 原檔放進 `results/colab/segmentation/`。
+
+---
+
 ## 2026-07-27 — Session 20：M15 Phase 1 獨立驗收與交接邊界修正
 
 ### 做了什麼

@@ -12,6 +12,16 @@
 *.json    text eol=lf
 *.md      text eol=lf
 
+# These frozen evidence files are hashed byte-for-byte by formal run reports.
+# Git's `binary` macro disables text conversion, diff, and merge so their issued
+# SHA256 values survive Windows/Linux checkouts and source archives unchanged.
+splits/split_manifest.json     binary
+splits/defect_types.json       binary
+splits/fewshot_selection.json  binary
+splits/test_blocklist.json     binary
+splits/source_checksums.json   binary
+splits/*.sha256                binary
+
 # Binary
 *.png     binary
 *.jpg     binary

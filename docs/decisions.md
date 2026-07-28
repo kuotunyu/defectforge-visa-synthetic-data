@@ -827,3 +827,39 @@ M22 要求用「最佳」分類器與分割模型做本機 Demo，但 M16 的主
   Demo 在配置 GPU 前 fail closed。
 - 排名使用 test 指標只服務展示模型，因此必須標記
   `selection_is_post_evaluation_demo_only=true`，不得拿選模後分數另立新實驗結論。
+
+---
+
+<a id="adr-023"></a>
+## ADR-023 — 凍結 JSON 保存原始位元，Colab source bundle 使用固定白名單
+
+**狀態：Accepted**（2026-07-28）
+
+### 背景
+M24 的全新環境驗證發現 Windows 工作樹中的 frozen JSON 是 CRLF 位元，但既有
+`.gitattributes` 會在 Git blob／GitHub Source ZIP 中轉為 LF。正式 run report、
+checksum sidecar 與 blocklist 都已引用原始 CRLF SHA256；因此公開 archive 的
+`verify_splits.py` 會 fail closed。另有一個獨立問題：M18 packager 依賴
+`git ls-files`，導致不含 `.git` 的 GitHub Source ZIP 無法再生 Colab bundle。
+
+### 決策
+- `split_manifest.json`、`defect_types.json`、`fewshot_selection.json`、
+  `test_blocklist.json`、`source_checksums.json` 與 `splits/*.sha256` 一律標成
+  `binary`，禁止 Git 的 text conversion、diff 與 merge；Git 必須保存已簽發證據
+  的原始位元，不得隱式轉換換行。
+- 不重新正規化 frozen JSON，也不改寫既有正式 report 的 hash；修正的是 Git 儲存
+  行為，而不是重新定義已發行的證據。
+- M18 source bundle 不再依賴 Git metadata，改用固定 root files 與
+  `configs/`、`notebooks/`、`scripts/`、`splits/`、`src/` 白名單。
+- 白名單內仍 fail closed：拒絕 symlink、秘密／credential 命名、Git internals
+  與大於 10 MiB 的單檔；忽略 `.gitkeep`、bytecode 與 `__pycache__`。
+
+### 後果
+- `git clone`、GitHub Source ZIP 與普通解壓目錄都能重現相同的最小 M18 source
+  bundle，不會夾帶 reports、results、`.venv` 或模型權重。
+- staged-tree archive 的 `split_manifest.json` SHA256 恢復為
+  `3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c`；
+  在全新 Python 3.12 `.venv` 中，166 tests、`verify_splits.py` 與兩物件 M18
+  package dry-run 全部通過。
+- source bundle 為 97 檔、2,330,613 uncompressed bytes；兩個 data bundle 的
+  selection SHA 與 training blocklist 零命中契約保持不變。

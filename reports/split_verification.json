@@ -1,0 +1,54 @@
+{
+  "assertions": {
+    "adr007_eight_counts": "passed",
+    "fewshot_train_strict_subset_highshot_train": "passed",
+    "manifest_phash_and_blocklist_integrity": "passed",
+    "official_train_test_disjoint": "passed"
+  },
+  "manifest": {
+    "blocked_sha256": 803,
+    "manifest_images": 1806,
+    "phash_groups": 1805,
+    "test_image_sha256": 723,
+    "test_images": 723,
+    "test_masks": 80,
+    "train_image_sha256": 1083
+  },
+  "manifest_sha256": "3d3c385cf0ff78479ecf90b4faf25fc07c88830e043616fb15aefb1282983e8c",
+  "official": {
+    "counts": {
+      "2cls_fewshot": {
+        "capsules": {
+          "test_anomaly": 80,
+          "test_normal": 482,
+          "train_anomaly": 20,
+          "train_normal": 120
+        },
+        "pcb1": {
+          "test_anomaly": 80,
+          "test_normal": 803,
+          "train_anomaly": 20,
+          "train_normal": 201
+        }
+      },
+      "2cls_highshot": {
+        "capsules": {
+          "test_anomaly": 40,
+          "test_normal": 241,
+          "train_anomaly": 60,
+          "train_normal": 361
+        },
+        "pcb1": {
+          "test_anomaly": 40,
+          "test_normal": 402,
+          "train_anomaly": 60,
+          "train_normal": 602
+        }
+      }
+    },
+    "fewshot_train_strict_subset_highshot_train": true,
+    "official_train_test_disjoint": true
+  },
+  "schema_version": 1,
+  "status": "passed"
+}
