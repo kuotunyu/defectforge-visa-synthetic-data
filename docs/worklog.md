@@ -303,6 +303,39 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-28 — Session 40：M30 工整格線與克制馬卡龍視覺精修
+
+### 做了什麼
+- 將原本集中在左側的操作流程改為三等分全寬流程帶，`01／02／03` 與文案使用固定
+  格線，桌機、平板與手機皆保持一致閱讀順序
+- 採用克制的 soft-industrial macaron palette：薄荷綠表示物件選擇、粉藍表示上傳、
+  杏桃表示執行步驟與研究界線、淡紫只用於結果區；深綠保留為主要 action 與狀態色
+- 全站一般內文與控制項提高到 20px，輔助文字提高到至少 18px；手機 runtime
+  狀態列因空間限制維持 16px，但改為單行置中，避免斷行與版面偏斜
+- 圓角收斂至 2–4px，移除 panel、Radio 外框、summary、research note、evidence 與
+  accordion 的非必要框線；只保留 uploader dashed border、影像邊界與 focus ring
+- 輸入與結果欄改為頂端精準對齊、各自依內容高度收合，不再用等高淡色面板製造
+  無效空白
+
+### 驗證
+- 本機真實 Gradio 元件以 `pcb1` 影像走完上傳與結果顯示；classification summary、
+  probability chart 與兩張 localization output 維持正確層級
+- Playwright 桌機 1680×958：流程三欄各 432px、兩張輸出各 640px、水平 overflow 0
+- 平板 768×1024 與手機 390×844：水平 overflow 0；手機三步驟垂直等寬排列，
+  runtime 狀態列 239px 單行顯示
+- console error 0；pytest 191 passed、`ruff check .` 與 M24 publication audit 通過；
+  遠端 Space 實機驗證在部署後執行
+
+### 決策
+- 馬卡龍色只承擔「選擇／上傳／執行／結果」的功能分區，不以多色按鈕、漸層或
+  裝飾圖形增加噪音
+- 工整不等於所有卡片等高；頂端對齊加內容自適應高度，比強制等高更能減少無效空白
+
+### 換你做
+目前沒有；部署完成後可直接重整原本的公開 Space 網址查看。
+
+---
+
 ## 2026-07-28 — Session 39：M29 公開 Demo 資訊密度與可讀性精修
 
 ### 做了什麼

@@ -115,15 +115,21 @@ def test_space_app_is_zh_tw_first_and_has_guided_empty_state() -> None:
     root = Path(__file__).resolve().parents[1]
     source = (root / "deploy/hf_space/app.py").read_text(encoding="utf-8")
     assert "瑕疵影像檢測 Demo" in source
-    assert "操作流程" in source
+    assert "aria-label='檢測流程'" in source
+    assert "<li><b>01</b><span>選擇物件</span></li>" in source
     assert "選擇物件並上傳影像" in source
     assert "等待檢測" in source
     assert "placeholder=\"將圖片拖放到這裡，或點擊上傳\"" in source
     assert "請先上傳一張待檢影像" in (
         root / "deploy/hf_space/runtime.py"
     ).read_text(encoding="utf-8")
-    assert "--text-xs: 1rem" in source
-    assert "--text-md: 1.125rem" in source
+    assert "--text-xs: 1.125rem" in source
+    assert "--text-md: 1.25rem" in source
+    assert "--df-radius-lg: 4px" in source
+    assert "--df-surface-blue: oklch(" in source
+    assert "--df-surface-peach: oklch(" in source
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in source
+    assert "border-radius: 999px" not in source
     assert 'elem_id="df-result-panel"' in source
     assert "id='df-steps'" not in source
     assert "font-size: .72rem" not in source
