@@ -1330,6 +1330,35 @@ release candidate；建立 GitHub repo、push 與轉 public 必須等使用者�
 
 ---
 
+## 2026-07-28 — Session 34：M25 公開 Hugging Face Space 上線
+
+### 做了什麼
+- 由 clean commit `251aed601f...` 重建 hash-bound package，28 檔、254,386,631 bytes
+- 建立 `steven0226/defectforge-visa-demo`，先 private CPU Basic build，再以授權 header
+  完成真實 pcb1 上傳／推論，確認後才轉 public
+- Hugging Face remote commit 為 `ee6ec3e00b...`；runtime 最終為 `RUNNING / cpu-basic`
+- 依遠端 HF 深色外框的實際截圖補強 kicker、runtime badge 與研究界線的 CSS 對比，
+  重新部署後再做一次完全匿名 Playwright 驗證
+
+### 驗證
+- 公開網址：
+  `https://huggingface.co/spaces/steven0226/defectforge-visa-demo`
+- anonymous browser：HTTP 200、正確 title、真實 pcb1 推論完成、CPU 與 mask coverage
+  可見，分類／mask／heatmap 全部輸出
+- 遠端 warm inference 約 0.82–0.86 秒；CPU Basic 足夠，不升級 T4／L4／A100
+- 唯一非 2xx 資源是 Hugging Face shell 查詢
+  `/api/organizations/steven0226/avatar` 的 404；不是 Space 程式、模型或靜態資源
+- 轉 public 後 `repo_info.private=false`；上傳前 package `source_dirty=false`
+
+### 下一步
+M26：在不讀 test 指標的前提下，加入 domain-balanced sampler，讓每個 batch schedule
+保留真實瑕疵曝光；先跑兩物件 development pilot，再依凍結 gate 決定是否值得 3-seed。
+
+### 換你做
+目前沒有。Space 不需要 Colab；M26 執行前會先避開其他專案正在使用的本機 GPU。
+
+---
+
 ## 2026-07-27 — Session 08：M6 DINOv2 + morphology 瑕疵分型凍結
 
 ### 做了什麼

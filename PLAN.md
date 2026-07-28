@@ -193,7 +193,7 @@
 > v1.0.0 的凍結表格、負面結果與結論保持不變。Phase 3 是明確標示的後續延伸，
 > 不得用新結果覆寫原實驗，也不得用 test set 選擇 v2 超參。
 
-- [ ] **M25** 🤖 公開 Hugging Face Gradio Space
+- [x] **M25** 🤖 公開 Hugging Face Gradio Space
   - **驗證**：四個展示 checkpoint 的大小與 SHA256 在載入前 fail closed；匿名訪客可完成
     pcb1／capsules 上傳、分類、mask、heatmap 與 provenance 檢視；預設 CPU Basic，
     只有實測不敷使用才升級 GPU；頁面與 bundle 完整附帶研究用途及第三方授權界線
