@@ -328,10 +328,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     result_path = (paths.project_root / str(config["output"]["result"])).resolve(strict=False)
     result_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = result_path.with_suffix(result_path.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    with temporary.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(
+            json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+        )
     temporary.replace(result_path)
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     return 0

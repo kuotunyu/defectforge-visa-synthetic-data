@@ -131,10 +131,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     output = args.output.resolve(strict=False)
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix(output.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(validation, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    with temporary.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(validation, indent=2, sort_keys=True) + "\n")
     os.replace(temporary, output)
     print(json.dumps(validation, indent=2, sort_keys=True))
     return 0

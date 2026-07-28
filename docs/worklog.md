@@ -1427,7 +1427,7 @@ M26：在不讀 test 指標的前提下，加入 domain-balanced sampler，讓�
 ### 驗證
 - 8 個 raw manifest 全部 `mode=development`、`test=[]`、validation 全為 real
 - verifier 綁定 run signature、model SHA、metrics、exposure 與 config SHA；
-  result SHA256 `1e33f6828e25e566fff72ffef3fb2d7142c663b44facd2f65f132a3440863f2a`
+  result SHA256 `703dd2cc94a64117d6526bd575467bd2008275c8244b402f69d1ea8940c88b87`
 - 全 run 峰值皆 3.1748 GiB；其他專案程序未終止或修改
 
 ### 結論
@@ -1437,6 +1437,27 @@ M26：在不讀 test 指標的前提下，加入 domain-balanced sampler，讓�
 
 ### 換你做
 目前沒有；公開 Demo 與 v2 pilot 都已完成。下一步只剩完整驗收、推送與 Contributors 稽核。
+
+---
+
+## 2026-07-28 — Session 37：Phase 3 發布級 gate
+
+### 做了什麼
+- 將 `codex/public-demo-v2-pilot` 以 fast-forward 合入本機 `main`
+- M24 gate 原本硬性要求 PLAN 只能有 M0–M24，導致合法的 M25–M27 extension 被判
+  incomplete；改為仍要求 M0–M24 各恰好一列且全勾，但允許編號更高、同樣不得重複
+- 重建 README 與 license-chain hash evidence，沒有改寫 v1 CSV、figures 或 release tag
+- 重新執行 publication tree、secret、identity、license、media 與 evidence graph audit
+
+### 驗證
+- `verify_publish.py`：passed
+- README 與 license chain：passed，current hashes 相符
+- M0–M27 全部有明確終態；M27 的 `[x]` 表示 gate 已執行並正確停止，不表示有跑 test
+- author／committer 唯一身份仍為
+  `kuotunyu <61350295+kuotunyu@users.noreply.github.com>`，co-author trailer = 0
+
+### 換你做
+目前沒有；完成最後全測試後可推送 `main`，再由 GitHub API 重查 Contributors。
 
 ---
 

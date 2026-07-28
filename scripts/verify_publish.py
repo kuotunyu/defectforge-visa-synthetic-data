@@ -227,7 +227,9 @@ def audit_plan_and_readme(repo: Path) -> dict[str, Any]:
         "missing_prepublication_milestones": missing_prepublication,
         "duplicate_or_missing_canonical_rows": duplicate_rows,
         "prepublication_complete": (
-            not missing_prepublication and not duplicate_rows and set(counts) == set(range(25))
+            not missing_prepublication
+            and not duplicate_rows
+            and set(range(25)) <= set(counts)
         ),
         "readme_has_required_sections": all(section in readme for section in required_sections),
         "readme_has_no_tbd_or_todo": "TBD" not in readme and "TODO" not in readme,

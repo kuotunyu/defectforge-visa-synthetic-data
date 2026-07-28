@@ -125,6 +125,13 @@ def test_plan_and_readme_audit_requires_all_prepublication_milestones(tmp_path: 
     assert complete["prepublication_complete"] is True
     assert complete["readme_has_no_tbd_or_todo"] is True
 
+    with_extension = (tmp_path / "PLAN.md").read_text(encoding="utf-8")
+    with_extension += "\n- [x] **M25** post-publication extension\n"
+    (tmp_path / "PLAN.md").write_text(with_extension, encoding="utf-8")
+    extended = audit_plan_and_readme(tmp_path)
+    assert extended["prepublication_complete"] is True
+    assert extended["checked_milestones"][-1] == 25
+
 
 def test_final_media_audit_rejects_single_frame_gif(tmp_path: Path) -> None:
     for relative in FINAL_FIGURES:
