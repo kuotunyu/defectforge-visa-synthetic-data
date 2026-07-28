@@ -1,6 +1,8 @@
 # DefectForge：VisA Synthetic Data 瑕疵生成與評估
 
 [![持續驗證](https://github.com/kuotunyu/defectforge-visa-synthetic-data/actions/workflows/verify.yml/badge.svg)](https://github.com/kuotunyu/defectforge-visa-synthetic-data/actions/workflows/verify.yml)
+[![MIT License](https://img.shields.io/badge/License-MIT-08796c.svg)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/kuotunyu/defectforge-visa-synthetic-data?color=08796c)](https://github.com/kuotunyu/defectforge-visa-synthetic-data/releases/latest)
 
 > **狀態：已公開；M0–M36 全數驗證完成。**
 > 下游結果表與最終結論皆由通過獨立驗證的 CSV 自動產生，不手動填寫數字。
@@ -253,9 +255,13 @@ Colab 精確操作流程見 [instructions_for_me.md](instructions_for_me.md)。
 | 路徑 | 內容 |
 |---|---|
 | [CLAUDE.md](CLAUDE.md) | Repository 工作規則 |
-| [PLAN.md](PLAN.md) | M0–M36 Milestone 與逐項驗證 |
+| [PLAN.md](PLAN.md) | M0–M37 Milestone 與逐項驗證 |
 | [docs/](docs/) | 方法論、Protocol、Spec、ADR、Worklog |
 | [docs/diagrams/](docs/diagrams/) | 已驗證的 Mermaid 架構圖原始碼與 PNG |
+| [CITATION.cff](CITATION.cff) | GitHub Citation Metadata |
+| [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Dataset、Model 與 Synthetic Artifact 授權界線 |
+| [SECURITY.md](SECURITY.md) | 安全回報管道與支援範圍 |
+| [CHANGELOG.md](CHANGELOG.md) | Semantic Versioning Release 紀錄 |
 | `src/` | Data／Synthetic／Filtering／Training／Evaluation／Inference Source Code |
 | `splits/` | Frozen split manifest、Checksum、Defect Taxonomy |
 | `notebooks/` | Colab Notebook |
@@ -265,7 +271,9 @@ Colab 精確操作流程見 [instructions_for_me.md](instructions_for_me.md)。
 ## 授權與引用
 
 本 Repository 的 Source Code 採 **MIT License**（見 [LICENSE](LICENSE)）。
-MIT 僅涵蓋程式碼；Dataset 與 Model Weights 各自保留原始條款：
+MIT 僅涵蓋程式碼；Dataset、Synthetic Images 與 Model Weights 各自保留原始條款。
+可直接引用的 Metadata 見 [CITATION.cff](CITATION.cff)，第三方資產總表見
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)：
 
 <!-- BEGIN VERIFIED LICENSE_CHAIN -->
 | 資產 | License | DefectForge 義務 |
@@ -293,3 +301,6 @@ MIT 僅涵蓋程式碼；Dataset 與 Model Weights 各自保留原始條款：
 - NVIDIA GTC Taiwan 2026, *Few-shot Industrial Synthetic Data Gen with NVIDIA Defect
   Image Generation Agent*：方法論靈感來源。本 Repository 是獨立 Open-source
   replication，與 NVIDIA 無隸屬或背書關係。
+
+如需引用 DefectForge，可在 GitHub 右側 **Cite this repository** 直接取得 Citation
+Metadata；若使用 VisA 影像或衍生 Synthetic Data，仍須另外引用 VisA 原始論文。

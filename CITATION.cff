@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "若 DefectForge 對你的研究有幫助，請引用此軟體與 VisA 原始論文。"
+title: "DefectForge：VisA Synthetic Data 瑕疵生成與評估"
+type: software
+authors:
+  - name: "kuotunyu"
+repository-code: "https://github.com/kuotunyu/defectforge-visa-synthetic-data"
+url: "https://steven0226-defectforge-visa-demo.hf.space/"
+license: MIT
+version: 1.2.0
+date-released: 2026-07-29
+abstract: >-
+  一套以 VisA pcb1 與 capsules 為研究對象、具防洩漏協定與完整證據鏈的少樣本
+  工業瑕疵 Synthetic Data 生成、品質過濾、Classification 與 Segmentation
+  評估專案。
+keywords:
+  - synthetic data
+  - industrial anomaly detection
+  - image segmentation
+  - few-shot learning
+  - VisA

@@ -13,6 +13,7 @@ from scripts.verify_publish import (
     EXPECTED_NAME,
     FINAL_EVIDENCE_REPORTS,
     FINAL_FIGURES,
+    audit_closeout_metadata,
     audit_evidence,
     audit_final_media,
     audit_identities,
@@ -141,6 +142,9 @@ def test_final_media_audit_rejects_single_frame_gif(tmp_path: Path) -> None:
     gif_path = tmp_path / "assets" / "demo.gif"
     gif_path.parent.mkdir(parents=True)
     Image.new("RGB", (640, 360), "white").save(gif_path, format="GIF")
+    Image.new("RGB", (1280, 640), "white").save(
+        tmp_path / "assets" / "github-social-preview.png"
+    )
 
     single_frame = audit_final_media(tmp_path)
 
@@ -159,6 +163,55 @@ def test_final_media_audit_rejects_single_frame_gif(tmp_path: Path) -> None:
     animated = audit_final_media(tmp_path)
     assert animated["demo_gif"]["valid"] is True
     assert animated["demo_gif"]["frames"] == 2
+    assert animated["github_social_preview"]["valid"] is True
+
+
+def test_closeout_metadata_requires_standard_mit_and_citation(tmp_path: Path) -> None:
+    (tmp_path / "LICENSE").write_text(
+        """MIT License
+
+Copyright (c) 2026 kuotunyu
+
+Permission is hereby granted, free of charge
+
+THE SOFTWARE IS PROVIDED "AS IS"
+""",
+        encoding="utf-8",
+    )
+    (tmp_path / "CITATION.cff").write_text(
+        """cff-version: 1.2.0
+message: "請引用"
+title: "DefectForge"
+type: software
+authors:
+  - name: "kuotunyu"
+repository-code: "https://github.com/kuotunyu/defectforge-visa-synthetic-data"
+license: MIT
+version: 1.2.0
+""",
+        encoding="utf-8",
+    )
+    (tmp_path / "THIRD_PARTY_NOTICES.md").write_text(
+        """VisA Dataset
+stable-diffusion-2-inpainting
+stable-diffusion-xl-1.0-inpainting-0.1
+facebook/dinov2-base
+DefectForge Synthetic Images
+DefectForge LoRA Weights
+""",
+        encoding="utf-8",
+    )
+
+    passed = audit_closeout_metadata(tmp_path)
+
+    assert passed["standard_mit_license"] is True
+    assert passed["citation_valid"] is True
+    assert passed["third_party_notices_complete"] is True
+
+    with (tmp_path / "LICENSE").open("a", encoding="utf-8") as handle:
+        handle.write("\n---\nNOTE: third-party material\n")
+    rejected = audit_closeout_metadata(tmp_path)
+    assert rejected["standard_mit_license"] is False
 
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:

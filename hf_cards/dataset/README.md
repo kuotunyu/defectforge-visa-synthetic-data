@@ -117,6 +117,9 @@ unfiltered; they are not relabelled after downstream results.
 
 ## License chain
 
+Source Code 與第三方 Artifact 的完整界線見
+[THIRD_PARTY_NOTICES.md](https://github.com/kuotunyu/defectforge-visa-synthetic-data/blob/main/THIRD_PARTY_NOTICES.md)。
+
 <!-- BEGIN VERIFIED LICENSE_CHAIN -->
 | 資產 | License | DefectForge 義務 |
 |---|---|---|
@@ -130,6 +133,9 @@ unfiltered; they are not relabelled after downstream results.
 <!-- END VERIFIED LICENSE_CHAIN -->
 
 ## Citation
+
+DefectForge 的 GitHub Citation Metadata 見
+[CITATION.cff](https://github.com/kuotunyu/defectforge-visa-synthetic-data/blob/main/CITATION.cff)。
 
 - Zou et al., *SPot-the-Difference Self-Supervised Pre-training for Anomaly Detection
   and Segmentation*, ECCV 2022.

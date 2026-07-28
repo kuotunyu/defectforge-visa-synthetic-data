@@ -13,6 +13,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+import yaml
 from PIL import Image
 
 EXPECTED_NAME = "kuotunyu"
@@ -48,6 +49,11 @@ REQUIRED_PATHS = (
     "PLAN.md",
     "CLAUDE.md",
     "LICENSE",
+    "CITATION.cff",
+    "THIRD_PARTY_NOTICES.md",
+    "SECURITY.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
     "uv.lock",
     "docs",
     "notebooks",
@@ -74,6 +80,11 @@ REQUIRED_PATHS = (
     "hf_cards/dataset/README.md",
     "hf_cards/model/README.md",
     "assets/demo.gif",
+    "assets/github-social-preview.png",
+    "assets/github-social-preview.philosophy.md",
+    ".github/ISSUE_TEMPLATE/bug-report.yml",
+    ".github/ISSUE_TEMPLATE/config.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md",
     ".claude/skills",
     *FINAL_FIGURES,
 )
@@ -571,10 +582,98 @@ def audit_final_media(repo: Path) -> dict[str, Any]:
                 )
         except (EOFError, OSError, ValueError) as error:
             gif["error"] = str(error)
+
+    preview_path = repo / "assets" / "github-social-preview.png"
+    preview: dict[str, Any] = {"exists": preview_path.is_file(), "valid": False}
+    if preview_path.is_file():
+        try:
+            with Image.open(preview_path) as image:
+                image.verify()
+                preview.update(
+                    {
+                        "format": image.format,
+                        "width": image.width,
+                        "height": image.height,
+                        "bytes": preview_path.stat().st_size,
+                        "valid": (
+                            image.format == "PNG"
+                            and image.width == 1280
+                            and image.height == 640
+                            and preview_path.stat().st_size <= 1024 * 1024
+                        ),
+                    }
+                )
+        except (OSError, ValueError) as error:
+            preview["error"] = str(error)
     return {
         "figures": figure_details,
         "all_figures_valid": all(item["valid"] for item in figure_details.values()),
         "demo_gif": gif,
+        "github_social_preview": preview,
+    }
+
+
+def audit_closeout_metadata(repo: Path) -> dict[str, Any]:
+    license_path = repo / "LICENSE"
+    license_text = license_path.read_text(encoding="utf-8") if license_path.is_file() else ""
+    citation_path = repo / "CITATION.cff"
+    citation: dict[str, Any] = {}
+    citation_error: str | None = None
+    if citation_path.is_file():
+        try:
+            loaded = yaml.safe_load(citation_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                citation = loaded
+            else:
+                citation_error = "top-level value is not an object"
+        except (OSError, UnicodeError, yaml.YAMLError) as error:
+            citation_error = str(error)
+    else:
+        citation_error = "missing"
+
+    authors = citation.get("authors")
+    author_rows = authors if isinstance(authors, list) else []
+    author_names = {
+        str(row.get("name"))
+        for row in author_rows
+        if isinstance(row, dict) and row.get("name")
+    }
+    expected_repository = "https://github.com/kuotunyu/defectforge-visa-synthetic-data"
+    citation_valid = bool(
+        citation_error is None
+        and str(citation.get("cff-version")) == "1.2.0"
+        and citation.get("title")
+        and citation.get("type") == "software"
+        and citation.get("repository-code") == expected_repository
+        and citation.get("license") == "MIT"
+        and str(citation.get("version")) == "1.2.0"
+        and "kuotunyu" in author_names
+    )
+    standard_mit = bool(
+        license_text.startswith("MIT License\n\nCopyright (c) 2026 kuotunyu\n")
+        and "Permission is hereby granted, free of charge" in license_text
+        and "THE SOFTWARE IS PROVIDED \"AS IS\"" in license_text
+        and "\n---\n" not in license_text
+        and "NOTE:" not in license_text
+    )
+    notices_path = repo / "THIRD_PARTY_NOTICES.md"
+    notices = notices_path.read_text(encoding="utf-8") if notices_path.is_file() else ""
+    notice_markers = (
+        "VisA Dataset",
+        "stable-diffusion-2-inpainting",
+        "stable-diffusion-xl-1.0-inpainting-0.1",
+        "facebook/dinov2-base",
+        "DefectForge Synthetic Images",
+        "DefectForge LoRA Weights",
+    )
+    notices_valid = all(marker in notices for marker in notice_markers)
+    return {
+        "standard_mit_license": standard_mit,
+        "citation_valid": citation_valid,
+        "citation_error": citation_error,
+        "citation_repository": citation.get("repository-code"),
+        "citation_version": str(citation.get("version", "")),
+        "third_party_notices_complete": notices_valid,
     }
 
 
@@ -599,6 +698,7 @@ def build_audit(repo: Path) -> dict[str, Any]:
     content = audit_plan_and_readme(repo)
     evidence = audit_evidence(repo)
     media = audit_final_media(repo)
+    closeout = audit_closeout_metadata(repo)
     acceptance = audit_release_acceptance(repo)
     checks = {
         "required_paths": not required["missing"],
@@ -625,6 +725,12 @@ def build_audit(repo: Path) -> dict[str, Any]:
         "hf_upload_plan_safe_dry_run": evidence["hf_upload_plan_is_safe_dry_run"],
         "final_figures_valid": media["all_figures_valid"],
         "demo_gif_valid": media["demo_gif"]["valid"],
+        "github_social_preview_valid": media["github_social_preview"]["valid"],
+        "closeout_metadata_valid": (
+            closeout["standard_mit_license"]
+            and closeout["citation_valid"]
+            and closeout["third_party_notices_complete"]
+        ),
         "release_acceptance_complete": all(acceptance.values()),
     }
     return {
@@ -638,6 +744,7 @@ def build_audit(repo: Path) -> dict[str, Any]:
         "content": content,
         "evidence": evidence,
         "media": media,
+        "closeout": closeout,
         "release_acceptance": acceptance,
     }
 

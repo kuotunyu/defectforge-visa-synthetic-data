@@ -109,6 +109,9 @@ interface.
 
 ## License chain
 
+Source Code 與第三方 Artifact 的完整界線見
+[THIRD_PARTY_NOTICES.md](https://github.com/kuotunyu/defectforge-visa-synthetic-data/blob/main/THIRD_PARTY_NOTICES.md)。
+
 <!-- BEGIN VERIFIED LICENSE_CHAIN -->
 | 資產 | License | DefectForge 義務 |
 |---|---|---|
@@ -125,5 +128,7 @@ interface.
 
 Methodology, checksums, training reports, and limitations are published in
 [kuotunyu/defectforge-visa-synthetic-data](https://github.com/kuotunyu/defectforge-visa-synthetic-data).
+GitHub Citation Metadata 見
+[CITATION.cff](https://github.com/kuotunyu/defectforge-visa-synthetic-data/blob/main/CITATION.cff).
 The project is an independent open-source replication and is not affiliated with or
 endorsed by NVIDIA.

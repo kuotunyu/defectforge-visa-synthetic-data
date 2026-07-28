@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Private Vulnerability Reporting
+    url: https://github.com/kuotunyu/defectforge-visa-synthetic-data/security/advisories/new
+    about: 安全漏洞請使用私密通道回報
+  - name: DefectForge 公開 Demo
+    url: https://steven0226-defectforge-visa-demo.hf.space/
+    about: 先確認問題是否能在目前公開版本重現
