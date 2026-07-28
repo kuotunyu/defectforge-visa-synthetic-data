@@ -24,6 +24,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.validate_segmenter_runs import FORMAL_GROUPS, validate
+from src.common.integrity import write_text_lf
 from src.common.paths import load_paths
 
 LOGICAL_GROUPS = (*FORMAL_GROUPS, "all_mixed")
@@ -432,8 +433,7 @@ def main() -> int:
     require(sum(row["physical_run"] == "true" for row in rows) == 16, "Physical run count changed")
     atomic_write_csv(args.output, rows)
     report_text = build_report(rows)
-    args.report.parent.mkdir(parents=True, exist_ok=True)
-    args.report.write_text(report_text, encoding="utf-8")
+    write_text_lf(args.report, report_text)
     validation_payload = {
         "status": "passed",
         "schema_version": 1,
@@ -446,10 +446,9 @@ def main() -> int:
         "segmentation_csv_sha256": sha256_file(args.output),
         "report_sha256": sha256_file(args.report),
     }
-    args.validation_out.parent.mkdir(parents=True, exist_ok=True)
-    args.validation_out.write_text(
+    write_text_lf(
+        args.validation_out,
         json.dumps(validation_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
     )
     print(json.dumps(validation_payload, ensure_ascii=False, indent=2, sort_keys=True))
     return 0

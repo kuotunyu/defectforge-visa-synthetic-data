@@ -24,6 +24,15 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def write_text_lf(path: Path, text: str) -> None:
+    """Write UTF-8 text with canonical LF endings on every platform."""
+
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(normalized)
+
+
 def load_json(path: Path) -> dict[str, Any]:
     """Load a JSON object and reject non-object roots."""
 

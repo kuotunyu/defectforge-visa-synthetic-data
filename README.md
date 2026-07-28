@@ -1,6 +1,8 @@
 # DefectForge-VisA
 
-> **Status: Published; M0–M24 verified.**
+[![Verify](https://github.com/kuotunyu/01-defectforge-visa/actions/workflows/verify.yml/badge.svg)](https://github.com/kuotunyu/01-defectforge-visa/actions/workflows/verify.yml)
+
+> **Status: Published; M0–M35 verified.**
 > Both downstream result tables and the outcome statement are generated atomically from
 > independently validated CSVs. Numbers are never typed by hand — see `scripts/verify_readme.py`.
 

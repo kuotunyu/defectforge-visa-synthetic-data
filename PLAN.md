@@ -250,6 +250,13 @@
     單元測試確認切換 threshold 只改變 Mask、Heatmap 像素保持一致；Playwright 確認
     純 Heatmap 顯示確實改變，桌機與手機均無水平溢位
 
+- [x] **M35** 🤖 乾淨原始碼重現與持續驗證
+  - **驗證**：從 Git 封存檔建立全新 Python 3.12／uv locked 環境，完整 lint、pytest
+    與 publication audit 全綠；所有產生後會被 SHA256 綁定的文字證據固定使用 LF，
+    確保 Windows 工作目錄與 GitHub Source ZIP 位元組一致；GitHub Actions 使用完整
+    Git 歷史、唯讀權限、不可變 action SHA 與 frozen lock，在每次 main push／PR
+    自動重跑相同 gate，並稽核作者、committer 與 co-author trailer
+
 ---
 
 ## 交接與追蹤

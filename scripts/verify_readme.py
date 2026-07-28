@@ -20,6 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from scripts.aggregate_segmentation import LOGICAL_GROUPS  # isort: skip
 from scripts.build_phase2_figures import MAIN_GROUPS, OBJECTS  # isort: skip
 from scripts.run_classifier_matrix import matrix_plan  # isort: skip
+from src.common.integrity import write_text_lf  # isort: skip
 
 BLOCK_NAMES = (
     "CLASSIFICATION_MAIN",
@@ -362,7 +363,7 @@ def verify_readme(readme: str, blocks: Mapping[str, str]) -> None:
 def atomic_write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(text, encoding="utf-8")
+    write_text_lf(temporary, text)
     os.replace(temporary, path)
 
 

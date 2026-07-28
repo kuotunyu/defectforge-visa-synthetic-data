@@ -5,12 +5,19 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from huggingface_hub import HfApi
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.common.integrity import write_text_lf
 
 MODEL_RULES = {
     "sd2-community/stable-diffusion-2-inpainting": {
@@ -88,9 +95,9 @@ def fetch_metadata(api: HfApi, model_id: str) -> dict[str, Any]:
 def atomic_write_json(path: Path, payload: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(
+    write_text_lf(
+        temporary,
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
     )
     os.replace(temporary, path)
 

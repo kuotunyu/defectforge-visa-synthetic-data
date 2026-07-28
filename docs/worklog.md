@@ -6,6 +6,38 @@
 
 ---
 
+## 2026-07-29 — Session 45：M35 乾淨原始碼重現與持續驗證
+
+### 做了什麼
+- 從 `git archive` 解開一份沒有 `.venv`、cache 或工作目錄殘留的乾淨原始碼，
+  以 Python 3.12 與 `uv run --frozen` 重建 171 個 locked packages
+- 乾淨封存驗證抓到兩份報告在 Windows 工作目錄使用 CRLF、但 GitHub Source ZIP
+  使用 LF 的跨平台雜湊差異；新增共用 `write_text_lf()`，讓生成式文字證據固定 LF
+- 修正 segmentation report／validation 與 model-license／license-chain 原子寫入，
+  並更新兩個 validation report 綁定的 SHA256
+- 新增 GitHub Actions：Windows runner、完整 Git 歷史、唯讀 `GITHUB_TOKEN`、
+  action commit SHA 鎖定、uv 0.11.18 與 frozen lock
+- CI 會依序執行 Ruff、完整 pytest，以及會拒絕非 `kuotunyu` commit／
+  `Co-Authored-By` trailer／過期或失配證據的 publication audit
+
+### 驗證
+- LF helper 單元測試涵蓋 CRLF、單獨 CR 與既有 LF
+- 20 項針對性 integrity／segmentation／license／publication 測試全綠
+- 本機工作目錄 Ruff、197 項完整 pytest 與 publication audit 全綠
+- 從即將提交的精確 Git tree 產生 Source ZIP，在全新 `.venv` 安裝 171 個 locked
+  packages 後，Ruff、197 項 pytest 與 publication audit 再次全綠
+- 遠端 GitHub Actions 結果在 push 後由同一 workflow 留存
+
+### 決策
+- CI 採 Windows runner，直接驗證本專案鎖定的 native Windows CUDA 13.0 PyTorch wheel
+- 第三方 actions 以 commit SHA 而非可移動 tag 引用；checkout 不保留寫入憑證
+- v1.0.0 的凍結結果與負面結論不變；此里程碑只強化來源封存與後續版本的重現保證
+
+### 換你做
+目前不用操作；CI 成功後再發布 Phase 3 follow-up release。
+
+---
+
 ## 2026-07-27 — Session 01：專案初始化與文件凍結（M0）
 
 ### 做了什麼
