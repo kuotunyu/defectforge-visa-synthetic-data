@@ -42,6 +42,9 @@ kaggle.json
 !/results/generation_quality.csv
 !/results/classification.csv
 !/results/segmentation.csv
+!/results/v2/
+/results/v2/*
+!/results/v2/pilot_classification.json
 !/results/colab/
 /results/colab/*
 !/results/colab/.gitkeep

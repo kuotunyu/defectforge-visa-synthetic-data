@@ -1,0 +1,41 @@
+schema_version: 1
+status: preregistered
+purpose: validation-only domain-mixing pilot
+
+base_config: configs/classifier.yaml
+objects: [pcb1, capsules]
+seed: 42
+total_steps: 100
+
+candidates:
+  - name: real_only
+    group: real_only
+    sampler_strategy: class_balanced
+    real_bad_share: 0.50
+  - name: v1_class_balanced
+    group: filtered_syn
+    sampler_strategy: class_balanced
+    real_bad_share: 0.50
+  - name: domain_balanced_50
+    group: filtered_syn
+    sampler_strategy: domain_balanced
+    real_bad_share: 0.50
+  - name: domain_balanced_75
+    group: filtered_syn
+    sampler_strategy: domain_balanced
+    real_bad_share: 0.75
+
+selection:
+  candidates: [domain_balanced_50, domain_balanced_75]
+  primary_metric: macro_f1
+  secondary_metric: auroc
+
+gate:
+  per_object_macro_f1_tolerance: 0.01
+  per_object_auroc_tolerance: 0.02
+  mean_macro_f1_min_gain: 0.01
+  require_both_objects_noninferior: true
+
+output:
+  run_subdirectory: cls_v2_pilot
+  result: results/v2/pilot_classification.json

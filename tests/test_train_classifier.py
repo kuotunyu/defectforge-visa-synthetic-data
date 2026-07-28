@@ -6,6 +6,7 @@ from src.training.classifier_data import ClassificationSample
 from src.training.train_classifier import (
     ClassifierTrainingError,
     _exposure_counts,
+    build_sampler,
     classification_metrics,
     cosine_multiplier,
 )
@@ -59,3 +60,52 @@ def test_exposure_counts_separates_real_and_synthetic_bad() -> None:
         "real_bad": 1,
         "synthetic_bad": 2,
     }
+
+
+def test_domain_balanced_sampler_preserves_real_anomaly_exposure() -> None:
+    samples = [
+        *[_sample(f"good_{index}", label=0, kind="real") for index in range(100)],
+        *[_sample(f"real_bad_{index}", label=1, kind="real") for index in range(10)],
+        *[_sample(f"synthetic_bad_{index}", label=1, kind="synthetic") for index in range(500)],
+    ]
+    sampler = build_sampler(
+        samples,
+        strategy="domain_balanced",
+        num_samples=10_000,
+        seed=42,
+        real_bad_share=0.75,
+    )
+    exposure = _exposure_counts(samples, list(sampler))
+    assert exposure["real_good"] / 10_000 == pytest.approx(0.50, abs=0.02)
+    assert exposure["real_bad"] / 10_000 == pytest.approx(0.375, abs=0.02)
+    assert exposure["synthetic_bad"] / 10_000 == pytest.approx(0.125, abs=0.02)
+
+
+def test_domain_balanced_sampler_is_deterministic() -> None:
+    samples = [
+        _sample("good", label=0, kind="real"),
+        _sample("real_bad", label=1, kind="real"),
+        _sample("synthetic_bad", label=1, kind="synthetic"),
+    ]
+    kwargs = {
+        "strategy": "domain_balanced",
+        "num_samples": 100,
+        "seed": 42,
+        "real_bad_share": 0.5,
+    }
+    assert list(build_sampler(samples, **kwargs)) == list(build_sampler(samples, **kwargs))
+
+
+def test_class_balanced_sampler_rejects_misleading_domain_share() -> None:
+    samples = [
+        _sample("good", label=0, kind="real"),
+        _sample("real_bad", label=1, kind="real"),
+    ]
+    with pytest.raises(ClassifierTrainingError, match="only applies"):
+        build_sampler(
+            samples,
+            strategy="class_balanced",
+            num_samples=10,
+            seed=42,
+            real_bad_share=0.75,
+        )

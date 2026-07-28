@@ -1359,6 +1359,40 @@ M26：在不讀 test 指標的前提下，加入 domain-balanced sampler，讓�
 
 ---
 
+## 2026-07-28 — Session 35：M26 domain-balanced pilot 預註冊
+
+### 做了什麼
+- 從 M16 raw exposure 識別到 label-balanced sampler 讓 10 張 real bad 被 500 張
+  synthetic bad 淹沒；把 v2 假說縮成單一取樣變因
+- 新增 deterministic `domain_balanced` sampler 與 0.50／0.75 real-bad share，
+  預設 `class_balanced` 完全不變
+- synthetic development 必須顯式開啟，且旗標、sampler、share 都寫入 signature／report；
+  final mode 仍拒絕 v2 sampler，避免探索結果流入 v1 CSV
+- 新增 `configs/classifier_v2_pilot.yaml`、8-run resumable runner、
+  `results/v2/pilot_classification.json` 白名單與 ADR-026
+- dry-run 已完整 hash／防洩漏盤點：pcb1 train 542 good + 10 real bad + 500 synthetic bad；
+  capsules 325 + 10 + 500；兩物件 validation 仍只來自 frozen train-side real holdout
+
+### 驗證
+- sampler 10,000 次抽樣的 good／real bad／synthetic bad 曝光符合預定機率 ±0.02
+- 同 seed sampler index sequence 完全相同；誤把 domain share 傳給 v1 sampler 會 fail closed
+- gate 的 pass 與 object-regression stop 路徑都有 unit tests
+- targeted Ruff 全綠、16 tests 通過；8-run dry-run 全數建立計畫但沒有配置 GPU 或寫 run
+
+### 未決與風險
+- 本機 GPU 目前由另一專案的 `scripts.train_supervised_labeler train` 使用，
+  約 9.8/24.6 GiB、83% utilization；不干擾、不終止，也尚未啟動 M26
+- pilot config 與程式必須先 commit，再等 GPU 空出或改用 Colab L4
+
+### 下一步
+以 `kuotunyu` 身分提交預註冊 commit；GPU 安全時執行 8 runs，runner 只讀 validation
+自動套用既定 gate。
+
+### 換你做
+目前沒有。若本機 GPU 長時間未釋放，我會再提供一鍵 L4 notebook；不會要求 A100。
+
+---
+
 ## 2026-07-27 — Session 08：M6 DINOv2 + morphology 瑕疵分型凍結
 
 ### 做了什麼

@@ -933,5 +933,41 @@ M16 raw evidence 顯示，500 張合成瑕疵加入後，單一 1,600-sample sch
 - GitHub 不追蹤約 243 MiB 權重，Space bundle 也不會夾帶 D 槽路徑、token 或原始 VisA。
 - Colab 的付費 GPU 額度保留給 M27；M26 可先用短程本機 4090 或 L4，並以 fail-fast
   validation gate 控制成本。
+
+---
+
+<a id="adr-026"></a>
+## ADR-026 — M26 只修正 anomaly domain exposure，先提交預註冊再執行
+
+**狀態：Accepted**（2026-07-28）
+
+### 背景
+M16 的 `WeightedRandomSampler` 只平衡 good／bad 兩個 label；bad 類別內仍按樣本數均勻。
+`filtered_syn` 有 10 張 real bad 與 500 張 synthetic bad，因此 1,600 次抽樣中，
+真實瑕疵實際只曝光 9–14 次，遠低於 real-only 的約 800 次。這個機制足以解釋
+synthetic run 的 domain collapse，先換大模型或重新生成會同時改太多變因。
+
+### 決策
+- v1 的 `class_balanced` sampler 保持預設且位元行為不變。
+- 新增 `domain_balanced`：good 固定占 50%；bad 的 50% 再依
+  `real_bad_share` 分成 real／synthetic。pilot 比較 0.50 與 0.75。
+- 使用同一 ConvNeXt、filtered 500、seed 42、100 steps、learning rate、augmentation
+  與 frozen real-only validation；總共 4 candidates × 2 objects = 8 development runs。
+- 原 v1 安全閘仍禁止 synthetic development；M26 必須顯式傳入
+  `experimental_synthetic_development`，此欄位寫進 run signature 與 report。
+  development integrity guard 仍要求 test list 為空、validation 全為真實 train-side holdout。
+- 候選只在 `domain_balanced_50/75` 中依兩物件 mean Macro-F1、mean AUROC 排序。
+- 進 M27 的 gate 在執行前固定為：
+  - 每物件 Macro-F1 不得比 real-only 低超過 0.01；
+  - 每物件 AUROC 不得比 real-only 低超過 0.02；
+  - 兩物件 mean Macro-F1 至少提升 0.01。
+- 任一條失敗就記錄 `stopped`，不得用 test 或追加 candidate 救結果；若要新假說，
+  必須另開新的、先提交的實驗版本。
+
+### 後果
+- M26 只回答「保留真實瑕疵曝光能否修正 v1 mixing」，因果解讀比換模型清楚。
+- 8 個 run 預估各約 30–45 秒、峰值約 3.2 GiB；不需 A100。
+- `configs/classifier_v2_pilot.yaml`、runner、gate tests 與本 ADR 必須先形成乾淨 commit，
+  才可執行 `--execute`，避免看到 validation 後改門檻。
 - GIF 可由同一套正式 checkpoint selector 重現，且不需開 share URL 或人工剪貼
   notebook／UI 數字。

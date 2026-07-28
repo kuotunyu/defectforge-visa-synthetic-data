@@ -77,6 +77,7 @@ RESULT_COLUMNS = (
     "split_manifest_sha256",
     "selection_sha256",
 )
+SAMPLER_STRATEGIES = ("class_balanced", "domain_balanced")
 
 
 class ClassifierTrainingError(RuntimeError):
@@ -231,6 +232,71 @@ def balanced_sampler(
     )
 
 
+def _exposure_bucket(sample: ClassificationSample) -> str:
+    if sample.kind == "synthetic":
+        require(sample.label == 1, "Synthetic classifier samples must be anomalies")
+        return "synthetic_bad"
+    return "real_bad" if sample.label == 1 else "real_good"
+
+
+def domain_balanced_sampler(
+    samples: Sequence[ClassificationSample],
+    *,
+    num_samples: int,
+    seed: int,
+    real_bad_share: float,
+) -> WeightedRandomSampler:
+    """Balance good/bad classes, then balance real/synthetic within bad."""
+    require(0.0 < real_bad_share < 1.0, "real_bad_share must be between zero and one")
+    buckets = Counter(_exposure_bucket(sample) for sample in samples)
+    required = {"real_good", "real_bad", "synthetic_bad"}
+    require(set(buckets) == required, "Domain-balanced sampling requires all three domains")
+    target_probability = {
+        "real_good": 0.5,
+        "real_bad": 0.5 * real_bad_share,
+        "synthetic_bad": 0.5 * (1.0 - real_bad_share),
+    }
+    weights = torch.tensor(
+        [
+            target_probability[_exposure_bucket(sample)]
+            / buckets[_exposure_bucket(sample)]
+            for sample in samples
+        ],
+        dtype=torch.double,
+    )
+    generator = torch.Generator()
+    generator.manual_seed(seed)
+    return WeightedRandomSampler(
+        weights=weights,
+        num_samples=num_samples,
+        replacement=True,
+        generator=generator,
+    )
+
+
+def build_sampler(
+    samples: Sequence[ClassificationSample],
+    *,
+    strategy: str,
+    num_samples: int,
+    seed: int,
+    real_bad_share: float,
+) -> WeightedRandomSampler:
+    require(strategy in SAMPLER_STRATEGIES, f"Unknown sampler strategy: {strategy}")
+    if strategy == "class_balanced":
+        require(
+            real_bad_share == 0.5,
+            "real_bad_share only applies to domain_balanced sampling",
+        )
+        return balanced_sampler(samples, num_samples=num_samples, seed=seed)
+    return domain_balanced_sampler(
+        samples,
+        num_samples=num_samples,
+        seed=seed,
+        real_bad_share=real_bad_share,
+    )
+
+
 def classification_metrics(labels: Sequence[int], scores: Sequence[float]) -> dict[str, Any]:
     require(len(labels) == len(scores) and bool(labels), "Metric inputs are empty or mismatched")
     labels_array = np.asarray(labels, dtype=np.int64)
@@ -374,6 +440,9 @@ def train(
     total_steps: int,
     learning_rate: float,
     weight_decay: float,
+    sampler_strategy: str,
+    real_bad_share: float,
+    experimental_synthetic_development: bool,
     smoke: bool,
 ) -> dict[str, Any]:
     training_config = config["training"]
@@ -392,10 +461,12 @@ def train(
         standard_augmentation=group.standard_augmentation,
     )
     train_dataset = ClassificationDataset(paths, group.train, training_transform)
-    sampler = balanced_sampler(
+    sampler = build_sampler(
         group.train,
+        strategy=sampler_strategy,
         num_samples=total_steps * batch_size,
         seed=seed,
+        real_bad_share=real_bad_share,
     )
     train_loader = _loader(
         train_dataset,
@@ -530,6 +601,9 @@ def train(
         "best_step": best_step if group.mode == "development" else executed_steps,
         "learning_rate": learning_rate,
         "weight_decay": weight_decay,
+        "sampler_strategy": sampler_strategy,
+        "real_bad_share": real_bad_share,
+        "experimental_synthetic_development": experimental_synthetic_development,
         "warmup_steps": warmup_steps,
         "last_loss": loss_values[-1],
         "mean_loss": float(np.mean(loss_values)),
@@ -625,6 +699,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--total-steps", type=int)
     parser.add_argument("--learning-rate", type=float)
     parser.add_argument("--weight-decay", type=float)
+    parser.add_argument(
+        "--sampler-strategy",
+        choices=SAMPLER_STRATEGIES,
+        default="class_balanced",
+    )
+    parser.add_argument("--real-bad-share", type=float, default=0.5)
+    parser.add_argument("--experimental-synthetic-development", action="store_true")
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
@@ -650,6 +731,21 @@ def main() -> None:
     require(total_steps > 0, "total_steps must be positive")
     require(learning_rate > 0, "learning_rate must be positive")
     require(weight_decay >= 0, "weight_decay must be non-negative")
+    require(0.0 < args.real_bad_share < 1.0, "real_bad_share must be between zero and one")
+    if args.sampler_strategy == "class_balanced":
+        require(
+            args.real_bad_share == 0.5,
+            "real_bad_share only applies to domain_balanced sampling",
+        )
+    if args.mode == "final":
+        require(
+            args.sampler_strategy == "class_balanced",
+            "v2 sampler is development-only until the confirmatory contract is frozen",
+        )
+        require(
+            not args.experimental_synthetic_development,
+            "Experimental synthetic development flag is invalid for final mode",
+        )
 
     group = build_classification_group(
         paths,
@@ -658,6 +754,7 @@ def main() -> None:
         object_name=args.object,
         seed=args.seed,
         mode=args.mode,
+        allow_synthetic_development=args.experimental_synthetic_development,
     )
     run_name = args.run_name or (
         f"{group.requested_group}__{group.object_name}__seed_{args.seed}__{args.mode}"
@@ -685,6 +782,9 @@ def main() -> None:
         "total_steps": total_steps,
         "learning_rate": learning_rate,
         "weight_decay": weight_decay,
+        "sampler_strategy": args.sampler_strategy,
+        "real_bad_share": args.real_bad_share,
+        "experimental_synthetic_development": args.experimental_synthetic_development,
         "mode": args.mode,
         "smoke": args.smoke,
     }
@@ -710,6 +810,11 @@ def main() -> None:
                     "run_signature": run_signature,
                     "output_dir": str(output_dir),
                     "counts": data_payload["counts"],
+                    "sampler_strategy": args.sampler_strategy,
+                    "real_bad_share": args.real_bad_share,
+                    "experimental_synthetic_development": (
+                        args.experimental_synthetic_development
+                    ),
                 },
                 ensure_ascii=False,
                 indent=2,
@@ -726,6 +831,9 @@ def main() -> None:
         total_steps=total_steps,
         learning_rate=learning_rate,
         weight_decay=weight_decay,
+        sampler_strategy=args.sampler_strategy,
+        real_bad_share=args.real_bad_share,
+        experimental_synthetic_development=args.experimental_synthetic_development,
         smoke=args.smoke,
     )
     report = {

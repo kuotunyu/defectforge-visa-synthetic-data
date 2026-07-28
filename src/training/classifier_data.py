@@ -423,6 +423,7 @@ def build_classification_group(
     object_name: str,
     seed: int,
     mode: str,
+    allow_synthetic_development: bool = False,
 ) -> ClassificationGroup:
     require(object_name in paths.objects, f"Unsupported object: {object_name}")
     require(mode in {"development", "final"}, f"Unsupported run mode: {mode}")
@@ -431,8 +432,9 @@ def build_classification_group(
     canonical_group, group_config = _resolve_group(groups, group_name)
     if mode == "development":
         require(
-            canonical_group == "real_only",
-            "Only Real-only may be used for hyperparameter development",
+            canonical_group == "real_only" or allow_synthetic_development,
+            "Only Real-only may be used for hyperparameter development unless the "
+            "experimental v2 contract is explicit",
         )
 
     manifest, manifest_sha256 = verify_frozen_manifest(paths.splits)
