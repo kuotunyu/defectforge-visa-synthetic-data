@@ -493,6 +493,24 @@ image、mask 與成圖 SHA256，並標記 `visual_inspection_required=true`。
 `--object` 會從完整正式 CSV 自動選 seed-42 physical checkpoint，逐項綁回 raw
 training report，並保存不含本機絕對路徑的 selection evidence。
 
+### M22 `scripts/record_demo_artifacts.py`
+```text
+--paths configs/paths.yaml
+--classification-results results/classification.csv
+--segmentation-results results/segmentation.csv
+--segmentation-runs-root results/colab/segmentation
+--selection-out reports/demo_checkpoint_selection.json
+--gif-out assets/demo.gif
+--validation-out reports/demo_validation.json
+```
+
+不啟動 Gradio share URL；依與 UI 相同的 deterministic selector，先把兩物件的
+classifier／segmenter CSV row 綁回 raw report 與 SafeTensors，再依 frozen
+`2cls_highshot` test manifest 每物件固定取一張 normal、一張 anomaly。四筆真模型
+輸出都必須同時產生機率、binary mask、heatmap 與 latency，原子寫入四幀 GIF。
+validation 保存兩份 CSV、selection、GIF、test image 與輸出 array SHA256；M22 勾選前
+仍須實際啟動本機 UI 上傳 test 圖，並目視 GIF。
+
 ### 驗證用腳本
 | 腳本 | 用途 |
 |---|---|
@@ -500,7 +518,9 @@ training report，並保存不含本機絕對路徑的 selection evidence。
 | `scripts/verify_generation_quality.py` | 核對 M14 CSV／Markdown／validation、sanity gate、圖與 feature-cache SHA256 |
 | `scripts/verify_readme.py` | 從 `results/*.csv` 重算 README 每張表的數字並比對 |
 | `scripts/verify_splits.py` | 重跑 [ADR-007](decisions.md#adr-007) 的四項斷言 |
-| `scripts/verify_publish.py` | M24 唯讀稽核：必備檔、13 skills、token／個人路徑、檔案大小、Git 身分與 co-author trailer |
+| `scripts/verify_publish.py` | M24 唯讀稽核：M0–M23、README、raw-hash evidence、正式圖/GIF、24 小時內上游授權、HF dry-run、必備檔、13 skills、token／個人路徑、檔案大小、Git 身分與 co-author trailer |
+| `scripts/build_release_acceptance.py` | M24 一頁驗收報告：除自身檔案外任一 local gate 未過即拒寫；只記通過項、修正項、殘留風險，不發佈 |
+| `scripts/record_phase2_visual_review.py` | M21/M22 人工目視 evidence：所有正式 PNG/GIF 可解碼且實際逐張開啟後，需明確 confirmation 與觀察 note，保存目前檔案 SHA256 |
 | `scripts/package_hf_release.py` | M24 本機封裝：預設只讀 inventory；`--build` 才原子建立 D 槽 HF dataset／model bundles，不連網 |
 | `scripts/upload_hf.py` | 見 [publish_spec.md](publish_spec.md)；**預設 `--dry-run`，上傳要顯式加 `--confirm`** |
 

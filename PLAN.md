@@ -174,6 +174,8 @@
 
 - [ ] **M22** 👀 Gradio demo（本機）＋ `assets/demo.gif`
   - **驗證**：上傳真實 test 影像能同時輸出機率、mask、heatmap 與延遲；GIF **自己看過**確認畫面正確
+    `scripts/record_demo_artifacts.py` 必須從 frozen highshot test 與 formal raw-bound
+    checkpoints 原子產出四幀 GIF／`reports/demo_validation.json`，不以假資料或截圖替代
 
 - [ ] **M23** 🤖 README 完成 ＋ `scripts/verify_readme.py`
   - **驗證**：`verify_readme.py` 跑過，README 每張表的數字都能從 `results/` 重算出來且完全相符；

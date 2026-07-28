@@ -138,7 +138,9 @@ trigger token 清單與對應的瑕疵型別、推論範例程式碼（含 crop-
 - [ ] 全 repo 掃描 token 格式、被追蹤的 `.env`、Windows 使用者絕對路徑 → 0 命中
 - [ ] `git shortlog -sne --all` 只有 `kuotunyu`
 - [ ] trailer 掃描無輸出
-- [ ] `uv run python scripts/verify_publish.py` 全綠（此命令只稽核，不發佈／不上傳）
+- [ ] `uv run python scripts/verify_publish.py` 全綠：除上述安全項外，還要驗 M0–M23、
+      README 無 TBD、正式 evidence 與目前檔案 SHA 相符、圖/GIF 可解碼、上游授權驗證
+      在 24 小時內、HF plan 仍為不改 visibility 的 dry-run（此命令只稽核，不發佈／不上傳）
 
 **HF**
 - [ ] dataset card 與 model card 完整（§3.2、§4）
@@ -149,5 +151,6 @@ trigger token 清單與對應的瑕疵型別、推論範例程式碼（含 crop-
 - [ ] 上傳後自己下載回來抽查幾筆，確認 metadata 與影像對得上
 
 **最後**
-- [ ] 產出一頁驗收報告（通過項／修正項／殘留風險）
+- [ ] 以 `uv run python scripts/build_release_acceptance.py` 產出一頁驗收報告
+      （通過項／修正項／殘留風險）；任一其他 local gate 未過時腳本必須拒寫
 - [ ] **等使用者說 OK，才把 GitHub repo 與 HF 轉 public**

@@ -592,6 +592,41 @@ capsules；完成後把兩個未改名的結果 ZIP 放到 `results/colab/segmen
 
 ---
 
+## 2026-07-28 — Session 29：M22 真模型 GIF 與 M24 evidence graph
+
+### 做了什麼
+- 重新跑 Phase 1 acceptance 時發現 verifier 永遠要求 Notebook 2 寫「尚未建立」；
+  改為接受歷史 M18 ownership 或目前五項交接完整，仍拒絕 M15↔M18 dependency cycle
+- Phase 1 重新驗證：M0–M15、10 份正式 JSON、3 支獨立 validator、62 commits、
+  Contributors 唯一身分與零 co-author trailers 全綠
+- 重跑 M16 38 raw runs、M13 filter、M14 quality、license chain；blocklist hits 皆 0
+- 經 HF model_info API 重查 SD2、SDXL、DINOv2、SegFormer pinned revision、
+  license、public／ungated 狀態，全數通過
+- 新增 ADR-024 與強化 `verify_publish.py`：M0–M23、README、12 份 evidence、
+  current hashes、24 小時授權新鮮度、HF safe dry-run、PNG/GIF、目視 review、
+  acceptance report 任一缺口都 fail closed
+- 新增 `record_demo_artifacts.py`：兩物件各 frozen test normal／anomaly，共四筆
+  真模型 output 產生 1280×720 GIF，保存 input／mask／heatmap／selection hashes，
+  不啟動 share URL
+- 新增 `record_phase2_visual_review.py` 與 `build_release_acceptance.py`；前者需要明確
+  review confirmation，後者目前負向測試正確拒寫並列出所有 M19–M23 缺口
+
+### 驗證
+- Ruff passed、176 tests passed
+- 強化後 M24 checkpoint 正確回報：
+  - 已通過：單一 Git 身分、零 trailer／secret／個人路徑／超大 tracked file、
+    13 skills、HF dry-run、安全授權新鮮度
+  - 尚缺：M19–M23、segmentation raw aggregation、四張正式 M21 圖、README final、
+    demo GIF／validation／目視 review、一頁 acceptance
+- `results/colab/segmentation/` 仍只有 `.gitkeep`；沒有生成、解壓或冒充 M19 產物
+- 全程 CPU-only，未配置 GPU，未終止或修改 FormosaNLU
+
+### 換你做
+仍是把兩個未改名 M19 result ZIP 放回 `results/colab/segmentation/`。收到後可依目前
+gate 清單一次完成 M20→M24，不需再補設計工具。
+
+---
+
 ## 2026-07-27 — Session 20：M15 Phase 1 獨立驗收與交接邊界修正
 
 ### 做了什麼

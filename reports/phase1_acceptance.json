@@ -23,7 +23,7 @@
   },
   "git": {
     "coauthored_by_trailers": 0,
-    "commit_count": 25,
+    "commit_count": 62,
     "contributor_emails": [
       "61350295+kuotunyu@users.noreply.github.com"
     ],
@@ -59,6 +59,9 @@
         "84a2158ca8b0471622fa414e6d6f9f02a7d1feaa"
       ],
       "M15": [
+        "a5ed3b130e87f37ceea11ca232c048b8e3fc3b75",
+        "77565d4809e48e09e1bc57a419912b0a1295ccbf",
+        "107828e1769fa50f6dea2e6b5ee89a456d596b55",
         "fe2227826070b5037efb92d803e6dc3874481555"
       ],
       "M2": [
@@ -97,7 +100,7 @@
   "instructions": {
     "m11_handoff_rows": 5,
     "m11_status": "complete",
-    "m18_status": "owned_by_m18"
+    "m18_status": "handoff_complete"
   },
   "plan": {
     "checked_milestones": [
@@ -120,5 +123,5 @@
     ]
   },
   "status": "passed",
-  "verified_at": "2026-07-27T13:12:29.898477+00:00"
+  "verified_at": "2026-07-28T00:24:25.450692+00:00"
 }

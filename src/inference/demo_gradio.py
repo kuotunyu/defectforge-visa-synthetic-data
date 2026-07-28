@@ -260,6 +260,33 @@ def select_best_checkpoint(
     )
 
 
+def select_object_checkpoints(
+    *,
+    paths: Paths,
+    object_name: str,
+    classification_results: Path,
+    segmentation_results: Path,
+    segmentation_runs_root: Path,
+) -> tuple[SelectedCheckpoint, SelectedCheckpoint]:
+    """Select and verify the two formal checkpoints for one demo object."""
+
+    require(object_name in paths.objects, f"Unsupported demo object: {object_name}")
+    classifier_config = load_classifier_config(paths.configs / "classifier.yaml")
+    classifier_selection = select_best_checkpoint(
+        results_path=classification_results,
+        runs_root=paths.runs / str(classifier_config["output"]["run_subdirectory"]),
+        object_name=object_name,
+        role="classifier",
+    )
+    segmenter_selection = select_best_checkpoint(
+        results_path=segmentation_results,
+        runs_root=segmentation_runs_root / object_name / "runs",
+        object_name=object_name,
+        role="segmenter",
+    )
+    return classifier_selection, segmenter_selection
+
+
 def atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -399,11 +426,15 @@ class InspectionRuntime:
             interpolation=InterpolationMode.BILINEAR,
             antialias=True,
         )
-        segmenter_input = tvf.normalize(
-            tvf.to_tensor(segmenter_input),
-            mean=self.segmenter_mean,
-            std=self.segmenter_std,
-        ).unsqueeze(0).to(self.device)
+        segmenter_input = (
+            tvf.normalize(
+                tvf.to_tensor(segmenter_input),
+                mean=self.segmenter_mean,
+                std=self.segmenter_std,
+            )
+            .unsqueeze(0)
+            .to(self.device)
+        )
 
         torch.cuda.synchronize()
         started = time.perf_counter()
@@ -416,12 +447,8 @@ class InspectionRuntime:
                 mode="bilinear",
                 align_corners=False,
             )
-        anomaly_probability = float(
-            torch.softmax(classifier_logits.float(), dim=1)[0, 1].cpu()
-        )
-        pixel_probability = (
-            torch.sigmoid(segmenter_logits.float())[0, 0].cpu().numpy()
-        )
+        anomaly_probability = float(torch.softmax(classifier_logits.float(), dim=1)[0, 1].cpu())
+        pixel_probability = torch.sigmoid(segmenter_logits.float())[0, 0].cpu().numpy()
         torch.cuda.synchronize()
         elapsed_ms = (time.perf_counter() - started) * 1000.0
         return render_outputs(
@@ -489,52 +516,52 @@ def build_app(runtime: InspectionRuntime) -> Any:
         gr.Blocks(title="DefectForge Inspection Console") as demo,
         gr.Column(elem_id="df-shell"),
     ):
-            gr.Markdown("MACHINE VISION / LOCAL INFERENCE", elem_id="df-kicker")
-            gr.Markdown(
-                "# DefectForge\n"
-                "A paired classification + segmentation console for few-shot industrial defects.",
-                elem_id="df-title",
-            )
-            gr.Markdown(
-                f"Object model: **{runtime.object_name}** · "
-                "checkpoints verified against raw training reports",
-                elem_id="df-object",
-            )
-            with gr.Row(equal_height=False):
-                with gr.Column(scale=5, elem_classes=["df-panel"]):
-                    input_image = gr.Image(
-                        label="Inspection frame",
-                        type="pil",
-                        sources=["upload", "clipboard"],
-                    )
-                    analyze = gr.Button("Run inspection", variant="primary", elem_id="df-run")
-                with gr.Column(scale=4):
-                    probabilities = gr.Label(
-                        label="Classification confidence",
-                        num_top_classes=2,
-                        elem_classes=["df-panel"],
-                    )
-                    latency = gr.Markdown(
-                        "Awaiting an inspection frame.",
-                        elem_classes=["df-panel"],
-                    )
-            with gr.Row():
-                mask = gr.Image(
-                    label="Binary defect mask",
-                    image_mode="L",
+        gr.Markdown("MACHINE VISION / LOCAL INFERENCE", elem_id="df-kicker")
+        gr.Markdown(
+            "# DefectForge\n"
+            "A paired classification + segmentation console for few-shot industrial defects.",
+            elem_id="df-title",
+        )
+        gr.Markdown(
+            f"Object model: **{runtime.object_name}** · "
+            "checkpoints verified against raw training reports",
+            elem_id="df-object",
+        )
+        with gr.Row(equal_height=False):
+            with gr.Column(scale=5, elem_classes=["df-panel"]):
+                input_image = gr.Image(
+                    label="Inspection frame",
+                    type="pil",
+                    sources=["upload", "clipboard"],
+                )
+                analyze = gr.Button("Run inspection", variant="primary", elem_id="df-run")
+            with gr.Column(scale=4):
+                probabilities = gr.Label(
+                    label="Classification confidence",
+                    num_top_classes=2,
                     elem_classes=["df-panel"],
                 )
-                heatmap = gr.Image(
-                    label="Defect probability heatmap",
+                latency = gr.Markdown(
+                    "Awaiting an inspection frame.",
                     elem_classes=["df-panel"],
                 )
-            analyze.click(
-                fn=runtime.predict,
-                inputs=input_image,
-                outputs=[probabilities, mask, heatmap, latency],
-                concurrency_limit=1,
-                show_progress="full",
+        with gr.Row():
+            mask = gr.Image(
+                label="Binary defect mask",
+                image_mode="L",
+                elem_classes=["df-panel"],
             )
+            heatmap = gr.Image(
+                label="Defect probability heatmap",
+                elem_classes=["df-panel"],
+            )
+        analyze.click(
+            fn=runtime.predict,
+            inputs=input_image,
+            outputs=[probabilities, mask, heatmap, latency],
+            concurrency_limit=1,
+            show_progress="full",
+        )
     return demo
 
 
@@ -583,18 +610,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.cls_ckpt is None and args.seg_ckpt is None,
             "--object cannot be mixed with explicit checkpoints",
         )
-        classifier_config = load_classifier_config(paths.configs / "classifier.yaml")
-        classifier_selection = select_best_checkpoint(
-            results_path=args.classification_results,
-            runs_root=paths.runs / str(classifier_config["output"]["run_subdirectory"]),
+        classifier_selection, segmenter_selection = select_object_checkpoints(
+            paths=paths,
             object_name=args.object,
-            role="classifier",
-        )
-        segmenter_selection = select_best_checkpoint(
-            results_path=args.segmentation_results,
-            runs_root=args.segmentation_runs_root / args.object / "runs",
-            object_name=args.object,
-            role="segmenter",
+            classification_results=args.classification_results,
+            segmentation_results=args.segmentation_results,
+            segmentation_runs_root=args.segmentation_runs_root,
         )
         classifier_checkpoint = classifier_selection.checkpoint
         segmenter_checkpoint = segmenter_selection.checkpoint

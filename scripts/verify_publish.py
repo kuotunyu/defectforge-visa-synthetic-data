@@ -3,17 +3,46 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
 import subprocess
 from collections.abc import Mapping, Sequence
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
+
+from PIL import Image
 
 EXPECTED_NAME = "kuotunyu"
 EXPECTED_EMAIL = "61350295+kuotunyu@users.noreply.github.com"
 MAX_TRACKED_BYTES = 10 * 1024 * 1024
+MODEL_LICENSE_MAX_AGE = timedelta(hours=24)
+PREPUBLICATION_MILESTONES = frozenset(range(24))
+FINAL_FIGURES = (
+    "reports/figures/real_scaling_curve.png",
+    "reports/figures/synthetic_volume_curve.png",
+    "reports/figures/main_comparison_table.png",
+    "reports/figures/segmentation_table.png",
+    "reports/figures/quality_vs_downstream.png",
+    "reports/figures/sample_grid_pcb1.png",
+    "reports/figures/sample_grid_capsules.png",
+)
+FINAL_EVIDENCE_REPORTS = (
+    "reports/classifier_matrix_validation.json",
+    "reports/segmentation_validation.json",
+    "reports/phase2_figures_validation.json",
+    "reports/sample_grids_validation.json",
+    "reports/readme_validation.json",
+    "reports/license_chain_validation.json",
+    "reports/model_license_verification.json",
+    "reports/hf_package_validation.json",
+    "reports/hf_upload_plan.json",
+    "reports/demo_checkpoint_selection.json",
+    "reports/demo_validation.json",
+    "reports/phase2_visual_review.json",
+)
 REQUIRED_PATHS = (
     "README.md",
     "PLAN.md",
@@ -28,6 +57,17 @@ REQUIRED_PATHS = (
     "splits/test_blocklist.json",
     "results/classification.csv",
     "results/segmentation.csv",
+    "reports/segmentation_results.md",
+    "reports/segmentation_validation.json",
+    "reports/phase2_figures_validation.json",
+    "reports/readme_validation.json",
+    "reports/model_license_verification.json",
+    "reports/hf_package_validation.json",
+    "reports/hf_upload_plan.json",
+    "reports/demo_checkpoint_selection.json",
+    "reports/demo_validation.json",
+    "reports/phase2_visual_review.json",
+    "reports/release_acceptance.md",
     "scripts/verify_readme.py",
     "scripts/verify_license_chain.py",
     "reports/license_chain_validation.json",
@@ -35,6 +75,7 @@ REQUIRED_PATHS = (
     "hf_cards/model/README.md",
     "assets/demo.gif",
     ".claude/skills",
+    *FINAL_FIGURES,
 )
 SECRET_PATTERNS = {
     "github_token": re.compile(r"gh[oprsu]_[A-Za-z0-9]{20,}"),
@@ -44,6 +85,7 @@ SECRET_PATTERNS = {
 }
 PERSONAL_WINDOWS_PATH = re.compile(r"(?i)[A-Z]:[\\/]+Users[\\/]+[^<%\\/][^\\/]*[\\/]")
 COAUTHOR_TRAILER = re.compile(r"(?im)^Co-Authored-By:\s")
+MILESTONE_ROW = re.compile(r"^- \[(?P<state>[ x])\] \*\*M(?P<number>\d+)\*\*", re.MULTILINE)
 
 
 class PublishVerificationError(RuntimeError):
@@ -67,6 +109,14 @@ def _git(repo: Path, *args: str) -> str:
     return completed.stdout
 
 
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def tracked_paths(repo: Path) -> list[Path]:
     output = _git(repo, "ls-files", "-z")
     return [repo / value for value in output.split("\0") if value]
@@ -79,9 +129,7 @@ def scan_text(path: Path, text: str) -> list[dict[str, Any]]:
     for line_number, line in enumerate(text.splitlines(), start=1):
         for label, pattern in SECRET_PATTERNS.items():
             if pattern.search(line):
-                findings.append(
-                    {"kind": label, "path": path.as_posix(), "line": line_number}
-                )
+                findings.append({"kind": label, "path": path.as_posix(), "line": line_number})
         if PERSONAL_WINDOWS_PATH.search(line):
             findings.append(
                 {"kind": "personal_windows_path", "path": path.as_posix(), "line": line_number}
@@ -150,12 +198,406 @@ def audit_required_paths(repo: Path) -> dict[str, Any]:
     }
 
 
+def audit_plan_and_readme(repo: Path) -> dict[str, Any]:
+    plan_path = repo / "PLAN.md"
+    readme_path = repo / "README.md"
+    plan = plan_path.read_text(encoding="utf-8") if plan_path.is_file() else ""
+    readme = readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
+    milestone_rows = [
+        (int(match.group("number")), match.group("state") == "x")
+        for match in MILESTONE_ROW.finditer(plan)
+    ]
+    counts: dict[int, int] = {}
+    for number, _ in milestone_rows:
+        counts[number] = counts.get(number, 0) + 1
+    checked = {number for number, state in milestone_rows if state}
+    duplicate_rows = sorted(number for number, count in counts.items() if count != 1)
+    missing_prepublication = sorted(PREPUBLICATION_MILESTONES - checked)
+    required_sections = (
+        "## Problem",
+        "## Method",
+        "## Experiments",
+        "## Results",
+        "## Limitations",
+        "## Reproduce",
+        "## License & Citations",
+    )
+    return {
+        "checked_milestones": sorted(checked),
+        "missing_prepublication_milestones": missing_prepublication,
+        "duplicate_or_missing_canonical_rows": duplicate_rows,
+        "prepublication_complete": (
+            not missing_prepublication and not duplicate_rows and set(counts) == set(range(25))
+        ),
+        "readme_has_required_sections": all(section in readme for section in required_sections),
+        "readme_has_no_tbd_or_todo": "TBD" not in readme and "TODO" not in readme,
+        "readme_status_is_final": "pending" not in readme[:500].lower(),
+    }
+
+
+def _load_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
+    if not path.is_file():
+        return None, "missing"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        return None, f"invalid JSON: {error}"
+    if not isinstance(payload, dict):
+        return None, "top-level value is not an object"
+    return payload, None
+
+
+def _record_hash_binding(
+    repo: Path,
+    *,
+    report: str,
+    payload: Mapping[str, Any],
+    key: str,
+    target: str,
+    mismatches: list[dict[str, Any]],
+) -> None:
+    target_path = repo / target
+    expected = payload.get(key)
+    observed = sha256_file(target_path) if target_path.is_file() else None
+    if expected != observed:
+        mismatches.append(
+            {
+                "report": report,
+                "field": key,
+                "target": target,
+                "expected": expected,
+                "observed": observed,
+            }
+        )
+
+
+def audit_evidence(repo: Path) -> dict[str, Any]:
+    missing: list[str] = []
+    invalid: list[dict[str, str]] = []
+    payloads: dict[str, dict[str, Any]] = {}
+    for relative in FINAL_EVIDENCE_REPORTS:
+        payload, error = _load_json_object(repo / relative)
+        if error == "missing":
+            missing.append(relative)
+            continue
+        if error is not None or payload is None:
+            invalid.append({"path": relative, "reason": error or "invalid"})
+            continue
+        if payload.get("status") != "passed":
+            invalid.append({"path": relative, "reason": "status is not passed"})
+            continue
+        payloads[relative] = payload
+
+    hash_mismatches: list[dict[str, Any]] = []
+    bindings = {
+        "reports/segmentation_validation.json": (
+            ("segmentation_csv_sha256", "results/segmentation.csv"),
+            ("report_sha256", "reports/segmentation_results.md"),
+        ),
+        "reports/readme_validation.json": (
+            ("readme_sha256", "README.md"),
+            ("classification_sha256", "results/classification.csv"),
+            ("segmentation_sha256", "results/segmentation.csv"),
+        ),
+        "reports/phase2_figures_validation.json": (
+            ("classification_sha256", "results/classification.csv"),
+            ("segmentation_sha256", "results/segmentation.csv"),
+        ),
+        "reports/demo_checkpoint_selection.json": (
+            ("classification_results_sha256", "results/classification.csv"),
+            ("segmentation_results_sha256", "results/segmentation.csv"),
+        ),
+        "reports/demo_validation.json": (
+            ("classification_sha256", "results/classification.csv"),
+            ("segmentation_sha256", "results/segmentation.csv"),
+            ("demo_gif_sha256", "assets/demo.gif"),
+        ),
+    }
+    for report, report_bindings in bindings.items():
+        payload = payloads.get(report)
+        if payload is None:
+            continue
+        for key, target in report_bindings:
+            _record_hash_binding(
+                repo,
+                report=report,
+                payload=payload,
+                key=key,
+                target=target,
+                mismatches=hash_mismatches,
+            )
+
+    license_payload = payloads.get("reports/license_chain_validation.json")
+    if license_payload is not None:
+        for key, target in (
+            ("source_sha256", "docs/license_chain.md"),
+            (
+                "upstream_verification_sha256",
+                "reports/model_license_verification.json",
+            ),
+        ):
+            _record_hash_binding(
+                repo,
+                report="reports/license_chain_validation.json",
+                payload=license_payload,
+                key=key,
+                target=target,
+                mismatches=hash_mismatches,
+            )
+        documents = license_payload.get("document_sha256")
+        if not isinstance(documents, dict):
+            invalid.append(
+                {
+                    "path": "reports/license_chain_validation.json",
+                    "reason": "document_sha256 is missing",
+                }
+            )
+        else:
+            for target, expected in sorted(documents.items()):
+                target_path = repo / target
+                observed = sha256_file(target_path) if target_path.is_file() else None
+                if expected != observed:
+                    hash_mismatches.append(
+                        {
+                            "report": "reports/license_chain_validation.json",
+                            "field": f"document_sha256.{target}",
+                            "target": target,
+                            "expected": expected,
+                            "observed": observed,
+                        }
+                    )
+
+    figure_payload = payloads.get("reports/phase2_figures_validation.json")
+    if figure_payload is not None:
+        figures = figure_payload.get("figures")
+        if not isinstance(figures, dict):
+            invalid.append(
+                {
+                    "path": "reports/phase2_figures_validation.json",
+                    "reason": "figures mapping is missing",
+                }
+            )
+        else:
+            for details in figures.values():
+                if not isinstance(details, dict):
+                    continue
+                target = details.get("path")
+                expected = details.get("sha256")
+                if not isinstance(target, str):
+                    continue
+                target_path = repo / target
+                observed = sha256_file(target_path) if target_path.is_file() else None
+                if expected != observed:
+                    hash_mismatches.append(
+                        {
+                            "report": "reports/phase2_figures_validation.json",
+                            "field": "figures.*.sha256",
+                            "target": target,
+                            "expected": expected,
+                            "observed": observed,
+                        }
+                    )
+
+    license_fresh = False
+    model_license = payloads.get("reports/model_license_verification.json")
+    if model_license is not None:
+        try:
+            verified_at = datetime.fromisoformat(str(model_license["verified_at"]))
+            if verified_at.tzinfo is None:
+                verified_at = verified_at.replace(tzinfo=UTC)
+            age = datetime.now(UTC) - verified_at.astimezone(UTC)
+            license_fresh = timedelta(0) <= age <= MODEL_LICENSE_MAX_AGE
+        except (KeyError, TypeError, ValueError):
+            invalid.append(
+                {
+                    "path": "reports/model_license_verification.json",
+                    "reason": "verified_at is invalid",
+                }
+            )
+
+    upload = payloads.get("reports/hf_upload_plan.json")
+    upload_safe = bool(
+        upload is not None
+        and upload.get("mode") == "dry_run"
+        and upload.get("changes_visibility") is False
+        and upload.get("creates_or_updates_private_repositories") is False
+    )
+    policy_failures: list[dict[str, str]] = []
+
+    def policy(relative: str, condition: bool, reason: str) -> None:
+        if relative in payloads and not condition:
+            policy_failures.append({"path": relative, "reason": reason})
+
+    classifier = payloads.get("reports/classifier_matrix_validation.json", {})
+    policy(
+        "reports/classifier_matrix_validation.json",
+        classifier.get("formal_runs") == 38 and classifier.get("blocklist_hits") == 0,
+        "expected 38 formal runs and zero blocklist hits",
+    )
+    segmentation = payloads.get("reports/segmentation_validation.json", {})
+    policy(
+        "reports/segmentation_validation.json",
+        segmentation.get("physical_runs") == 16
+        and segmentation.get("logical_rows") == 18
+        and segmentation.get("source") == "raw_training_report_json",
+        "expected 16 physical runs, 18 logical rows, and raw-report aggregation",
+    )
+    phase2_figures = payloads.get("reports/phase2_figures_validation.json", {})
+    policy(
+        "reports/phase2_figures_validation.json",
+        phase2_figures.get("visual_inspection_required") is True,
+        "visual inspection requirement is missing",
+    )
+    sample_grids = payloads.get("reports/sample_grids_validation.json", {})
+    policy(
+        "reports/sample_grids_validation.json",
+        sample_grids.get("visual_inspection_required") is True,
+        "sample-grid visual inspection requirement is missing",
+    )
+    readme_validation = payloads.get("reports/readme_validation.json", {})
+    policy(
+        "reports/readme_validation.json",
+        readme_validation.get("negative_results_preserved") is True,
+        "negative-result preservation is not proven",
+    )
+    hf_package = payloads.get("reports/hf_package_validation.json", {})
+    hf_dataset = hf_package.get("dataset")
+    policy(
+        "reports/hf_package_validation.json",
+        isinstance(hf_dataset, dict) and hf_dataset.get("test_blocklist_hits") == 0,
+        "HF dataset bundle does not prove zero blocklist hits",
+    )
+    selection = payloads.get("reports/demo_checkpoint_selection.json", {})
+    policy(
+        "reports/demo_checkpoint_selection.json",
+        selection.get("selection_is_post_evaluation_demo_only") is True
+        and selection.get("changes_reported_metrics") is False,
+        "demo checkpoint selection could alter reported metrics",
+    )
+    demo_validation = payloads.get("reports/demo_validation.json", {})
+    validated_outputs = demo_validation.get("validated_outputs")
+    policy(
+        "reports/demo_validation.json",
+        demo_validation.get("share_enabled") is False
+        and demo_validation.get("uses_frozen_test_images") is True
+        and isinstance(validated_outputs, int)
+        and not isinstance(validated_outputs, bool)
+        and validated_outputs >= 2,
+        "demo validation must be local, use frozen test images, and validate at least two outputs",
+    )
+    visual_review = payloads.get("reports/phase2_visual_review.json", {})
+    reviewed_sha256 = visual_review.get("reviewed_sha256")
+    policy(
+        "reports/phase2_visual_review.json",
+        isinstance(reviewed_sha256, dict)
+        and (set(FINAL_FIGURES) | {"assets/demo.gif"}) <= set(reviewed_sha256),
+        "visual review does not cover every final figure and demo GIF",
+    )
+    if isinstance(reviewed_sha256, dict):
+        for target, expected in sorted(reviewed_sha256.items()):
+            target_path = repo / target
+            observed = sha256_file(target_path) if target_path.is_file() else None
+            if expected != observed:
+                hash_mismatches.append(
+                    {
+                        "report": "reports/phase2_visual_review.json",
+                        "field": f"reviewed_sha256.{target}",
+                        "target": target,
+                        "expected": expected,
+                        "observed": observed,
+                    }
+                )
+    return {
+        "missing": missing,
+        "invalid": invalid,
+        "policy_failures": policy_failures,
+        "hash_mismatches": hash_mismatches,
+        "passed_report_count": len(payloads),
+        "expected_report_count": len(FINAL_EVIDENCE_REPORTS),
+        "model_license_fresh_within_24h": license_fresh,
+        "hf_upload_plan_is_safe_dry_run": upload_safe,
+    }
+
+
+def audit_final_media(repo: Path) -> dict[str, Any]:
+    figure_details: dict[str, Any] = {}
+    for relative in FINAL_FIGURES:
+        path = repo / relative
+        details: dict[str, Any] = {"exists": path.is_file()}
+        if path.is_file():
+            try:
+                with Image.open(path) as image:
+                    image.verify()
+                    details.update(
+                        {
+                            "format": image.format,
+                            "width": image.width,
+                            "height": image.height,
+                            "valid": image.format == "PNG"
+                            and image.width >= 320
+                            and image.height >= 180,
+                        }
+                    )
+            except (OSError, ValueError) as error:
+                details.update({"valid": False, "error": str(error)})
+        else:
+            details["valid"] = False
+        figure_details[relative] = details
+
+    gif_path = repo / "assets" / "demo.gif"
+    gif: dict[str, Any] = {"exists": gif_path.is_file(), "valid": False}
+    if gif_path.is_file():
+        try:
+            with Image.open(gif_path) as image:
+                frame_count = int(getattr(image, "n_frames", 1))
+                for frame in range(frame_count):
+                    image.seek(frame)
+                    image.load()
+                gif.update(
+                    {
+                        "format": image.format,
+                        "width": image.width,
+                        "height": image.height,
+                        "frames": frame_count,
+                        "valid": (
+                            image.format == "GIF"
+                            and frame_count >= 2
+                            and image.width >= 320
+                            and image.height >= 180
+                        ),
+                    }
+                )
+        except (EOFError, OSError, ValueError) as error:
+            gif["error"] = str(error)
+    return {
+        "figures": figure_details,
+        "all_figures_valid": all(item["valid"] for item in figure_details.values()),
+        "demo_gif": gif,
+    }
+
+
+def audit_release_acceptance(repo: Path) -> dict[str, Any]:
+    path = repo / "reports" / "release_acceptance.md"
+    text = path.read_text(encoding="utf-8") if path.is_file() else ""
+    return {
+        "exists": path.is_file(),
+        "no_unchecked_items": "- [ ]" not in text,
+        "has_passed_items": "## Passed" in text,
+        "has_fixed_items": "## Fixed" in text,
+        "has_residual_risks": "## Residual risks" in text,
+    }
+
+
 def build_audit(repo: Path) -> dict[str, Any]:
     repo = repo.resolve(strict=True)
     require((repo / ".git").exists(), f"Not a Git repository: {repo}")
     tree = scan_tracked_tree(repo, tracked_paths(repo))
     identities = audit_identities(repo)
     required = audit_required_paths(repo)
+    content = audit_plan_and_readme(repo)
+    evidence = audit_evidence(repo)
+    media = audit_final_media(repo)
+    acceptance = audit_release_acceptance(repo)
     checks = {
         "required_paths": not required["missing"],
         "thirteen_skills": required["skill_count_valid"],
@@ -164,6 +606,24 @@ def build_audit(repo: Path) -> dict[str, Any]:
         "no_oversized_tracked_files": not tree["oversized"],
         "single_git_identity": not identities["invalid_rows"],
         "no_coauthor_trailers": identities["coauthor_trailer_count"] == 0,
+        "prepublication_milestones_complete": content["prepublication_complete"],
+        "readme_final": (
+            content["readme_has_required_sections"]
+            and content["readme_has_no_tbd_or_todo"]
+            and content["readme_status_is_final"]
+        ),
+        "final_evidence_reports_passed": (
+            not evidence["missing"]
+            and not evidence["invalid"]
+            and not evidence["policy_failures"]
+            and evidence["passed_report_count"] == evidence["expected_report_count"]
+        ),
+        "final_evidence_hashes_current": not evidence["hash_mismatches"],
+        "model_license_verification_fresh": evidence["model_license_fresh_within_24h"],
+        "hf_upload_plan_safe_dry_run": evidence["hf_upload_plan_is_safe_dry_run"],
+        "final_figures_valid": media["all_figures_valid"],
+        "demo_gif_valid": media["demo_gif"]["valid"],
+        "release_acceptance_complete": all(acceptance.values()),
     }
     return {
         "schema_version": 1,
@@ -173,6 +633,10 @@ def build_audit(repo: Path) -> dict[str, Any]:
         "required": required,
         "tree": tree,
         "git": identities,
+        "content": content,
+        "evidence": evidence,
+        "media": media,
+        "release_acceptance": acceptance,
     }
 
 

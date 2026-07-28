@@ -27,6 +27,13 @@ REQUIRED_INSTRUCTION_ROWS = (
     "| 4. 實測時數與 compute units |",
     "| 5. 跑完要下載哪些檔案 / 放回哪個路徑 |",
 )
+REQUIRED_M18_INSTRUCTION_ROWS = (
+    "| 1. 上 Colab 方式 |",
+    "| 2. Runtime 選型 |",
+    "| 3. Colab Secrets |",
+    "| 4. 預估時數與 compute units |",
+    "| 5. 跑完下載／回收 |",
+)
 REQUIRED_PASSED_JSON = (
     "reports/stageA_copypaste_validation.json",
     "reports/stageA_procedural_validation.json",
@@ -77,11 +84,7 @@ def checked_milestones(plan_text: str) -> set[int]:
         plan_text,
         flags=re.MULTILINE,
     )
-    return {
-        int(match.group("number"))
-        for match in matches
-        if match.group("state") == "x"
-    }
+    return {int(match.group("number")) for match in matches if match.group("state") == "x"}
 
 
 def validate_instruction_handoff(instructions_text: str) -> dict[str, Any]:
@@ -97,7 +100,11 @@ def validate_instruction_handoff(instructions_text: str) -> dict[str, Any]:
     require("已完成" in notebook_1, "Notebook 1 is not marked complete")
 
     notebook_2 = instructions_text[notebook_2_start:]
-    require("M18" in notebook_2 and "尚未建立" in notebook_2, "M18 ownership is unclear")
+    m18_handoff_complete = all(row in notebook_2 for row in REQUIRED_M18_INSTRUCTION_ROWS)
+    require(
+        m18_handoff_complete or ("M18" in notebook_2 and "尚未建立" in notebook_2),
+        "M18 ownership or completed handoff is unclear",
+    )
     require(
         "M15 最終驗收" not in notebook_2,
         "Notebook 2 still creates an M15/M18 dependency cycle",
@@ -105,7 +112,7 @@ def validate_instruction_handoff(instructions_text: str) -> dict[str, Any]:
     return {
         "m11_handoff_rows": len(REQUIRED_INSTRUCTION_ROWS),
         "m11_status": "complete",
-        "m18_status": "owned_by_m18",
+        "m18_status": "handoff_complete" if m18_handoff_complete else "owned_by_m18",
     }
 
 
@@ -280,9 +287,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         f"| {milestone} | {len(commits)} |"
         for milestone, commits in git["milestone_commits"].items()
     )
-    validator_rows = "\n".join(
-        f"| `{name}` | {status} |" for name, status in validators.items()
-    )
+    validator_rows = "\n".join(f"| `{name}` | {status} |" for name, status in validators.items())
     return f"""# Phase 1 Acceptance Report
 
 **Status:** `{payload["status"]}`

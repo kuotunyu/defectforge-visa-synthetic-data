@@ -2,7 +2,7 @@
 
 **Status:** `passed`
 
-**Verified at:** `2026-07-27T13:12:29.898477+00:00`
+**Verified at:** `2026-07-28T00:24:25.450692+00:00`
 
 **Policy decision:** [ADR-019](../docs/decisions.md#adr-019)
 
@@ -13,7 +13,7 @@
 | PLAN M0-M15 checked | 16 / 16 |
 | Frozen validation JSON | 10 passed |
 | Independent validators | 3 passed |
-| Git commits audited | 25 |
+| Git commits audited | 62 |
 | Contributor identities | `kuotunyu` |
 | Co-Authored-By trailers | 0 |
 | Repo-local identity | `kuotunyu <61350295+kuotunyu@users.noreply.github.com>` |
@@ -38,7 +38,7 @@
 | M12 | 1 |
 | M13 | 2 |
 | M14 | 1 |
-| M15 | 1 |
+| M15 | 4 |
 
 ## Independent validators
 

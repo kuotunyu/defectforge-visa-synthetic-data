@@ -863,3 +863,39 @@ checksum sidecar 與 blocklist 都已引用原始 CRLF SHA256；因此公開 arc
   package dry-run 全部通過。
 - source bundle 為 97 檔、2,330,613 uncompressed bytes；兩個 data bundle 的
   selection SHA 與 training blocklist 零命中契約保持不變。
+
+---
+
+<a id="adr-024"></a>
+## ADR-024 — M24 必須驗完整 evidence graph，M22 GIF 由 frozen test 真模型輸出產生
+
+**狀態：Accepted**（2026-07-28）
+
+### 背景
+原 `verify_publish.py` 只驗必備路徑、安全掃描與 Git 身分；只要放入任意
+`results/segmentation.csv` 與 `assets/demo.gif` 就可能通過，沒有證明 M19–M23、
+README 數字、raw report、圖表、授權或 HF bundle 彼此仍一致。M22 也只有互動 UI，
+缺少可重跑且能證明 GIF 來自正式模型／frozen test 的產生流程。
+
+### 決策
+- M24 gate 必須要求 M0–M23 canonical PLAN rows 全勾、README 無 TBD／pending、
+  12 份 final evidence 全部 `status=passed`，並重算 CSV、README、license documents、
+  figures、demo selection／GIF 與 visual review 的 SHA256。
+- 上游模型 visibility／gated／license 報告必須在 24 小時內；HF upload evidence
+  只接受 `mode=dry_run`、不改 visibility、不建立或更新 private repositories。
+- 正式 PNG 必須可完整解碼且至少 320×180；GIF 必須是至少兩幀的有效動畫，
+  且全 repo 10 MiB tracked-file 上限仍適用。
+- `record_demo_artifacts.py` 先選完並綁定兩物件 formal checkpoints，才檢查／配置 CUDA；
+  每物件從 frozen highshot test 固定取一張 normal、一張 anomaly，產生四幀
+  input／probability／mask／heatmap／latency GIF 與 array-level hash evidence。
+- 目視 review 只有在逐張打開全部 final media 後，顯式傳入 confirmation 與觀察 note
+  才能保存；報告綁定當下每個媒體 SHA。
+- 一頁 acceptance report 只能在除自身外所有 local gate 通過後產生。任何缺檔或
+  false check 都拒寫；external GitHub／HF 寫入與 visibility 仍等待使用者明確同意。
+
+### 後果
+- M24 incomplete 變成可定位清單，不會把「未發現錯誤」誤當成完成證據。
+- M19 尚未回收時，gate 應明確停在 M19–M23、六份 downstream evidence、四張正式圖、
+  README、GIF 與 acceptance；不得用 dummy segmentation 或單幀占位 GIF 解鎖。
+- GIF 可由同一套正式 checkpoint selector 重現，且不需開 share URL 或人工剪貼
+  notebook／UI 數字。

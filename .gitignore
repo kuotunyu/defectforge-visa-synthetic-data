@@ -33,6 +33,9 @@ kaggle.json
 # The canonical combined original/searched validation JSON remains tracked.
 /reports/stageB_sd2_*_pcb1_validation.json
 /reports/stageB_sd2_*_capsules_validation.json
+# Ephemeral M24 checkpoint audit. The tracked one-page acceptance report is
+# generated only after every non-publication gate passes.
+/reports/publish_validation.json
 # results/ must stay tracked as a directory so results/colab/.gitkeep survives:
 # ignore its CONTENTS, not the directory itself.
 /results/*
