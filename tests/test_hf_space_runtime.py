@@ -134,6 +134,8 @@ def test_space_app_is_zh_tw_first_and_has_guided_empty_state() -> None:
     assert "height: 80px !important" in source
     assert 'elem_id="df-result-overview"' in source
     assert "df-confidence-bars" in source
+    assert ".df-decision h3 {" in source
+    assert "color: #fff !important" in source
     assert "gr.Markdown(" not in source
     assert "border-radius: 999px" not in source
     assert 'elem_id="df-result-panel"' in source

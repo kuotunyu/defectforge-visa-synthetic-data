@@ -636,7 +636,7 @@ button#df-run:active {
 .df-decision-kicker,
 .df-confidence-title span,
 .df-result-section-kicker {
-  color: oklch(86% .07 172);
+  color: oklch(86% .07 172) !important;
   font-size: 1.0625rem;
   font-weight: 800;
   letter-spacing: .08em;
@@ -646,7 +646,7 @@ button#df-run:active {
   align-items: center;
   gap: .7rem;
   margin: .55rem 0 .25rem;
-  color: #fff;
+  color: #fff !important;
   font-size: 2rem;
   font-weight: 850;
   line-height: 1.25;
@@ -660,7 +660,7 @@ button#df-run:active {
 }
 .df-decision-label {
   margin: 0 0 1.15rem;
-  color: oklch(94% .025 180);
+  color: oklch(94% .025 180) !important;
   font-size: 1.25rem;
   font-weight: 700;
 }
@@ -675,26 +675,26 @@ button#df-run:active {
   border-top: 1px solid oklch(92% .04 177 / .28);
 }
 .df-result-metrics dt {
-  color: oklch(84% .035 180);
+  color: oklch(84% .035 180) !important;
   font-size: 1.0625rem;
 }
 .df-result-metrics dd {
   margin: .2rem 0 0;
-  color: #fff;
+  color: #fff !important;
   font-size: 1.25rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 .df-decision-threshold {
   margin: .75rem 0 0;
-  color: oklch(84% .035 180);
+  color: oklch(84% .035 180) !important;
   font-size: 1.0625rem;
 }
 .df-confidence-title {
   margin-bottom: 1rem;
 }
 .df-confidence-title span {
-  color: var(--df-primary);
+  color: var(--df-primary) !important;
 }
 .df-confidence-title h3 {
   margin: .25rem 0 .15rem;
@@ -749,7 +749,7 @@ button#df-run:active {
 }
 .df-result-heading .df-result-section-kicker,
 .df-section-heading .df-result-section-kicker {
-  color: var(--df-primary);
+  color: var(--df-primary) !important;
 }
 .df-section-heading {
   margin: 1.15rem 0 .65rem;
