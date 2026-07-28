@@ -161,14 +161,14 @@
     Secrets／預估時數與 compute units／跑完抓哪些檔放回哪個路徑）；第 9 組在文件中
     明確標示「引用第 4 組，不重跑」（實跑 8 組 × 2 物件）
 
-- [ ] **M19** 🙋 **使用者在 Colab 跑分割**，產出放回 `results/colab/`
+- [x] **M19** 🙋 **使用者在 Colab 跑分割**，產出放回 `results/colab/`
   - **驗證**：對照 `instructions_for_me.md` 的預期清單盤點產出，缺件就停下來列清單問使用者，不要硬做
 
-- [ ] **M20** 🤖 分割分析
+- [x] **M20** 🤖 分割分析
   - **驗證**：`results/segmentation.csv` **從 raw metrics 檔重新聚合**，不抄 notebook 畫面上的值；
     第 6 組（程序化-only）的口徑照 [ADR-011](docs/decisions.md#adr-011) 的正式措辭陳述
 
-- [ ] **M21** 👀 圖表全套 → `reports/figures/`
+- [x] **M21** 👀 圖表全套 → `reports/figures/`
   - **驗證**：[experiment_protocol.md §10](docs/experiment_protocol.md) 列的每張圖都存在；
     **每張都自己打開檢視**；頭號圖 `real_scaling_curve.png` 能直接回答「合成資料相當於幾張真實瑕疵」
 

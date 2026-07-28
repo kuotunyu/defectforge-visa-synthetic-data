@@ -1,0 +1,57 @@
+{
+  "classification_sha256": "aa083aa7524cea80d211efa911616ea71b4888049deced5678441ee8f05cbce6",
+  "figures": {
+    "main_comparison_table": {
+      "path": "reports\\figures\\main_comparison_table.png",
+      "sha256": "00b4d20f480b3ed23b37bb3357e6d060070ecbef82615f7c0049b6270b6c4fe0"
+    },
+    "real_scaling_curve": {
+      "path": "reports\\figures\\real_scaling_curve.png",
+      "sha256": "3595771937ceef070f3e1b5a8dedbfa9b47a1a5601130524bd1e55f573c69ee6"
+    },
+    "segmentation_table": {
+      "path": "reports\\figures\\segmentation_table.png",
+      "sha256": "b3382cc8c9c1ceea50875d7ffe1bcfedec0e8d8cde71fd4468eeb9d529dcb314"
+    },
+    "synthetic_volume_curve": {
+      "path": "reports\\figures\\synthetic_volume_curve.png",
+      "sha256": "f33cde9e17e11e980a221f25577fe0be2f6459c21c9c73118c0877171e252efb"
+    }
+  },
+  "filtered_synthetic_equivalent_real_count": {
+    "capsules": {
+      "estimate": 10.0,
+      "isotonic_scores": [
+        0.5727890766185708,
+        0.6389721627408993,
+        0.6748487205265854
+      ],
+      "raw_scores": [
+        0.5727890766185708,
+        0.6389721627408993,
+        0.6748487205265854
+      ],
+      "relation": "at_or_below",
+      "synthetic_score": 0.37116835805360393
+    },
+    "pcb1": {
+      "estimate": 10.0,
+      "isotonic_scores": [
+        0.6825689955883861,
+        0.6825689955883861,
+        0.6825689955883861
+      ],
+      "raw_scores": [
+        0.6825689955883861,
+        0.6825689955883861,
+        0.6825689955883861
+      ],
+      "relation": "at_or_below",
+      "synthetic_score": 0.4269723320158103
+    }
+  },
+  "schema_version": 1,
+  "segmentation_sha256": "fbe4f97379e2597713c1c7255bfd6b5df7ac49c948b396469f598d34b03615aa",
+  "status": "passed",
+  "visual_inspection_required": true
+}

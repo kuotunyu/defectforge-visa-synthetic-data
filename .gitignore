@@ -41,6 +41,7 @@ kaggle.json
 /results/*
 !/results/generation_quality.csv
 !/results/classification.csv
+!/results/segmentation.csv
 !/results/colab/
 /results/colab/*
 !/results/colab/.gitkeep

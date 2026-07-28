@@ -1,9 +1,9 @@
 # 換你做：Colab 操作手冊
 
-> **狀態：Notebook 1 已完成；Notebook 2 已備妥，等待你執行。** M11 SDXL 的
+> **狀態：Notebook 1 與 Notebook 2 均已完成。** M11 SDXL 的
 > Colab L4 正式 fresh run、成果匯入、本機兩物件 one-step smoke 與 checkpoint
-> resume 均已通過，不需再跑。M18 SegFormer 的本機 smoke、獨立驗證與三個上傳 ZIP
-> 也已通過；下一步是依本頁 Notebook 2 的步驟跑兩個物件。
+> resume 均已通過，不需再跑。M18 SegFormer 的本機 smoke、兩個 L4 正式 run、
+> 回傳 ZIP 安全匯入與 M20 獨立驗證也已通過，不需再跑。
 
 ## 通用流程（每本 notebook 都一樣）
 
@@ -57,10 +57,10 @@ bundle 都通過 fresh `PeftModel` 雙 encoder 重載。證據在
 | 項目 | 內容 |
 |---|---|
 | 1. 上 Colab 方式 | 將本機 `%USERPROFILE%\Desktop\mySyntheticData\1_DefectForge\notebooks\02_train_segformer.ipynb` 上傳到 Drive 的 `MyDrive/sdg-portfolio/01-defectforge-visa/notebooks/`；再將 `D:\sdg-data\01-defectforge\colab\m18\defectforge_m18_source.zip`、`m18_seg_pcb1.zip`、`m18_seg_capsules.zip` 三個檔案上傳到 `MyDrive/sdg-portfolio/01-defectforge-visa/`。從 Drive 開 notebook，不要用 Colab 的臨時上傳方式。每次只設定一個 `OBJECT_NAME`：先 `pcb1`，完成後再用新 runtime 設 `capsules`。 |
-| 2. Runtime 選型 | **T4 GPU，至少 14 GiB VRAM**。本機 RTX 4090 one-step smoke 的 peak VRAM 兩物件皆為 0.977 GiB；notebook 仍會在 CUDA 缺失或總 VRAM <14 GiB 時先停止。 |
+| 2. Runtime 選型 | 正式 run 實際使用 **L4 GPU（24 GB）**；程式最低要求仍是 T4-class、至少 14 GiB VRAM。本機 RTX 4090 one-step smoke 的 peak VRAM 兩物件皆為 0.977 GiB；notebook 會在 CUDA 缺失或總 VRAM <14 GiB 時先停止。 |
 | 3. Colab Secrets | **不需要任何 Secret**。鎖定的 NVIDIA SegFormer checkpoint 是公開模型；Notebook 2 不讀 `HF_TOKEN`，也沒有明文憑證。 |
-| 4. 預估時數與 compute units | 固定 500 optimizer steps × 8 個實跑 group × 2 物件；`all_mixed` 只引用 `filtered_syn`，不第九次重跑。規劃估計 T4 每 group 20–40 分鐘，約 3–6 小時／物件、兩物件合計約 6–12 小時，約 9–20 CU。這不是正式實測；開始前記下帳戶 CU，結束後回報每個 group 的秒數與 CU 差值。 |
-| 5. 跑完下載／回收 | 每個物件最後一格必須顯示 validator 通過，並在 Drive `MyDrive/sdg-portfolio/01-defectforge-visa/results/segmentation/` 產生 `m18_seg_results_pcb1.zip` 或 `m18_seg_results_capsules.zip`。兩個 ZIP 都下載到本機 `%USERPROFILE%\Desktop\mySyntheticData\1_DefectForge\results\colab\segmentation\`；不要只貼 notebook 畫面，也不要自行解壓或改檔名。 |
+| 4. 實測時數與 compute units | 固定 500 optimizer steps × 8 個實跑 group × 2 物件；`all_mixed` 只引用 `filtered_syn`，沒有第九次重跑。L4 實測：pcb1 八組合計 2,509.070 秒（41.82 分），capsules 合計 2,321.437 秒（38.69 分），總計 80.51 分；帳戶 CU 前後值未記錄，因此不回推 CU。 |
+| 5. 跑完下載／回收 | **已完成**：兩個 notebook validator 均通過；原始 `m18_seg_results_pcb1.zip` 與 `m18_seg_results_capsules.zip` 已放入本機 `results/colab/segmentation/`，並由 M20 聚合器完成安全匯入與獨立驗證。Drive checkpoints 暫不影響本機重現。 |
 
 ### 上傳檔案核對
 

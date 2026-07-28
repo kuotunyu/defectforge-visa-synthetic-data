@@ -303,6 +303,63 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-28 — Session 30：M19 L4 回收、M20 raw 聚合與 M21 正式圖表
+
+### 做了什麼
+- 使用者在 Colab L4 依序完成 pcb1 與 capsules 的八個 SegFormer-B0 formal group；
+  每個物件的 notebook validator 均通過並回傳原始結果 ZIP
+- 保留兩個 ZIP 原始位元，先以 M20 聚合器執行 Zip Slip、symlink、Windows ADS、
+  白名單、檔案數、展開大小與 CRC fail-closed 預檢，再原子匯入
+- 從 16 份 raw `training_report.json` 與 `data_manifest.json` 重建
+  `results/segmentation.csv`；沒有採信 notebook 畫面或包內暫存 CSV
+- 修正 `.gitignore` 的精確單檔 allowlist，讓小型 `results/segmentation.csv`
+  進入可發布 source tree；原始 Colab ZIP、匯入目錄與 SafeTensors 仍維持忽略
+- 產生 `reports/segmentation_results.md` 與
+  `reports/segmentation_validation.json`
+- 從 verified classification／segmentation CSV 產生四張 M21 正式圖：
+  `real_scaling_curve.png`、`synthetic_volume_curve.png`、
+  `main_comparison_table.png`、`segmentation_table.png`
+
+### M19 實測與原始回收
+- pcb1：八組合計 2,509.070 秒（41.82 分）；ZIP SHA256
+  `d87e3caaf6b090c65bb460ed8da4e1fa779e89d1010b434f2c3cd59e43161321`
+- capsules：八組合計 2,321.437 秒（38.69 分）；ZIP SHA256
+  `b68a7bfd2f43fbe41627c37f1c5bd61c6292f042c878d4626e3094c1e3c9e8d1`
+- 每包恰有 43 個白名單檔案；兩包 CRC 與安全路徑檢查通過
+- 帳戶 compute units 前後值未記錄，不從牆鐘時間反推
+
+### M20 驗證與結果
+- 16 個 physical run + 2 個 `all_mixed → filtered_syn` logical alias，共 18 列
+- 兩物件各八組、alias reruns = 0、frozen manifest／selection SHA 相符
+- `procedural_only` 的 real defect train count 為 0；所有 raw report/model hash
+  與 exact frozen test inventory 經獨立 validator 重算
+- `results/segmentation.csv` SHA256：
+  `fbe4f97379e2597713c1c7255bfd6b5df7ac49c948b396469f598d34b03615aa`
+- 結果如實保留：Filtered Synthetic 相對 Real-only 的 mean Dice 為負向；
+  capsules 的 Dice／AUPRO 有改善，但 pcb1 Dice 明顯下降，不能宣稱跨物件一致提升
+
+### M21 程式與目視驗證
+- `reports/phase2_figures_validation.json` status = passed，綁定兩份輸入 CSV 與四張圖 SHA
+- 四張新圖均以原始解析度逐張打開；標題、座標、圖例、表格列欄、alias 說明與數字可讀，
+  沒有裁切、重疊或錯誤圖例
+- Real-only 10/20/60 scaling 與 filtered-synthetic 落點顯示兩物件皆為 `≤10` real；
+  不做觀察範圍外的外插
+
+### 未決與風險
+- M22 必須用正式分類與分割 checkpoint 對 frozen test 真圖做 GPU 推論並產生 GIF；
+  當下 RTX 4090 仍由 FormosaNLU 使用，因此先維持 CPU-only，不搶占跨專案 GPU
+- M23 README 必須保留分類與分割的負面結果，不可改選較好看的 group
+
+### 下一步
+**M22** — GPU 釋放後執行 deterministic checkpoint selection、四筆 frozen-test
+真模型輸出、GIF 與本機 Gradio UI 目視驗證；其後完成 M23 README 與 M24 gate。
+
+### 換你做
+目前沒有；M19 已完成。GitHub repo、remote、push 與 public visibility 仍等待 M24
+最終過目與使用者明確同意。
+
+---
+
 ## 2026-07-27 — Session 21：M16 guarded ConvNeXt trainer 與兩物件真模型 smoke
 
 ### 做了什麼
