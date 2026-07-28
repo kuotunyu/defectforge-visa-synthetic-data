@@ -44,6 +44,6 @@ anomaly classification 與 defect-region segmentation。成功的介面必須在
 
 ## Accessibility & Inclusion
 
-以 WCAG 2.2 AA 為最低標準。一般內文與控制項不得小於 16px，輔助文字不得小於
-14px；保留清楚的 keyboard focus、足夠對比、44px 以上操作目標與 reduced-motion
+以 WCAG 2.2 AA 為最低標準。一般內文與控制項以 18px 為基準，輔助文字不得小於
+16px；保留清楚的 keyboard focus、足夠對比、44px 以上操作目標與 reduced-motion
 支援。狀態不可只靠顏色表達，手機與放大至 200% 時仍需維持可理解的閱讀順序。

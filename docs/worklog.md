@@ -303,6 +303,42 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-28 — Session 39：M29 公開 Demo 資訊密度與可讀性精修
+
+### 做了什麼
+- 依第二輪 UI 回饋把一般文字與控制項基準提高到 18px，輔助文字提高到 16px，
+  panel title 提高到 24px，主按鈕提高到 19px／56px
+- 將獨立三步驟卡片合併為 header 內的單行操作流程，移除表單重複的 1／2／3 編號
+- 將物件選擇與上傳框重排為同一操作面；移除 Gradio HTML wrapper 的額外 padding，
+  桌機首屏可同時看見輸入、隱私說明與主要按鈕
+- 初始狀態隱藏無內容的結果欄；完成推論後才以 5:4 雙欄展開摘要與分類信心
+- 建立 restrained teal semantic palette：teal 僅用於選取、主要動作與就緒狀態，
+  amber 僅用於研究用途界線；同時修正系統 dark preference 下的 Gradio 內層對比
+- 900px 以下改為結構性單欄，避免手機與 200% zoom 把輸入／結果擠成窄欄
+
+### 驗證
+- 本機 Gradio stub 實際載入後，桌機 1548×986 的 initial input 為 1296px 全寬；
+  結果展開後為 706px／574px 的 5:4 雙欄，沒有 horizontal overflow
+- 手機 390×844：document scrollWidth 與 clientWidth 同為 375px，無水平捲軸
+- 768px（桌機 200% zoom 等效寬度）：輸入與結果改為各 649px 的垂直單欄，
+  無水平溢位
+- 瀏覽器 console error 為 0；實測 body／控制項 18px、輔助文字 16px、
+  h1 32–36px、panel title 24px、主按鈕 19px
+- `ruff check` 通過；pytest 191 passed
+
+### 決策
+- 主任務是「上傳並檢測」，尚未產生資料的結果欄不應占據首屏；採 progressive
+  disclosure，比用教學空白卡填滿右欄更直接
+- 保留一個明確 header、一個輸入操作面與一個主要 CTA；移除不提供新資訊的卡片、
+  小標與重複說明
+- 本次只改 presentation 與 layout；四個 formal checkpoint、推論流程、公開指標與
+  v1／v2 結論完全不變
+
+### 換你做
+目前沒有；公開 Space 更新後可直接重整原網址查看。
+
+---
+
 ## 2026-07-28 — Session 32：M24 GitHub／Hugging Face 正式公開
 
 ### 使用者授權與 Contributors 紅線

@@ -13,23 +13,29 @@ DATASET_URL = "https://huggingface.co/datasets/steven0226/defectforge-visa-synth
 CSS = """
 :root {
   color-scheme: light;
-  --df-canvas: #f3f7f6;
-  --df-surface: #ffffff;
-  --df-surface-soft: #eaf4f1;
-  --df-surface-muted: #f7f9f9;
-  --df-ink: #172b32;
-  --df-muted: #52666b;
-  --df-primary: #0f766e;
-  --df-primary-strong: #0b5753;
-  --df-primary-soft: #d9eeea;
-  --df-accent: #d97706;
-  --df-border: #cbdcd8;
-  --df-border-strong: #9ebbb5;
-  --df-danger: #b42318;
-  --df-focus: #0b84a5;
+  --df-canvas: oklch(97% .009 184);
+  --df-surface: oklch(100% 0 0);
+  --df-surface-soft: oklch(94% .024 181);
+  --df-surface-muted: oklch(98% .007 184);
+  --df-result-soft: oklch(96% .018 181);
+  --df-ink: oklch(27% .032 208);
+  --df-muted: oklch(42% .027 197);
+  --df-primary: oklch(45% .088 179);
+  --df-primary-strong: oklch(34% .068 184);
+  --df-primary-soft: oklch(91% .036 179);
+  --df-accent: oklch(61% .122 65);
+  --df-border: oklch(84% .023 184);
+  --df-border-strong: oklch(70% .037 183);
+  --df-danger: oklch(48% .17 28);
+  --df-focus: oklch(55% .12 221);
   --df-radius-sm: 8px;
   --df-radius-md: 12px;
   --df-radius-lg: 16px;
+  --df-space-xs: .5rem;
+  --df-space-sm: .75rem;
+  --df-space-md: 1rem;
+  --df-space-lg: 1.5rem;
+  --df-space-xl: 2rem;
   --df-font: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Inter,
     system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -38,21 +44,46 @@ html, body, #root, .gradio-container {
   color: var(--df-ink) !important;
   font-family: var(--df-font) !important;
 }
+body.dark,
+body.dark #root,
+body.dark .gradio-container {
+  background: var(--df-canvas) !important;
+  color: var(--df-ink) !important;
+}
 .gradio-container {
-  --text-xs: .875rem;
-  --text-sm: .9375rem;
-  --text-md: 1rem;
-  --text-lg: 1.125rem;
-  max-width: 1280px !important;
+  --text-xs: 1rem;
+  --text-sm: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.25rem;
+  --body-background-fill: var(--df-canvas);
+  --body-text-color: var(--df-ink);
+  --background-fill-primary: var(--df-surface);
+  --background-fill-secondary: var(--df-surface-muted);
+  --block-background-fill: var(--df-surface);
+  --block-label-background-fill: var(--df-surface);
+  --block-label-text-color: var(--df-ink);
+  --input-background-fill: var(--df-surface);
+  --border-color-primary: var(--df-border);
+  --border-color-accent: var(--df-border-strong);
+  max-width: 1400px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
   margin: 0 auto !important;
   min-height: 100vh !important;
-  padding: 1.5rem 1.25rem 2.5rem !important;
-  font-size: 1rem !important;
+  padding: 1rem 1.25rem 2rem !important;
+  font-size: 1.125rem !important;
   line-height: 1.6 !important;
 }
 .gradio-container > .main,
 .gradio-container > div:first-child {
   background: transparent !important;
+}
+.html-container:has(#df-header),
+.html-container:has(.df-panel-heading),
+.html-container:has(.df-privacy),
+.html-container:has(.df-section-heading),
+.html-container:has(.df-boundary) {
+  padding: 0 !important;
 }
 .gradio-container,
 .gradio-container button,
@@ -67,11 +98,19 @@ html, body, #root, .gradio-container {
 .gradio-container input,
 .gradio-container textarea,
 .gradio-container .prose {
-  font-size: 1rem !important;
+  font-size: 1.125rem !important;
 }
 .gradio-container .prose p,
 .gradio-container .prose li {
-  line-height: 1.65 !important;
+  line-height: 1.6 !important;
+}
+.gradio-container .info,
+.gradio-container .secondary-wrap,
+.gradio-container .secondary-wrap *,
+.gradio-container .label-wrap,
+.gradio-container .label-wrap * {
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
 }
 .gradio-container a {
   color: var(--df-primary-strong) !important;
@@ -86,7 +125,7 @@ html, body, #root, .gradio-container {
   outline-offset: 2px !important;
 }
 #df-header {
-  padding: 1.75rem 2rem;
+  padding: 1.25rem 1.5rem;
   background: var(--df-surface);
   border: 1px solid var(--df-border);
   border-radius: var(--df-radius-lg);
@@ -96,20 +135,23 @@ html, body, #root, .gradio-container {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: .75rem;
 }
 .df-brand {
   display: inline-flex;
   align-items: center;
-  gap: .75rem;
+  gap: .65rem;
   color: var(--df-primary-strong);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   font-weight: 750;
+}
+.df-brand > span:last-child {
+  color: var(--df-primary-strong) !important;
 }
 .df-mark {
   display: inline-grid;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   place-items: center;
   border-radius: var(--df-radius-sm);
   background: var(--df-primary);
@@ -126,8 +168,9 @@ html, body, #root, .gradio-container {
   border-radius: 999px;
   background: var(--df-primary-soft);
   color: var(--df-primary-strong);
-  font-size: .875rem;
+  font-size: 1rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .df-runtime::before {
   content: "";
@@ -137,100 +180,108 @@ html, body, #root, .gradio-container {
   background: var(--df-primary);
 }
 #df-header h1 {
-  max-width: 24ch;
-  margin: 0 0 .65rem;
+  max-width: 28ch;
+  margin: 0 0 .35rem;
   color: var(--df-ink);
   font-size: 2.25rem;
   font-weight: 800;
-  line-height: 1.22;
+  line-height: 1.2;
   letter-spacing: -.025em;
   text-wrap: balance;
 }
 #df-header p {
-  max-width: 68ch;
+  max-width: 100ch;
   margin: 0;
   color: var(--df-muted);
-  font-size: 1.0625rem;
-  line-height: 1.7;
+  font-size: 1.125rem;
+  line-height: 1.55;
   text-wrap: pretty;
 }
 #df-header strong {
   color: var(--df-primary-strong);
 }
-#df-steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  margin: 1rem 0 1.25rem;
-  overflow: hidden;
-  background: var(--df-surface);
-  border: 1px solid var(--df-border);
-  border-radius: var(--df-radius-md);
-}
-.df-step {
-  display: grid;
-  grid-template-columns: 38px 1fr;
-  gap: .75rem;
+.df-flow {
+  display: flex;
   align-items: center;
-  min-height: 76px;
-  padding: .85rem 1rem;
+  gap: .8rem;
+  margin-top: 1rem;
+  padding-top: .85rem;
+  border-top: 1px solid var(--df-border);
 }
-.df-step + .df-step {
-  border-left: 1px solid var(--df-border);
+.df-flow-label {
+  flex: 0 0 auto;
+  color: var(--df-primary-strong);
+  font-size: 1rem;
+  font-weight: 800;
 }
-.df-step-number {
-  display: grid;
-  width: 38px;
-  height: 38px;
+.df-flow ol {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem .7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.df-flow li {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: var(--df-ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.df-flow li span {
+  color: var(--df-ink) !important;
+}
+.df-flow li + li::before {
+  content: "→";
+  margin-right: .2rem;
+  color: var(--df-border-strong);
+  font-weight: 800;
+}
+.df-flow b {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
   place-items: center;
   border-radius: 50%;
   background: var(--df-primary-soft);
   color: var(--df-primary-strong);
-  font-weight: 800;
-}
-.df-step strong,
-.df-step small {
-  display: block;
-}
-.df-step strong {
-  color: var(--df-ink);
   font-size: 1rem;
 }
-.df-step small {
-  margin-top: .1rem;
-  color: var(--df-muted);
-  font-size: .875rem;
-}
 #df-workspace {
-  gap: 1.25rem !important;
-  align-items: flex-start !important;
+  gap: var(--df-space-md) !important;
+  align-items: stretch !important;
+  margin-top: 0 !important;
 }
 .df-panel {
-  padding: 1.25rem !important;
+  min-width: 0 !important;
+  padding: 1.25rem 1.35rem !important;
   background: var(--df-surface) !important;
   border: 1px solid var(--df-border) !important;
   border-radius: var(--df-radius-lg) !important;
 }
+#df-result-panel {
+  background: var(--df-result-soft) !important;
+  border-color: var(--df-border-strong) !important;
+}
 .df-panel-heading {
-  margin-bottom: 1rem;
+  margin-bottom: .85rem;
 }
 .df-panel-heading h2 {
-  margin: 0 0 .35rem;
+  margin: 0 0 .2rem;
   color: var(--df-ink);
-  font-size: 1.375rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 .df-panel-heading p {
   margin: 0;
   color: var(--df-muted);
-  font-size: .9375rem !important;
-}
-.df-panel-label {
-  display: inline-block;
-  margin-bottom: .35rem;
-  color: var(--df-primary-strong);
-  font-size: .875rem;
-  font-weight: 800;
+  font-size: 1.0625rem !important;
+  line-height: 1.55 !important;
 }
 #df-object,
 #df-upload,
@@ -240,8 +291,28 @@ html, body, #root, .gradio-container {
   border-color: var(--df-border) !important;
   border-radius: var(--df-radius-md) !important;
 }
-#df-object {
+#df-input-grid {
+  gap: var(--df-space-md) !important;
+  align-items: stretch !important;
+}
+.df-setup {
+  gap: .75rem !important;
+  min-width: 270px !important;
+  padding: 1rem !important;
   background: var(--df-surface-muted) !important;
+  border: 1px solid var(--df-border) !important;
+  border-radius: var(--df-radius-md) !important;
+}
+#df-object {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#df-object > .wrap,
+#df-advanced > .wrap {
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
 }
 #df-object label,
 #df-object span,
@@ -250,67 +321,104 @@ html, body, #root, .gradio-container {
 .df-output-image label {
   color: var(--df-ink) !important;
 }
+#df-object > .wrap > span {
+  color: var(--df-ink) !important;
+  font-size: 1.125rem !important;
+  font-weight: 700 !important;
+}
+#df-object .info-text {
+  color: var(--df-muted) !important;
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+}
 #df-object .wrap {
-  gap: .6rem !important;
+  gap: .65rem !important;
 }
 #df-object .wrap label {
-  min-height: 44px !important;
-  padding: .55rem .8rem !important;
+  min-height: 48px !important;
+  padding: .65rem .8rem !important;
   border-radius: var(--df-radius-sm) !important;
+  background: oklch(93% .013 190) !important;
+  border: 1px solid transparent !important;
+}
+#df-object .wrap label:has(input:checked) {
+  background: var(--df-primary-soft) !important;
+  border-color: var(--df-primary) !important;
+  color: var(--df-primary-strong) !important;
 }
 .df-object-help {
-  margin: -.15rem 0 .85rem;
+  margin: 0;
   color: var(--df-muted);
-  font-size: .875rem;
+  font-size: 1rem;
 }
 .df-privacy {
   display: flex;
-  gap: .55rem;
-  align-items: flex-start;
-  margin: .75rem 0 1rem;
-  padding: .75rem .85rem;
+  gap: .65rem;
+  align-items: center;
+  margin: .75rem 0 0;
+  padding: .75rem .9rem;
   border-radius: var(--df-radius-sm);
   background: var(--df-surface-soft);
   color: var(--df-primary-strong);
-  font-size: .875rem;
-  line-height: 1.55;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 .df-privacy strong {
   white-space: nowrap;
 }
+.df-privacy strong,
+.df-privacy span {
+  color: var(--df-primary-strong) !important;
+}
 #df-upload {
-  min-height: 390px !important;
-  background: var(--df-surface-muted) !important;
+  min-height: 320px !important;
+  background: oklch(98% .01 184) !important;
+  border-style: dashed !important;
+  border-color: var(--df-border-strong) !important;
 }
 #df-upload .upload-container,
 #df-upload .wrap {
-  min-height: 340px !important;
+  min-height: 275px !important;
 }
 #df-upload .upload-container p,
 #df-upload .upload-container span {
   color: var(--df-muted) !important;
-  font-size: 1rem !important;
+  font-size: 1.125rem !important;
 }
 #df-advanced {
-  margin-top: .85rem !important;
+  margin-top: auto !important;
   background: var(--df-surface-muted) !important;
 }
 #df-advanced summary {
   min-height: 48px;
   color: var(--df-ink) !important;
-  font-size: .9375rem !important;
+  font-size: 1rem !important;
   font-weight: 700;
+}
+#df-advanced .label-wrap,
+#df-advanced .label-wrap * {
+  color: var(--df-ink) !important;
+  font-size: 1rem !important;
+}
+#df-upload .label-wrap,
+#df-upload .label-wrap *,
+.df-output-image .label-wrap,
+.df-output-image .label-wrap *,
+#df-probabilities .label-wrap,
+#df-probabilities .label-wrap * {
+  background: var(--df-surface) !important;
+  color: var(--df-ink) !important;
 }
 #df-run,
 #df-run button,
 button#df-run {
-  min-height: 52px !important;
-  margin-top: .9rem !important;
+  min-height: 56px !important;
+  margin-top: .75rem !important;
   border: 0 !important;
   border-radius: var(--df-radius-sm) !important;
   background: var(--df-primary) !important;
   color: #fff !important;
-  font-size: 1.0625rem !important;
+  font-size: 1.1875rem !important;
   font-weight: 800 !important;
   transition:
     background-color 180ms cubic-bezier(.16, 1, .3, 1),
@@ -328,53 +436,54 @@ button#df-run:active {
   transform: translateY(0);
 }
 #df-summary {
-  min-height: 132px;
-  padding: 1rem 1.1rem !important;
-  background: var(--df-surface-soft) !important;
-  border: 1px solid var(--df-border) !important;
-  border-radius: var(--df-radius-md) !important;
+  min-height: 116px;
+  padding: .9rem 1rem !important;
+  background: var(--df-surface) !important;
+  border: 1px solid var(--df-border-strong) !important;
+  border-radius: var(--df-radius-sm) !important;
 }
 #df-summary h3 {
-  margin: 0 0 .4rem !important;
+  margin: 0 0 .25rem !important;
   color: var(--df-primary-strong) !important;
-  font-size: 1.1875rem !important;
+  font-size: 1.375rem !important;
   font-weight: 800 !important;
 }
 #df-summary p {
   margin: 0 !important;
   color: var(--df-muted) !important;
+  font-size: 1.0625rem !important;
 }
 #df-summary code {
   padding: .1rem .35rem;
   border-radius: 4px;
-  background: #fff;
+  background: var(--df-surface-soft);
   color: var(--df-primary-strong);
-  font-size: .9375rem;
+  font-size: 1rem;
 }
 #df-probabilities {
-  min-height: 230px !important;
-  margin-top: .85rem !important;
-  background: var(--df-surface-muted) !important;
+  min-height: 210px !important;
+  margin-top: .75rem !important;
+  background: var(--df-surface) !important;
 }
 #df-probabilities .label-wrap {
-  background: var(--df-surface-muted) !important;
+  background: var(--df-surface) !important;
 }
 .df-section-heading {
-  margin: 1.35rem 0 .8rem;
+  margin: 1.15rem 0 .65rem;
 }
 .df-section-heading h2 {
-  margin: 0 0 .25rem;
+  margin: 0 0 .15rem;
   color: var(--df-ink);
-  font-size: 1.375rem;
+  font-size: 1.5rem;
   font-weight: 800;
 }
 .df-section-heading p {
   margin: 0;
   color: var(--df-muted);
-  font-size: .9375rem !important;
+  font-size: 1.0625rem !important;
 }
 #df-localization {
-  gap: 1.25rem !important;
+  gap: var(--df-space-md) !important;
 }
 .df-output-image {
   overflow: hidden !important;
@@ -393,21 +502,26 @@ button#df-run:active {
 #df-evidence summary {
   min-height: 52px;
   color: var(--df-ink) !important;
-  font-size: 1rem !important;
+  font-size: 1.0625rem !important;
   font-weight: 750;
+}
+#df-evidence .label-wrap,
+#df-evidence .label-wrap * {
+  color: var(--df-ink) !important;
+  font-size: 1.0625rem !important;
 }
 .df-boundary {
   margin-top: 1rem;
   padding: 1rem 1.1rem;
-  border: 1px solid #ead3b0;
+  border: 1px solid oklch(83% .058 69);
   border-radius: var(--df-radius-md);
-  background: #fff8eb;
-  color: #67410d;
-  font-size: .9375rem;
-  line-height: 1.65;
+  background: oklch(97% .026 75);
+  color: oklch(37% .07 65);
+  font-size: 1rem;
+  line-height: 1.6;
 }
 .df-boundary strong {
-  color: #513108;
+  color: oklch(31% .07 65);
 }
 .df-footer {
   display: flex;
@@ -417,7 +531,7 @@ button#df-run:active {
   margin-top: 1rem;
   padding: .85rem .15rem 0;
   color: var(--df-muted);
-  font-size: .875rem;
+  font-size: 1rem;
 }
 .df-footer-links {
   display: flex;
@@ -425,45 +539,66 @@ button#df-run:active {
   gap: 1rem;
 }
 footer { display: none !important; }
+@media (max-width: 900px) {
+  #df-workspace,
+  #df-input-grid {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+  #df-workspace > *,
+  #df-input-grid > * {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
 @media (max-width: 760px) {
   :root {
     --size-8: .5rem;
   }
   .gradio-container.gradio-container {
+    max-width: 100% !important;
     padding: .75rem !important;
   }
   .main.fillable {
     padding: 0 !important;
   }
   #df-header {
-    padding: 1.25rem;
+    padding: 1rem;
   }
   .df-brand-row {
     align-items: flex-start;
     flex-direction: column;
   }
   #df-header h1 {
-    font-size: 1.875rem;
+    font-size: 2rem;
   }
-  #df-steps {
-    grid-template-columns: 1fr;
+  .df-flow {
+    align-items: flex-start;
+    flex-direction: column;
   }
-  .df-step {
-    min-height: 68px;
+  .df-flow ol {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .4rem;
   }
-  .df-step + .df-step {
-    border-top: 1px solid var(--df-border);
-    border-left: 0;
+  .df-flow li + li::before {
+    content: "";
+    margin: 0;
   }
   .df-panel {
     padding: 1rem !important;
   }
   #df-upload {
-    min-height: 320px !important;
+    min-height: 290px !important;
   }
   #df-upload .upload-container,
   #df-upload .wrap {
-    min-height: 275px !important;
+    min-height: 245px !important;
+  }
+  .df-privacy {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -487,6 +622,7 @@ def _run(image: object, object_name: str, threshold: float) -> tuple[object, ...
             threshold,
         )
         return (
+            gr.Column(visible=True),
             gr.Label(
                 value=probabilities,
                 visible=True,
@@ -509,13 +645,13 @@ def _run(image: object, object_name: str, threshold: float) -> tuple[object, ...
 
 def _clear_results() -> tuple[object, ...]:
     return (
+        gr.Column(visible=False),
         gr.Label(visible=False),
         None,
         None,
         (
-            "### 尚未開始檢測\n"
-            "請完成左側三個步驟。檢測後會顯示 classification confidence、"
-            "binary mask 與 probability heatmap。"
+            "### 等待檢測\n"
+            "重新按下「開始檢測」後，結果會顯示在這裡。"
         ),
         {},
         gr.Column(visible=False),
@@ -542,82 +678,90 @@ def build_app() -> gr.Blocks:
             "<h1>瑕疵影像檢測 Demo</h1>"
             "<p>上傳一張 <strong>pcb1</strong> 或 <strong>capsules</strong> 影像，"
             "即可同時取得 anomaly classification 與 defect-region segmentation "
-            "結果。整個流程只需要三個步驟。</p>"
+            "結果。</p>"
+            "<nav class='df-flow' aria-label='檢測流程'>"
+            "<span class='df-flow-label'>操作流程</span><ol>"
+            "<li><b>1</b><span>選擇物件</span></li>"
+            "<li><b>2</b><span>上傳影像</span></li>"
+            "<li><b>3</b><span>開始檢測</span></li>"
+            "</ol></nav>"
             "</section>"
         )
-        gr.HTML(
-            "<nav id='df-steps' aria-label='檢測流程' lang='zh-Hant-TW'>"
-            "<div class='df-step'><span class='df-step-number'>1</span><span>"
-            "<strong>選擇物件</strong><small>選擇 pcb1 或 capsules</small></span></div>"
-            "<div class='df-step'><span class='df-step-number'>2</span><span>"
-            "<strong>上傳影像</strong><small>支援拖放、貼上或點擊上傳</small></span></div>"
-            "<div class='df-step'><span class='df-step-number'>3</span><span>"
-            "<strong>開始檢測</strong><small>查看分類、mask 與 heatmap</small></span></div>"
-            "</nav>"
-        )
         with gr.Row(equal_height=False, elem_id="df-workspace"):
-            with gr.Column(scale=5, min_width=340, elem_classes=["df-panel"]):
+            with gr.Column(
+                scale=5,
+                min_width=420,
+                elem_id="df-input-panel",
+                elem_classes=["df-panel"],
+            ):
                 gr.HTML(
                     "<div class='df-panel-heading' lang='zh-Hant-TW'>"
-                    "<span class='df-panel-label'>檢測輸入</span>"
-                    "<h2>準備一張待檢影像</h2>"
-                    "<p>物件類型必須與影像內容相符，接著上傳影像即可。</p>"
+                    "<h2>選擇物件並上傳影像</h2>"
+                    "<p>完成後按「開始檢測」，分類與瑕疵位置會一次顯示。</p>"
                     "</div>"
                 )
-                object_name = gr.Radio(
-                    choices=["pcb1", "capsules"],
-                    value="pcb1",
-                    label="1. 選擇物件類型",
-                    info="模型是 object-specific，請勿跨物件使用。",
-                    elem_id="df-object",
-                )
-                gr.HTML(
-                    "<p class='df-object-help' lang='zh-Hant-TW'>"
-                    "<strong>pcb1</strong>：印刷電路板　·　"
-                    "<strong>capsules</strong>：膠囊</p>"
-                )
-                image = gr.Image(
-                    label="2. 上傳待檢影像",
-                    type="pil",
-                    sources=["upload", "clipboard"],
-                    image_mode="RGB",
-                    placeholder="將圖片拖放到這裡，或點擊上傳",
-                    buttons=["fullscreen"],
-                    height=420,
-                    elem_id="df-upload",
-                )
+                with gr.Row(equal_height=True, elem_id="df-input-grid"):
+                    with gr.Column(scale=4, min_width=270, elem_classes=["df-setup"]):
+                        object_name = gr.Radio(
+                            choices=[
+                                ("pcb1｜印刷電路板", "pcb1"),
+                                ("capsules｜膠囊", "capsules"),
+                            ],
+                            value="pcb1",
+                            label="選擇與影像相符的物件",
+                            info="模型為 object-specific；選錯物件會讓結果失真。",
+                            elem_id="df-object",
+                        )
+                        gr.HTML(
+                            "<p class='df-object-help' lang='zh-Hant-TW'>"
+                            "支援 JPEG、PNG；單張上限 20 MB。</p>"
+                        )
+                        with gr.Accordion(
+                            "進階顯示設定",
+                            open=False,
+                            elem_id="df-advanced",
+                        ):
+                            threshold = gr.Slider(
+                                minimum=0.05,
+                                maximum=0.95,
+                                value=0.50,
+                                step=0.05,
+                                label="Mask 顯示 threshold",
+                                info="正式 preregistered threshold 為 0.50。此設定只改變畫面上的 "
+                                "binary mask，不會改寫已發布指標。",
+                            )
+                    with gr.Column(scale=7, min_width=340):
+                        image = gr.Image(
+                            label="上傳影像",
+                            type="pil",
+                            sources=["upload", "clipboard"],
+                            image_mode="RGB",
+                            placeholder="將圖片拖放到這裡，或點擊上傳",
+                            buttons=["fullscreen"],
+                            height=330,
+                            elem_id="df-upload",
+                        )
                 gr.HTML(
                     "<div class='df-privacy' lang='zh-Hant-TW'>"
                     "<strong>隱私說明</strong><span>影像只在記憶體中處理；"
                     "本程式不會儲存你上傳的檔案。</span></div>"
                 )
-                with gr.Accordion(
-                    "進階顯示設定（通常不需調整）",
-                    open=False,
-                    elem_id="df-advanced",
-                ):
-                    threshold = gr.Slider(
-                        minimum=0.05,
-                        maximum=0.95,
-                        value=0.50,
-                        step=0.05,
-                        label="Mask 顯示 threshold",
-                        info="正式 preregistered threshold 為 0.50。此設定只改變畫面上的 "
-                        "binary mask，不會改寫已發布指標。",
-                    )
-                run = gr.Button("3. 開始檢測", variant="primary", elem_id="df-run")
-            with gr.Column(scale=4, min_width=320, elem_classes=["df-panel"]):
+                run = gr.Button("開始檢測", variant="primary", elem_id="df-run")
+            with gr.Column(
+                scale=4,
+                min_width=340,
+                visible=False,
+                elem_id="df-result-panel",
+                elem_classes=["df-panel"],
+            ) as result_panel:
                 gr.HTML(
                     "<div class='df-panel-heading' lang='zh-Hant-TW'>"
-                    "<span class='df-panel-label'>檢測結果</span>"
-                    "<h2>先看結果摘要</h2>"
-                    "<p>完成檢測後，這裡會顯示判定、信心分數與執行時間。</p>"
+                    "<h2>檢測結果</h2>"
                     "</div>"
                 )
                 summary = gr.Markdown(
-                    "### 尚未開始檢測\n"
-                    "請完成左側三個步驟。檢測後會顯示 classification confidence、"
-                    "binary mask 與 probability heatmap。",
+                    "### 等待檢測\n"
+                    "按下「開始檢測」後，結果會顯示在這裡。",
                     elem_id="df-summary",
                 )
                 probabilities = gr.Label(
@@ -675,6 +819,7 @@ def build_app() -> gr.Blocks:
             fn=_run,
             inputs=[image, object_name, threshold],
             outputs=[
+                result_panel,
                 probabilities,
                 mask,
                 heatmap,
@@ -694,6 +839,7 @@ def build_app() -> gr.Blocks:
                 fn=_clear_results,
                 inputs=None,
                 outputs=[
+                    result_panel,
                     probabilities,
                     mask,
                     heatmap,

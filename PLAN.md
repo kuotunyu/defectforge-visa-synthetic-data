@@ -214,6 +214,12 @@
     classification、mask、heatmap 與 provenance；桌機／手機無水平溢位、console error，
     核心文字與控制項對比達 WCAG 2.2 AA
 
+- [x] **M29** 🤖 公開 Demo 資訊密度與可讀性精修
+  - **驗證**：一般內文與控制項以 18px 為基準、輔助文字至少 16px；移除重複的
+    三步驟卡片與表單編號，initial state 僅呈現可操作輸入，結果區採 progressive
+    disclosure；桌機首屏可看見完整主要操作、手機與 200% zoom 無水平溢位，真實影像
+    推論仍可完成 classification、mask、heatmap 與 provenance
+
 ---
 
 ## 交接與追蹤
