@@ -1289,6 +1289,46 @@ release candidate；建立 GitHub repo、push 與轉 public 必須等使用者�
 
 ---
 
+## 2026-07-28 — Session 33：公開 Space 本機完成與 v2 extension 凍結
+
+### 做了什麼
+- 新增獨立 `deploy/hf_space/`，以正式 pcb1／capsules classifier + segmenter 同時輸出
+  anomaly probability、binary mask、heatmap、推論延遲與 immutable provenance
+- 新增 `scripts/package_hf_space.py`：白名單打包四個 checkpoint、raw reports、
+  configs、manifest 與第三方授權；秘密、絕對本機路徑、symlink、hash 不符都 fail closed
+- 新增 `scripts/publish_hf_space.py`：預設 dry-run，必須顯式 `--confirm-upload`；
+  先建立 private CPU Basic、上傳及驗證後才可轉 public，並設定一小時閒置休眠
+- 新增六個 Space runtime／packager 契約測試；真實 pcb1 與 capsules 異常影像皆完成
+  CPU 模型 smoke，輸出 shape、分類、mask 與 heatmap 正確
+- 使用隔離的 7864 port 完成 Playwright 端到端測試：上傳真實 pcb1、執行、等待四項輸出、
+  驗證 CPU／coverage 文案、0 console errors，並逐張目視調整低對比文字與標籤
+- 查證並附入 ConvNeXt Apache-2.0 與 NVIDIA SegFormer Source Code License；
+  公開頁明示研究／評估用途，不宣稱 production AOI
+- 新增 Phase 3 M25–M27 與 ADR-025；v2 聚焦於 M16 已觀察到的 real-defect
+  exposure collapse，而不是先花 GPU 額度盲目重生成
+
+### 驗證
+- 四模型封裝共 28 檔、約 254 MB；manifest 綁定來源 commit、每檔大小與 SHA256
+- pcb1 CPU 模型推論約 0.34–0.41 秒；capsules 約 0.26 秒，公開 Demo 無需 A100／L4
+- targeted Ruff 全綠；新增 pytest 6/6；Playwright 全流程通過且 console errors = 0
+- 暫存 package 在 dirty source 時明確標記 `source_dirty=true`，publisher 拒絕正式上傳；
+  必須先 commit、全專案驗收，再重建 clean package
+
+### 未決與風險
+- Hugging Face Space 尚未建立；先以 private CPU Basic build，遠端通過後再轉 public
+- CPU Basic 的冷啟動與 RAM 要以遠端實測為準；若不敷使用才考慮 T4/L4
+- v2 pilot 尚未執行；必須先寫 validation-only gate，避免把 test 當調參集
+
+### 下一步
+提交公開 Space 原始碼 → 由 clean commit 重建 bundle → private upload／runtime 驗證 →
+轉 public 並匿名瀏覽器驗證 → 開始 M26 domain-balanced pilot。
+
+### 換你做
+目前沒有；公開 Demo 不需 Colab。若 M26 本機 GPU 正被其他專案占用，我會改為產出
+一鍵 Colab L4 notebook，再只請你按「全部執行」。
+
+---
+
 ## 2026-07-27 — Session 08：M6 DINOv2 + morphology 瑕疵分型凍結
 
 ### 做了什麼

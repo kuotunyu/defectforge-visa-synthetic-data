@@ -126,4 +126,4 @@ git log -1 --format="%an <%ae>"; git log -1 --format="%B" | Select-String "Co-[A
 | 資料集 | VisA（CC BY 4.0），先做 `pcb1` 與 `capsules` |
 | 目標 | 少樣本瑕疵情境下，證明合成資料能提升**瑕疵分類**與**瑕疵區域分割** |
 | 方法論來源 | NVIDIA GTC 2026 *Few-shot Industrial SDG (Cosmos AnomalyGen)*，用開源工具復刻，見 [docs/methodology.md](docs/methodology.md) |
-| 目前階段 | Phase 2 M19（使用者執行兩物件 SegFormer Colab 正式實驗）。M16–M18 已獨立驗證並提交；結果 ZIP 回收後由 M20 從 raw artifacts 聚合 |
+| 目前階段 | v1.0.0 的 M0–M24 已公開；Phase 3 M25 正在部署公開互動 Space，其後進行 validation-only 的 v2 低成本 pilot |

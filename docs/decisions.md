@@ -897,5 +897,41 @@ README 數字、raw report、圖表、授權或 HF bundle 彼此仍一致。M22 
 - M24 incomplete 變成可定位清單，不會把「未發現錯誤」誤當成完成證據。
 - M19 尚未回收時，gate 應明確停在 M19–M23、六份 downstream evidence、四張正式圖、
   README、GIF 與 acceptance；不得用 dummy segmentation 或單幀占位 GIF 解鎖。
+
+---
+
+<a id="adr-025"></a>
+## ADR-025 — 公開 Demo 採 CPU-first、hash-bound Space；v2 與 v1 結果分流
+
+**狀態：Accepted**（2026-07-28）
+
+### 背景
+v1.0.0 已公開 dataset、LoRA 與可重現的本機 Demo，但作品集訪客仍必須自行 clone、
+準備四個本機 checkpoint 才能互動。使用者也同意在不改寫 v1 負面結果的前提下，
+追加一輪「為什麼合成資料失敗、能否低成本修正」的 v2 實驗。
+
+M16 raw evidence 顯示，500 張合成瑕疵加入後，單一 1,600-sample schedule 中真實瑕疵
+曝光量從 real-only 的 818 次降到 9–14 次，合成瑕疵則達 769–798 次。這是明確且可
+在 validation 上測試的 domain-imbalance 假說，不需要重新生成影像或先租 A100。
+
+### 決策
+- 公開 Demo 使用 Hugging Face Gradio Space；部署包不進 GitHub，而由白名單 packager
+  從四個 formal checkpoint、raw report 與固定授權檔組成。
+- 每個模型載入前驗大小與 SHA256；任何缺件、tamper、物件／group/report 不一致即拒絕服務。
+- runtime 預設自動選 CPU/GPU，但正式公開先用 CPU Basic。實測本機 CPU 的單張四模型
+  lazy-load 後推論約 0.3–0.4 秒，因此不為展示常駐付費 GPU；只有遠端實測證明不足才升級。
+- Space 不保存上傳影像、private API 關閉、單併發、20 MB 上限、25 MP 解碼上限。
+- `nvidia/segformer-b0-finetuned-ade-512-512` 的 upstream license 僅允許非商業研究／
+  評估，因此 Space、README、完整 license copy 都要明示「非 production AOI」。
+- v2 先做 domain-balanced／curriculum pilot，只以 development validation 選策略。
+  pilot 未在兩物件均不退步且至少一項主要指標改善，就停止而不開正式 A100 run。
+- v1 的 CSV、圖表、release 與結論凍結；所有 v2 產物另存 `results/v2/`、`reports/v2/`，
+  並標明 exploratory pilot 或 confirmatory run。
+
+### 後果
+- 訪客可直接操作正式模型，同時看到 checkpoint provenance 與誠實的研究用途界線。
+- GitHub 不追蹤約 243 MiB 權重，Space bundle 也不會夾帶 D 槽路徑、token 或原始 VisA。
+- Colab 的付費 GPU 額度保留給 M27；M26 可先用短程本機 4090 或 L4，並以 fail-fast
+  validation gate 控制成本。
 - GIF 可由同一套正式 checkpoint selector 重現，且不需開 share URL 或人工剪貼
   notebook／UI 數字。

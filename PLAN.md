@@ -188,6 +188,28 @@
 
 ---
 
+# Phase 3 — 公開互動展示與 v2 改良實驗
+
+> v1.0.0 的凍結表格、負面結果與結論保持不變。Phase 3 是明確標示的後續延伸，
+> 不得用新結果覆寫原實驗，也不得用 test set 選擇 v2 超參。
+
+- [ ] **M25** 🤖 公開 Hugging Face Gradio Space
+  - **驗證**：四個展示 checkpoint 的大小與 SHA256 在載入前 fail closed；匿名訪客可完成
+    pcb1／capsules 上傳、分類、mask、heatmap 與 provenance 檢視；預設 CPU Basic，
+    只有實測不敷使用才升級 GPU；頁面與 bundle 完整附帶研究用途及第三方授權界線
+
+- [ ] **M26** 🤖 v2 低成本 pilot：修正合成樣本淹沒真實瑕疵的取樣問題
+  - **驗證**：先凍結候選策略與 validation-only 選模規則；以 real-only、v1 mixing 與
+    domain-balanced／curriculum mixing 做小規模對照，記錄每域曝光量、walltime、VRAM、
+    validation Macro-F1／AUROC；pilot 未過門檻就停止，不消耗 A100 額度做正式重跑
+
+- [ ] **M27** 🙋 v2 confirmatory run 與公開 addendum
+  - **驗證**：只有 M26 在兩物件 validation 都未退步且至少一項主要指標改善才啟動；
+    以凍結設定跑 3 seeds、最後一次性評估 test，輸出獨立 `results/v2/` 與報告；
+    README 清楚並列 v1 與 v2，不能把探索性 pilot 當成預註冊主結果
+
+---
+
 ## 交接與追蹤
 
 每完成一個里程碑：跑驗證欄 → 全綠才勾選 → 追加 [docs/worklog.md](docs/worklog.md) 一筆 →
