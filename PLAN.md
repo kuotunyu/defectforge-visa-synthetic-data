@@ -257,6 +257,13 @@
     Git 歷史、唯讀權限、不可變 action SHA 與 frozen lock，在每次 main push／PR
     自動重跑相同 gate，並稽核作者、committer 與 co-author trailer
 
+- [x] **M36** 🤖 GitHub 正體中文資訊架構與 Repository 重新命名
+  - **驗證**：Repository 更名為 `defectforge-visa-synthetic-data`，名稱直接揭露
+    Synthetic Data 主題；README、系統架構圖、About、v1.0.0／v1.1.0 Release title
+    與 notes 均以正體中文為主，專有名詞保留原文；Semantic Versioning tag 不改名；
+    舊 GitHub URL 可 redirect，新 URL、CI badge、clone command 與公開連結皆有效；
+    完整 pytest、publication audit、GitHub Actions 與 Contributors 稽核全綠
+
 ---
 
 ## 交接與追蹤

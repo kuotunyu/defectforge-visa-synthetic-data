@@ -9,7 +9,7 @@
 
 | 平台 | 帳號 | Repo | 授權 |
 |---|---|---|---|
-| GitHub | **`kuotunyu`** | `01-defectforge-visa` | MIT（**僅程式碼**） |
+| GitHub | **`kuotunyu`** | `defectforge-visa-synthetic-data` | MIT（**僅程式碼**） |
 | Hugging Face Dataset | **`steven0226`** | `defectforge-visa-synthetic` | CC BY 4.0（繼承 VisA） |
 | Hugging Face Model | **`steven0226`** | `defectforge-visa-lora` | CreativeML Open RAIL++-M（繼承底模） |
 

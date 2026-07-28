@@ -86,10 +86,10 @@ def _segmentation_rows() -> list[dict[str, str]]:
 
 
 def _readme_with_blocks(blocks: Mapping[str, str]) -> str:
-    text = "# Project\n\n## Results\n\n"
+    text = "# 專案\n\n## 實驗結果\n\n"
     for name in ("CLASSIFICATION_MAIN", "SEGMENTATION_MAIN"):
         text += f"<!-- BEGIN VERIFIED {name} -->\nstale\n<!-- END VERIFIED {name} -->\n\n"
-    text += "## Limitations\n\n"
+    text += "## 限制與誠實揭露\n\n"
     text += (
         "<!-- BEGIN VERIFIED RESULT_OUTCOME -->\n"
         "stale\n"
@@ -109,7 +109,7 @@ def test_rendered_readme_preserves_negative_result() -> None:
     readme = _readme_with_blocks(blocks)
     verify_readme(readme, blocks)
     assert outcome["classification_negative"] is True
-    assert "Classification negative result: **yes" in blocks["RESULT_OUTCOME"]
+    assert "Classification 負面結果：**是" in blocks["RESULT_OUTCOME"]
     assert outcome["segmentation_negative"] is False
 
 
@@ -155,7 +155,7 @@ def test_write_mode_validates_candidate_before_changing_readme(tmp_path: Path) -
         writer.writeheader()
         writer.writerows(_segmentation_rows())
     readme = tmp_path / "README.md"
-    original = "# Project\n\n## Results\n\n"
+    original = "# 專案\n\n## 實驗結果\n\n"
     for name in BLOCK_NAMES:
         original += (
             f"<!-- BEGIN VERIFIED {name} -->\n"
@@ -165,7 +165,7 @@ def test_write_mode_validates_candidate_before_changing_readme(tmp_path: Path) -
     readme.write_text(original, encoding="utf-8")
     validation = tmp_path / "readme_validation.json"
 
-    with pytest.raises(ReadmeVerificationError, match="Limitations"):
+    with pytest.raises(ReadmeVerificationError, match="limitations"):
         main(
             [
                 "--readme",

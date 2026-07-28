@@ -214,13 +214,13 @@ def audit_plan_and_readme(repo: Path) -> dict[str, Any]:
     duplicate_rows = sorted(number for number, count in counts.items() if count != 1)
     missing_prepublication = sorted(PREPUBLICATION_MILESTONES - checked)
     required_sections = (
-        "## Problem",
-        "## Method",
-        "## Experiments",
-        "## Results",
-        "## Limitations",
-        "## Reproduce",
-        "## License & Citations",
+        "## 研究問題",
+        "## 方法與系統架構",
+        "## 實驗設計",
+        "## 實驗結果",
+        "## 限制與誠實揭露",
+        "## 重現方式",
+        "## 授權與引用",
     )
     return {
         "checked_milestones": sorted(checked),

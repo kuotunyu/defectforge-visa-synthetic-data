@@ -166,7 +166,7 @@ headers。M8 的程序噪聲因此改由 NumPy/scikit-image 實作，避免為�
 
 | 平台 | 帳號 |
 |---|---|
-| GitHub | **`kuotunyu`**（repo `01-defectforge-visa`） |
+| GitHub | **`kuotunyu`**（repo `defectforge-visa-synthetic-data`） |
 | Hugging Face | **`steven0226`**（Phase 2 上傳合成資料集與 LoRA，見 [publish_spec.md](publish_spec.md)） |
 
 ---

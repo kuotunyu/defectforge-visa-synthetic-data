@@ -1,305 +1,295 @@
-# DefectForge-VisA
+# DefectForge：VisA Synthetic Data 瑕疵生成與評估
 
-[![Verify](https://github.com/kuotunyu/01-defectforge-visa/actions/workflows/verify.yml/badge.svg)](https://github.com/kuotunyu/01-defectforge-visa/actions/workflows/verify.yml)
+[![持續驗證](https://github.com/kuotunyu/defectforge-visa-synthetic-data/actions/workflows/verify.yml/badge.svg)](https://github.com/kuotunyu/defectforge-visa-synthetic-data/actions/workflows/verify.yml)
 
-> **Status: Published; M0–M35 verified.**
-> Both downstream result tables and the outcome statement are generated atomically from
-> independently validated CSVs. Numbers are never typed by hand — see `scripts/verify_readme.py`.
+> **狀態：已公開；M0–M36 全數驗證完成。**
+> 下游結果表與最終結論皆由通過獨立驗證的 CSV 自動產生，不手動填寫數字。
+> 驗證入口請見 `scripts/verify_readme.py` 與 GitHub Actions。
 
-Published artifacts:
-[synthetic dataset](https://huggingface.co/datasets/steven0226/defectforge-visa-synthetic) ·
-[SD2/SDXL LoRA weights](https://huggingface.co/steven0226/defectforge-visa-lora) ·
-[public inspection demo](https://huggingface.co/spaces/steven0226/defectforge-visa-demo)
+公開成果：
+[Synthetic Dataset](https://huggingface.co/datasets/steven0226/defectforge-visa-synthetic) ·
+[SD2／SDXL LoRA Weights](https://huggingface.co/steven0226/defectforge-visa-lora) ·
+[正體中文互動 Demo](https://steven0226-defectforge-visa-demo.hf.space/) ·
+[Release](https://github.com/kuotunyu/defectforge-visa-synthetic-data/releases)
 
-**Can synthetic defect images improve few-shot industrial anomaly classification and
-segmentation?** An open-source replication of the NVIDIA GTC 2026 course
-*Few-shot Industrial Synthetic Data Generation with the NVIDIA Defect Image Generation Agent*
-(Cosmos AnomalyGen), rebuilt entirely with open models and open data.
+**研究問題：Synthetic Data 能否改善少樣本工業瑕疵的 Classification 與 Segmentation？**
 
-**繁中摘要**：在「每個物件只有 10 張真實瑕疵圖」的少樣本情境下，用兩階段合成資料
-（程序化／copy-paste ＋ diffusion inpainting LoRA）證明合成資料能否提升瑕疵分類與瑕疵區域分割。
-方法論復刻 NVIDIA GTC 2026 的 Cosmos AnomalyGen 課程，但全部改用開源工具實作。
-若合成資料**沒有**帶來提升，我們會如實報告並分析原因。
+本專案在每個物件只有 **10 張真實瑕疵圖**的條件下，重建 NVIDIA GTC 2026
+Cosmos AnomalyGen 的方法論，並全部改用 Open Model、Open Data 與可重現程式碼實作。
+主實驗結果顯示：已篩選 Synthetic Data **沒有**優於 Real-only；本專案保留這個負面結果，
+並進一步用 v2 pilot 分析 Synthetic Data 曝光比例是否造成退步。
 
 ---
 
-## Problem
+## 研究問題
 
-Real production lines rarely have enough defect images to train a reliable AOI model.
-On VisA, each object ships only **100 anomalous images**, and the official few-shot
-protocol trims that to **10**. Meanwhile normal images are essentially free.
-This is exactly the asymmetry synthetic data should be able to close.
+真實產線通常很難蒐集足夠的瑕疵影像。VisA 每個物件只有 **100 張異常影像**，
+而官方 few-shot protocol 進一步縮減為 **10 張**；相較之下，正常影像容易取得。
+DefectForge 要驗證的正是：Synthetic Data 能否補上這個資料不對稱。
 
-| | |
+| 項目 | 設定 |
 |---|---|
-| Dataset | [VisA](https://registry.opendata.aws/visa/) (CC BY 4.0) — `pcb1`, `capsules` |
-| Real defect budget | 10 images per object (seed=42) |
-| Downstream tasks | defect classification + defect-region segmentation |
-| Labels for synthetic data | **fully automatic** — the placed mask *is* the segmentation ground truth |
+| Dataset | [VisA](https://registry.opendata.aws/visa/)（CC BY 4.0）：`pcb1`、`capsules` |
+| 真實瑕疵預算 | 每個物件 10 張，seed=42 |
+| 下游任務 | Defect Classification＋Defect-region Segmentation |
+| Synthetic Data 標註 | 全自動；放置用 Mask 就是 Segmentation Ground Truth |
 
-### The split matters, and it is easy to get wrong
+### Split 很重要，而且非常容易洩漏
 
-VisA's official `2cls_fewshot` and `2cls_highshot` CSVs are two different partitions of the
-same images. We measured their overlap before writing any code:
+VisA 官方 `2cls_fewshot` 與 `2cls_highshot` CSV 是同一批影像的兩種不同切分。
+在開始撰寫訓練程式前，我們先量測兩者的交集：
 
-```
-highshot TRAIN(anomaly) ∩ fewshot TEST(anomaly) = 40   (per object, out of 80)
+```text
+highshot TRAIN(anomaly) ∩ fewshot TEST(anomaly) = 40   （每個物件，test 共 80 張）
 fewshot TRAIN ⊂ highshot TRAIN                          True
 highshot TEST ⊂ fewshot TEST                            True
 ```
 
-Training a "full-real upper bound" on the highshot train split and scoring it on the fewshot
-test split would put **half the test defects into training**. We therefore use
-`2cls_highshot` as the single base partition, giving one frozen test set shared by every
-group. Because the partitions nest, this also hands us a free real-data scaling curve at
-**10 → 20 → 60** real defect images — which is what lets us answer *how many real defect
-images our synthetic data is worth*. Details: [ADR-007](docs/decisions.md#adr-007).
+如果用 highshot train 訓練 Full-real upper bound，卻用 fewshot test 評估，
+就會把**一半的 test 瑕疵放進 training**。因此本專案統一以 `2cls_highshot`
+作為唯一 base partition，所有實驗共用同一個 frozen test set。
+因為 partition 具有包含關係，我們也能免費得到 **10 → 20 → 60**
+張真實瑕疵圖的 scaling curve。完整決策見 [ADR-007](docs/decisions.md#adr-007)。
 
-## Method
+## 方法與系統架構
 
-```mermaid
-flowchart TD
-    A[VisA raw] --> B[spot-diff 2cls_highshot base partition]
-    B --> C[pHash grouping + frozen split manifest + test blocklist]
-    C --> D[k=10 few-shot defect seeds]
-    D --> E[Defect typing: DINOv2 + mask morphology clustering]
+![DefectForge Synthetic Data 系統架構](docs/diagrams/readme_01_flowchart_system_architecture.png)
 
-    E --> F1[Stage A: copy-paste]
-    E --> F2[Stage A: procedural anomalies]
-    E --> G[Stage B: LoRA fine-tune of an inpainting UNet]
+[查看 Mermaid 原始碼](docs/diagrams/readme_01_flowchart_system_architecture.mmd)
 
-    C --> H[Auto mask placement: ROI detect -> affine -> place]
-    G --> I[Crop-to-ROI inpaint -> blend back at full resolution]
-    H --> I
-    I --> J[Refine search over guidance_scale x crop_ratio]
+整體流程分成五層：
 
-    F1 --> K[Quality filtering]
-    F2 --> K
-    J --> K
-    K --> L1[filtered/]
-    K --> L2[unfiltered/]
+1. **資料與防洩漏**：凍結 split manifest、SHA256、pHash group 與 test blocklist。
+2. **Synthetic Data 生成**：Stage A 使用 Copy-paste／Procedural；Stage B 使用
+   SD2／SDXL Inpainting LoRA 與 Auto Mask Placement。
+3. **品質與可追溯性**：六道 Quality Filtering、Filtered／Unfiltered view、
+   per-image metadata provenance。
+4. **下游評估**：以 ConvNeXt-Tiny 執行 Classification，以 SegFormer-B0 執行
+   Segmentation。
+5. **公開結果與證據鏈**：Validated CSV、Figures、SHA256-bound reports 與正體中文 Demo。
 
-    L1 --> M[Phase 2: 5-group controlled experiments]
-    L2 --> M
-```
+Cosmos AnomalyGen 各元件與 Open-source 替代方案的逐項對照，記錄在
+[方法論文件](docs/methodology.md)；其中也明確標示哪些部分是本專案的工程詮釋，
+而不是 NVIDIA 公開公式。
 
-The mapping from each Cosmos AnomalyGen component to its open-source stand-in is
-documented cell-by-cell in [docs/methodology.md](docs/methodology.md), including which
-parts are our own interpretation rather than published NVIDIA formulas.
+## 實驗設計
 
-## Experiments
+主實驗包含五組控制組；第 1–4 組使用完全相同的真實資料，Synthetic Data 僅能額外加入，
+所有組別都在同一個 frozen test set 評估：
 
-Five groups, identical real data in groups 1–4, synthetic strictly additive, all scored on
-the same frozen test set:
+1. **Real-only**：10 張真實瑕疵圖
+2. **+ Standard Augmentation**：排除一般 augmentation 就足以改善的可能
+3. **+ 未篩選 Synthetic Data**
+4. **+ 已篩選 Synthetic Data**：主比較組
+5. **Full-real upper bound**：60 張真實瑕疵圖
 
-1. Real-only (10 real defects)
-2. + Standard Augmentation — rules out "plain augmentation would have done it"
-3. + Unfiltered Synthetic
-4. + Filtered Synthetic — main result, and the case for the filtering pipeline
-5. Full-real upper bound (60 real defects)
+其他實驗包括：
 
-Plus: a real-data scaling curve (10 / 20 / 60), a synthetic-volume sweep at
-{125, 250, 500} mirroring the course's own curve, a base-model ablation (SD2 vs SDXL),
-and a segmentation group trained with **zero real defect pixels**.
+- 10／20／60 張真實瑕疵圖的 scaling curve
+- `{125, 250, 500}` Synthetic Data volume sweep
+- SD2 與 SDXL base model ablation
+- 完全不讀取真實瑕疵 pixel 的 Segmentation 組別
 
-Anti-leakage: validation and test are real-only; the generator, the filter and the
-defect-type clusterer never read a test image. The split manifest (seed, SHA256,
-pHash groups) is frozen before a single synthetic image is generated, and
-`splits/test_blocklist.json` is published so anyone can check us.
-Full protocol: [docs/experiment_protocol.md](docs/experiment_protocol.md).
+Validation 與 test 僅使用真實資料。Generator、Filter 與 defect-type clusterer
+不讀取 test image；split manifest 在第一張 Synthetic Image 產生前就凍結，
+並公開 `splits/test_blocklist.json` 供外部檢查。完整 protocol 見
+[實驗設計文件](docs/experiment_protocol.md)。
 
-## Results
+## 實驗結果
 
-The tables below are populated only by `scripts/verify_readme.py --write` after the
-formal classification and segmentation artefacts pass their independent validators.
-The figures are built from the same two CSVs and carry their input hashes in
-`reports/phase2_figures_validation.json`.
+下列表格只能由 `scripts/verify_readme.py --write` 產生，而且必須先通過
+Classification 與 Segmentation 的獨立 validator。所有 Figure 也從相同兩份 CSV
+建立，輸入 SHA256 記錄於 `reports/phase2_figures_validation.json`。
 
-![Real-data scaling and filtered-synthetic equivalent](reports/figures/real_scaling_curve.png)
+![真實資料 Scaling Curve 與已篩選 Synthetic Data 等價量](reports/figures/real_scaling_curve.png)
 
-### Classification
+### 瑕疵分類（Classification）
 
 <!-- BEGIN VERIFIED CLASSIFICATION_MAIN -->
-| Object | Training group | Macro-F1 | Defect F1 | AUROC | Normal FPR |
+| 物件 | 訓練組別 | Macro-F1 | 瑕疵 F1 | AUROC | 正常樣本 FPR |
 | --- | --- | --- | --- | --- | --- |
-| pcb1 | Real-only (10) | 0.6826 | 0.4815 | 0.9086 | 0.2065 |
+| pcb1 | Real-only（10 張） | 0.6826 | 0.4815 | 0.9086 | 0.2065 |
 | pcb1 | + Standard Augmentation | 0.6826 | 0.4815 | 0.9157 | 0.2065 |
-| pcb1 | + Unfiltered Synthetic | 0.4866 | 0.1858 | 0.5556 | 0.3134 |
-| pcb1 | + Filtered Synthetic | 0.4270 | 0.0160 | 0.2229 | 0.2090 |
-| pcb1 | Full-real (60) | 0.6826 | 0.4815 | 0.9294 | 0.2065 |
-| capsules | Real-only (10) | 0.5728 | 0.2535 | 0.7934 | 0.0913 |
+| pcb1 | + 未篩選 Synthetic Data | 0.4866 | 0.1858 | 0.5556 | 0.3134 |
+| pcb1 | + 已篩選 Synthetic Data | 0.4270 | 0.0160 | 0.2229 | 0.2090 |
+| pcb1 | Full-real（60 張） | 0.6826 | 0.4815 | 0.9294 | 0.2065 |
+| capsules | Real-only（10 張） | 0.5728 | 0.2535 | 0.7934 | 0.0913 |
 | capsules | + Standard Augmentation | 0.6031 | 0.3333 | 0.7656 | 0.1452 |
-| capsules | + Unfiltered Synthetic | 0.3839 | 0.0331 | 0.3145 | 0.3278 |
-| capsules | + Filtered Synthetic | 0.3712 | 0.0444 | 0.2844 | 0.3817 |
-| capsules | Full-real (60) | 0.6748 | 0.4874 | 0.8583 | 0.2075 |
+| capsules | + 未篩選 Synthetic Data | 0.3839 | 0.0331 | 0.3145 | 0.3278 |
+| capsules | + 已篩選 Synthetic Data | 0.3712 | 0.0444 | 0.2844 | 0.3817 |
+| capsules | Full-real（60 張） | 0.6748 | 0.4874 | 0.8583 | 0.2075 |
 <!-- END VERIFIED CLASSIFICATION_MAIN -->
 
-![Five-group classification comparison](reports/figures/main_comparison_table.png)
+![五組 Classification 比較](reports/figures/main_comparison_table.png)
 
-### Segmentation
+### 瑕疵區域分割（Segmentation）
 
 <!-- BEGIN VERIFIED SEGMENTATION_MAIN -->
-| Object | Training group | Dice | mIoU | Pixel AUROC | AUPRO |
+| 物件 | 訓練組別 | Dice | mIoU | Pixel AUROC | AUPRO |
 | --- | --- | --- | --- | --- | --- |
-| pcb1 | Real-only (10) | 0.3762 | 0.6156 | 0.9460 | 0.6028 |
+| pcb1 | Real-only（10 張） | 0.3762 | 0.6156 | 0.9460 | 0.6028 |
 | pcb1 | + Standard Augmentation | 0.3836 | 0.6185 | 0.9144 | 0.5740 |
-| pcb1 | + Unfiltered Synthetic | 0.2490 | 0.5709 | 0.9324 | 0.6065 |
-| pcb1 | + Filtered Synthetic | 0.0621 | 0.5156 | 0.9010 | 0.7471 |
-| pcb1 | Full-real (60) | 0.6862 | 0.7610 | 0.9296 | 0.5999 |
-| pcb1 | Procedural-only | 0.0316 | 0.5076 | 0.8551 | 0.5963 |
-| pcb1 | Copy-paste-only | 0.0000 | 0.4997 | 0.9015 | 0.4386 |
-| pcb1 | Diffusion-only | 0.0000 | 0.4997 | 0.8288 | 0.4556 |
-| pcb1 | All-mixed (alias of Filtered Synthetic) | 0.0621 | 0.5156 | 0.9010 | 0.7471 |
-| capsules | Real-only (10) | 0.5958 | 0.7119 | 0.9858 | 0.8488 |
+| pcb1 | + 未篩選 Synthetic Data | 0.2490 | 0.5709 | 0.9324 | 0.6065 |
+| pcb1 | + 已篩選 Synthetic Data | 0.0621 | 0.5156 | 0.9010 | 0.7471 |
+| pcb1 | Full-real（60 張） | 0.6862 | 0.7610 | 0.9296 | 0.5999 |
+| pcb1 | 僅 Procedural | 0.0316 | 0.5076 | 0.8551 | 0.5963 |
+| pcb1 | 僅 Copy-paste | 0.0000 | 0.4997 | 0.9015 | 0.4386 |
+| pcb1 | 僅 Diffusion | 0.0000 | 0.4997 | 0.8288 | 0.4556 |
+| pcb1 | All-mixed（與已篩選 Synthetic Data 共用） | 0.0621 | 0.5156 | 0.9010 | 0.7471 |
+| capsules | Real-only（10 張） | 0.5958 | 0.7119 | 0.9858 | 0.8488 |
 | capsules | + Standard Augmentation | 0.0000 | 0.4996 | 0.8661 | 0.5591 |
-| capsules | + Unfiltered Synthetic | 0.0000 | 0.4996 | 0.4919 | 0.1666 |
-| capsules | + Filtered Synthetic | 0.4570 | 0.6477 | 0.9737 | 0.9137 |
-| capsules | Full-real (60) | 0.6331 | 0.7312 | 0.9991 | 0.9591 |
-| capsules | Procedural-only | 0.0000 | 0.4996 | 0.6127 | 0.3506 |
-| capsules | Copy-paste-only | 0.6101 | 0.7191 | 0.9869 | 0.9440 |
-| capsules | Diffusion-only | 0.0000 | 0.4996 | 0.5178 | 0.2556 |
-| capsules | All-mixed (alias of Filtered Synthetic) | 0.4570 | 0.6477 | 0.9737 | 0.9137 |
+| capsules | + 未篩選 Synthetic Data | 0.0000 | 0.4996 | 0.4919 | 0.1666 |
+| capsules | + 已篩選 Synthetic Data | 0.4570 | 0.6477 | 0.9737 | 0.9137 |
+| capsules | Full-real（60 張） | 0.6331 | 0.7312 | 0.9991 | 0.9591 |
+| capsules | 僅 Procedural | 0.0000 | 0.4996 | 0.6127 | 0.3506 |
+| capsules | 僅 Copy-paste | 0.6101 | 0.7191 | 0.9869 | 0.9440 |
+| capsules | 僅 Diffusion | 0.0000 | 0.4996 | 0.5178 | 0.2556 |
+| capsules | All-mixed（與已篩選 Synthetic Data 共用） | 0.4570 | 0.6477 | 0.9737 | 0.9137 |
 <!-- END VERIFIED SEGMENTATION_MAIN -->
 
-![Nine logical segmentation groups](reports/figures/segmentation_table.png)
+![九個 Segmentation 邏輯組別](reports/figures/segmentation_table.png)
 
-## v2 follow-up: did sampling cause the failure?
+## v2 後續實驗：退步是否來自 Sampling？
 
-After v1.0.0 was frozen, we tested one explicit failure hypothesis without touching the
-test set: label balancing gave the 500 synthetic anomalies almost all positive-class
-exposure, leaving the 10 real anomalies only 14 of 1,600 sampled positions.
+v1.0.0 凍結後，我們在完全不讀取 test set 的前提下驗證一個明確假設：
+Label balancing 讓 500 張 Synthetic Anomaly 幾乎占據全部 positive-class exposure，
+導致 10 張真實 anomaly 在 1,600 個 sampled positions 中只出現 14 次。
 
 | Validation candidate | pcb1 Macro-F1 | pcb1 AUROC | capsules Macro-F1 | capsules AUROC |
 |---|---:|---:|---:|---:|
 | Real-only | 0.6944 | 0.9167 | 0.8133 | 0.9120 |
-| v1 class-balanced mixing | 0.5537 | 0.3139 | 0.4545 | 0.2083 |
+| v1 Class-balanced Mixing | 0.5537 | 0.3139 | 0.4545 | 0.2083 |
 | Domain-balanced 50% real bad | 0.6944 | **0.9389** | 0.6571 | 0.7500 |
 | Domain-balanced 75% real bad | 0.6944 | 0.8806 | 0.6571 | **0.8611** |
 
-Domain balancing rescued pcb1 and much of capsules, confirming that exposure collapse
-was real. It still failed the preregistered cross-object gate: the selected 75% candidate
-was `-0.0781` mean Macro-F1 versus real-only and capsules remained `-0.1562`. Therefore
-we stopped before test evaluation or a three-seed confirmatory run. This is an
-**exploratory validation result**, not a replacement for the v1 tables above.
-[Protocol and full report](reports/v2_pilot_report.md).
+Domain balancing 救回 pcb1 與部分 capsules 表現，證明 exposure collapse 確實存在。
+然而預先註冊的跨物件 gate 仍未通過：選出的 75% candidate 相對 Real-only
+平均 Macro-F1 為 `-0.0781`，capsules 仍為 `-0.1562`。因此我們在 test evaluation
+與 three-seed confirmatory run 之前正確停止。這是 **exploratory validation result**，
+不取代上方 v1 結果。完整內容見 [v2 Pilot Report](reports/v2_pilot_report.md)。
 
-## Local demo
+## 公開互動 Demo
 
-![DefectForge deterministic local demo](assets/demo.gif)
+![DefectForge 決定性 Demo](assets/demo.gif)
 
-Try the same formal models in the
-[public DefectForge Inspection Console](https://huggingface.co/spaces/steven0226/defectforge-visa-demo).
-The Space starts on CPU Basic, checks all four checkpoint hashes before loading, does not
-save uploads, and includes five attributed VisA examples that can be selected without
-supplying a local image. It is restricted to non-commercial research/evaluation because
-of the SegFormer upstream license.
+[開啟正體中文 DefectForge Demo](https://steven0226-defectforge-visa-demo.hf.space/)
 
-The GIF is generated by `scripts/record_demo_artifacts.py` from four deterministic
-images in the frozen highshot test partition. It uses the post-evaluation best formal
-classifier and segmenter checkpoints for each object, verifies those checkpoints against
-their raw reports, and does not change any reported metric.
+Demo 預設使用 CPU Basic，載入前會檢查四個 checkpoint SHA256，不保存上傳影像，
+並提供五張具 attribution 的 VisA 範例。使用者可以查看 Classification Confidence、
+Binary Mask、固定 0–1 色階的 Probability Heatmap 與 checkpoint provenance。
+由於 SegFormer upstream License 限制，此 Demo 僅供 non-commercial
+research／evaluation 使用。
 
-## Limitations
+上方 GIF 由 `scripts/record_demo_artifacts.py` 使用 frozen highshot test partition
+中的四張固定影像產生。展示模型來自事後凍結的正式 checkpoint，會回查 raw report，
+且不會改寫任何正式指標。
 
-The outcome block is deliberately generated under Limitations so a flat or negative
-synthetic-data result cannot be silently omitted from the final narrative.
+## 限制與誠實揭露
 
-At the preregistered segmentation threshold of 0.5, all four deterministic demo frames
-produced zero binary-mask coverage. The probability heatmaps and classifier probabilities
-are preserved in the GIF, and the samples were not reselected to hide this limitation.
+本專案刻意把 outcome block 放在限制段落，確保 Synthetic Data 的持平或負面結果
+不會從最終敘事中被移除。
+
+在預先註冊的 Segmentation threshold 0.5 下，四張決定性 Demo frame 的 Binary Mask
+coverage 都是 0。Probability Heatmap 與 Classification Probability 仍完整保留，
+且沒有重新挑選 sample 來隱藏這項限制。
 
 <!-- BEGIN VERIFIED RESULT_OUTCOME -->
-- Classification, Filtered Synthetic vs Real-only: `-0.2286` mean Macro-F1.
-- Segmentation, Filtered Synthetic vs Real-only: `-0.2264` mean Dice.
-- Classification negative result: **yes — Filtered Synthetic did not improve mean Macro-F1.**
-- Segmentation negative result: **yes — Filtered Synthetic did not improve mean Dice.**
+- Classification：已篩選 Synthetic Data 相對 Real-only 的平均 Macro-F1 差異為 `-0.2286`。
+- Segmentation：已篩選 Synthetic Data 相對 Real-only 的平均 Dice 差異為 `-0.2264`。
+- Classification 負面結果：**是——已篩選 Synthetic Data 未提升平均 Macro-F1。**
+- Segmentation 負面結果：**是——已篩選 Synthetic Data 未提升平均 Dice。**
 <!-- END VERIFIED RESULT_OUTCOME -->
 
-## Reproduce
+其他限制：
 
-DefectForge is developed and fully tested on native Windows 11 with Python 3.12 and an
-RTX 4090. The data root is configured once in `configs/paths.yaml`; code never embeds a
-machine-specific user path.
+- 僅研究 `pcb1` 與 `capsules`，不能直接推廣到其他工業物件。
+- Synthetic Data 的視覺品質不等於下游任務有效性。
+- 公開 Demo 是 research／evaluation tool，不是 production AOI、品質放行或安全系統。
+- v2 pilot 是 exploratory validation；未通過 gate，因此沒有執行 confirmatory test。
+
+## 重現方式
+
+DefectForge 在原生 Windows 11、Python 3.12 與 RTX 4090 上開發並完成驗證。
+資料根目錄只需在 `configs/paths.yaml` 設定一次；Source Code 不嵌入使用者專屬路徑。
 
 ```powershell
-git clone https://github.com/kuotunyu/01-defectforge-visa.git
-Set-Location 01-defectforge-visa
+git clone https://github.com/kuotunyu/defectforge-visa-synthetic-data.git
+Set-Location defectforge-visa-synthetic-data
 uv sync --frozen --python 3.12
 
-# Confirm the locked CUDA environment.
+# 確認鎖定的 CUDA 環境。
 uv run python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 
-# Download/check VisA, prepare both official layouts, and independently recheck ADR-007.
+# 下載並檢查 VisA、產生兩套官方 layout，獨立重驗 ADR-007。
 uv run python scripts/download_visa.py
 uv run python scripts/prepare_splits.py
 uv run python scripts/verify_splits.py
 
-# Fast repository verification. Training commands remain dry-run here.
+# 快速 Repository 驗證；Training command 在此維持 dry-run。
 uv run ruff check .
 uv run pytest -q
 uv run python scripts/run_classifier_matrix.py --dry-run
 uv run python scripts/package_m18_colab.py --dry-run
 ```
 
-The full ordered pipeline, immutable checkpoints, expected sample counts, and validator
-for every milestone are in [PLAN.md](PLAN.md). Configuration and CLI contracts are in
-[docs/interfaces.md](docs/interfaces.md); the preregistered downstream protocol is in
-[docs/experiment_protocol.md](docs/experiment_protocol.md).
+完整執行順序、Immutable Checkpoint、預期 Sample Count 與每個 Milestone 的 Validator
+記錄於 [PLAN.md](PLAN.md)。Configuration／CLI 契約見
+[Interfaces](docs/interfaces.md)；預先註冊的下游 Protocol 見
+[Experiment Protocol](docs/experiment_protocol.md)。
 
-GPU work is deliberately split:
+GPU 工作刻意拆分：
 
-- SD2 generation, SDXL inference, classification, and one-step SegFormer smoke tests run
-  locally.
-- SDXL LoRA training uses `notebooks/01_train_inpaint_lora_sdxl.ipynb`.
-- The 16 physical SegFormer runs use `notebooks/02_train_segformer.ipynb`; `all_mixed`
-  cites `filtered_syn` and is not rerun.
+- SD2 Generation、SDXL Inference、Classification 與 SegFormer one-step smoke 在本機執行。
+- SDXL LoRA Training 使用 `notebooks/01_train_inpaint_lora_sdxl.ipynb`。
+- 16 個實體 SegFormer run 使用 `notebooks/02_train_segformer.ipynb`；
+  `all_mixed` 引用 `filtered_syn`，不重複訓練。
 
-Both notebooks are thin wrappers around the same tracked Python trainers. They download
-no test data outside the frozen manifest, save resumable checkpoints, and return raw
-reports that are independently aggregated. See [instructions_for_me.md](instructions_for_me.md)
-for the exact Colab handoff.
+兩個 Notebook 都只是 tracked Python trainer 的薄包裝，不會在 frozen manifest 之外
+下載 test data，並提供 resumable checkpoint 與可獨立聚合的 raw report。
+Colab 精確操作流程見 [instructions_for_me.md](instructions_for_me.md)。
 
-## Repository map
+## Repository 結構
 
-| Path | What it holds |
+| 路徑 | 內容 |
 |---|---|
-| [CLAUDE.md](CLAUDE.md) | Working rules for this repo |
-| [PLAN.md](PLAN.md) | Phase 1 milestones with per-item verification |
-| [docs/](docs/) | Methodology, protocols, specs, ADRs, worklog |
-| `src/` | Pipeline code (data / synthetic / filtering / training / evaluation / inference) |
-| `splits/` | Frozen split manifest, checksums, defect taxonomy |
-| `notebooks/` | Colab notebooks (LoRA training) |
-| `reports/` | Generated reports and figures |
-| `.claude/skills/` | Project-level agent skills mirroring the course's agentic flow |
+| [CLAUDE.md](CLAUDE.md) | Repository 工作規則 |
+| [PLAN.md](PLAN.md) | M0–M36 Milestone 與逐項驗證 |
+| [docs/](docs/) | 方法論、Protocol、Spec、ADR、Worklog |
+| [docs/diagrams/](docs/diagrams/) | 已驗證的 Mermaid 架構圖原始碼與 PNG |
+| `src/` | Data／Synthetic／Filtering／Training／Evaluation／Inference Source Code |
+| `splits/` | Frozen split manifest、Checksum、Defect Taxonomy |
+| `notebooks/` | Colab Notebook |
+| `reports/` | 自動產生的 Report、Evidence 與 Figure |
+| `.claude/skills/` | 對應課程 Agentic Flow 的 Project-level Skill |
 
-## License & Citations
+## 授權與引用
 
-Source code in this repository: **MIT** (see [LICENSE](LICENSE)). The MIT grant covers
-code only — data and model weights carry their own terms:
+本 Repository 的 Source Code 採 **MIT License**（見 [LICENSE](LICENSE)）。
+MIT 僅涵蓋程式碼；Dataset 與 Model Weights 各自保留原始條款：
 
 <!-- BEGIN VERIFIED LICENSE_CHAIN -->
-| Asset | License | DefectForge obligation |
+| 資產 | License | DefectForge 義務 |
 |---|---|---|
-| VisA source dataset | CC BY 4.0 | Attribute VisA and its paper; do not include the original images in our HF dataset |
-| `sd2-community/stable-diffusion-2-inpainting` | CreativeML Open RAIL++-M | Preserve the use-based restrictions and disclose the preservation mirror |
-| `diffusers/stable-diffusion-xl-1.0-inpainting-0.1` | CreativeML Open RAIL++-M | Preserve the use-based restrictions |
-| `facebook/dinov2-base` | Apache-2.0 | Attribute the model and DINOv2 paper |
-| DefectForge synthetic images | CC BY 4.0 | Treat as VisA derivatives; retain VisA attribution and disclose diffusion base licenses |
-| DefectForge LoRA weights | CreativeML Open RAIL++-M | Inherit the corresponding base-model restrictions and link the license |
-| DefectForge source code | MIT | The MIT grant applies to code only, not data or model weights |
+| VisA 原始 Dataset | CC BY 4.0 | 標示 VisA 與其論文；Hugging Face Dataset 不得包含原始影像 |
+| `sd2-community/stable-diffusion-2-inpainting` | CreativeML Open RAIL++-M | 保留用途限制，並揭露 preservation mirror |
+| `diffusers/stable-diffusion-xl-1.0-inpainting-0.1` | CreativeML Open RAIL++-M | 保留用途限制 |
+| `facebook/dinov2-base` | Apache-2.0 | 標示模型與 DINOv2 論文 |
+| DefectForge Synthetic Images | CC BY 4.0 | 視為 VisA 衍生內容；保留 VisA attribution，並揭露 Diffusion base model License |
+| DefectForge LoRA Weights | CreativeML Open RAIL++-M | 繼承對應 base model 的限制，並附上 License 連結 |
+| DefectForge Source Code | MIT | MIT 僅授權程式碼，不包含 Dataset 與 Model Weights |
 <!-- END VERIFIED LICENSE_CHAIN -->
 
-References:
+主要引用：
 
 - Zou et al., *SPot-the-Difference Self-Supervised Pre-training for Anomaly Detection
-  and Segmentation* (ECCV 2022) — the VisA dataset and its official splits.
+  and Segmentation*（ECCV 2022）：VisA Dataset 與官方 Split。
   [arXiv:2207.14315](https://arxiv.org/abs/2207.14315) ·
   [amazon-science/spot-diff](https://github.com/amazon-science/spot-diff)
 - Hu et al., *AnomalyDiffusion: Few-Shot Anomaly Image Generation with Diffusion Model*
-  (AAAI 2024) — the spatial-anomaly-embedding idea this pipeline mirrors.
+  （AAAI 2024）：本 Pipeline 對照的 Spatial Anomaly Embedding 概念。
   [arXiv:2312.05767](https://arxiv.org/abs/2312.05767)
-- Zavrtanik et al., *DRAEM* (ICCV 2021) — procedural anomaly synthesis.
-- Ghiasi et al., *Simple Copy-Paste is a Strong Data Augmentation Method* (CVPR 2021).
+- Zavrtanik et al., *DRAEM*（ICCV 2021）：Procedural Anomaly Synthesis。
+- Ghiasi et al., *Simple Copy-Paste is a Strong Data Augmentation Method*（CVPR 2021）。
 - NVIDIA GTC Taiwan 2026, *Few-shot Industrial Synthetic Data Gen with NVIDIA Defect
-  Image Generation Agent* — methodological inspiration. This repository is an
-  independent open-source replication and is **not** affiliated with or endorsed by NVIDIA.
+  Image Generation Agent*：方法論靈感來源。本 Repository 是獨立 Open-source
+  replication，與 NVIDIA 無隸屬或背書關係。

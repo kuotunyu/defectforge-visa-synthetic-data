@@ -6,6 +6,38 @@
 
 ---
 
+## 2026-07-29 — Session 46：M36 GitHub 正體中文化與 Repository 重新命名
+
+### 做了什麼
+- 將 GitHub Repository 從 `01-defectforge-visa` 更名為
+  `defectforge-visa-synthetic-data`，移除序號並直接揭露 Synthetic Data 主題
+- 重寫根目錄 README：以正體中文說明研究問題、資料洩漏風險、方法、實驗、負面結果、
+  v2 pilot、公開 Demo、限制、重現方式、Repository 結構與授權
+- 使用 `design-doc-mermaid` skill 建立五層正體中文系統架構圖；第一次橫向版本雖通過
+  語法驗證但縮小後不可讀，因此改為直向層級，經 Mermaid CLI 成功渲染後才加入 README
+- 將 README 自動結果表與 outcome generator 改為正體中文 label，保留 Macro-F1、
+  AUROC、Dice、AUPRO 等專有名詞
+- 同步更新 About 正體中文描述、Demo homepage、新 Repository URL、v1.0.0／v1.1.0
+  Release title 與 notes；`v1.0.0`／`v1.1.0` tag 依 Semantic Versioning 保留
+- 將共用 License chain 翻為正體中文，並同步 README 與兩張 Hugging Face card
+
+### 驗證
+- Mermaid CLI 成功產生 56,617-byte PNG，架構圖具高對比色彩與可讀的直向層級
+- README verified blocks、readme SHA256 與 License chain evidence 全部重新產生
+- Ruff、197 項完整 pytest 與 publication audit 全綠
+- 新舊 GitHub URL、About、Release 與 Contributors 在 push 後再次遠端查核
+
+### 決策
+- Repository 採 `defectforge-visa-synthetic-data`：品牌、Dataset 與技術主題三者兼具
+- 正體中文是敘事主語言；Synthetic Data、Classification、Segmentation、LoRA、
+  Checkpoint、Metric 與模型名稱等專有名詞保留原文
+- 不為了中文化破壞 Semantic Versioning，因此 tag 維持 `v1.0.0`／`v1.1.0`
+
+### 換你做
+目前不用操作；重新整理新的 GitHub URL 即可查看結果。
+
+---
+
 ## 2026-07-29 — Session 45：M35 乾淨原始碼重現與持續驗證
 
 ### 做了什麼

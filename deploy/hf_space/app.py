@@ -9,7 +9,7 @@ from pathlib import Path
 import gradio as gr
 from runtime import MODEL_ROOT, SpaceContractError, load_manifest, predict, preferred_device
 
-GITHUB_URL = "https://github.com/kuotunyu/01-defectforge-visa"
+GITHUB_URL = "https://github.com/kuotunyu/defectforge-visa-synthetic-data"
 DATASET_URL = "https://huggingface.co/datasets/steven0226/defectforge-visa-synthetic"
 APP_ROOT = Path(__file__).resolve().parent
 DEMO_EXAMPLES = [

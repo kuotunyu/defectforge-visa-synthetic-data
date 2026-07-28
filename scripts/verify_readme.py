@@ -35,15 +35,15 @@ CLASSIFICATION_METRICS = (
 )
 SEGMENTATION_METRICS = ("dice", "miou", "pixel_auroc", "aupro")
 GROUP_LABELS = {
-    "real_only": "Real-only (10)",
+    "real_only": "Real-only（10 張）",
     "std_aug": "+ Standard Augmentation",
-    "unfiltered_syn": "+ Unfiltered Synthetic",
-    "filtered_syn": "+ Filtered Synthetic",
-    "full_real": "Full-real (60)",
-    "procedural_only": "Procedural-only",
-    "copypaste_only": "Copy-paste-only",
-    "diffusion_only": "Diffusion-only",
-    "all_mixed": "All-mixed (alias of Filtered Synthetic)",
+    "unfiltered_syn": "+ 未篩選 Synthetic Data",
+    "filtered_syn": "+ 已篩選 Synthetic Data",
+    "full_real": "Full-real（60 張）",
+    "procedural_only": "僅 Procedural",
+    "copypaste_only": "僅 Copy-paste",
+    "diffusion_only": "僅 Diffusion",
+    "all_mixed": "All-mixed（與已篩選 Synthetic Data 共用）",
 }
 
 
@@ -195,7 +195,7 @@ def classification_block(rows: Sequence[Mapping[str, str]]) -> str:
                 ]
             )
     return _markdown_table(
-        ("Object", "Training group", "Macro-F1", "Defect F1", "AUROC", "Normal FPR"),
+        ("物件", "訓練組別", "Macro-F1", "瑕疵 F1", "AUROC", "正常樣本 FPR"),
         output,
     )
 
@@ -221,7 +221,7 @@ def segmentation_block(rows: Sequence[Mapping[str, str]]) -> str:
                 ]
             )
     return _markdown_table(
-        ("Object", "Training group", "Dice", "mIoU", "Pixel AUROC", "AUPRO"),
+        ("物件", "訓練組別", "Dice", "mIoU", "Pixel AUROC", "AUPRO"),
         output,
     )
 
@@ -289,27 +289,27 @@ def outcome_block(payload: Mapping[str, Any]) -> str:
     classification_delta = float(payload["classification_macro_f1_delta"])
     segmentation_delta = float(payload["segmentation_dice_delta"])
     classification_statement = (
-        "yes — Filtered Synthetic did not improve mean Macro-F1."
+        "是——已篩選 Synthetic Data 未提升平均 Macro-F1。"
         if payload["classification_negative"]
-        else "no — Filtered Synthetic improved mean Macro-F1."
+        else "否——已篩選 Synthetic Data 提升了平均 Macro-F1。"
     )
     segmentation_statement = (
-        "yes — Filtered Synthetic did not improve mean Dice."
+        "是——已篩選 Synthetic Data 未提升平均 Dice。"
         if payload["segmentation_negative"]
-        else "no — Filtered Synthetic improved mean Dice."
+        else "否——已篩選 Synthetic Data 提升了平均 Dice。"
     )
     return "\n".join(
         [
             (
-                f"- Classification, Filtered Synthetic vs Real-only: "
-                f"`{classification_delta:+.4f}` mean Macro-F1."
+                f"- Classification：已篩選 Synthetic Data 相對 Real-only 的平均 Macro-F1 "
+                f"差異為 `{classification_delta:+.4f}`。"
             ),
             (
-                f"- Segmentation, Filtered Synthetic vs Real-only: "
-                f"`{segmentation_delta:+.4f}` mean Dice."
+                f"- Segmentation：已篩選 Synthetic Data 相對 Real-only 的平均 Dice "
+                f"差異為 `{segmentation_delta:+.4f}`。"
             ),
-            f"- Classification negative result: **{classification_statement}**",
-            f"- Segmentation negative result: **{segmentation_statement}**",
+            f"- Classification 負面結果：**{classification_statement}**",
+            f"- Segmentation 負面結果：**{segmentation_statement}**",
         ]
     )
 
@@ -348,14 +348,15 @@ def read_block(readme: str, name: str) -> str:
 
 
 def verify_readme(readme: str, blocks: Mapping[str, str]) -> None:
-    require("## Limitations" in readme, "README needs a Limitations section")
+    limitations_heading = "## 限制與誠實揭露"
+    require(limitations_heading in readme, "README needs a limitations section")
     for name, expected in blocks.items():
         observed = read_block(readme, name)
         require(observed == expected, f"README verified block is stale: {name}")
-    limitations = readme.split("## Limitations", maxsplit=1)[1]
+    limitations = readme.split(limitations_heading, maxsplit=1)[1]
     require(
         "<!-- BEGIN VERIFIED RESULT_OUTCOME -->" in limitations,
-        "RESULT_OUTCOME must remain under Limitations",
+        "RESULT_OUTCOME must remain under the limitations section",
     )
     require("TBD" not in readme, "README still contains TBD")
 

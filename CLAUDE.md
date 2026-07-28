@@ -1,4 +1,4 @@
-# CLAUDE.md — 01-defectforge-visa
+# CLAUDE.md — defectforge-visa-synthetic-data
 
 > 每個 session 開工前必讀。與 [PLAN.md](PLAN.md)、[docs/worklog.md](docs/worklog.md)、[docs/decisions.md](docs/decisions.md) 一起構成本專案的長期記憶。
 > 快速恢復脈絡：直接呼叫 `/defectforge` skill。
@@ -60,7 +60,8 @@ Colab 產出由使用者放回 `results/colab/` 後，Claude Code 才接手分�
 ## 【工作方式】
 
 - 開工先把本階段拆成 [PLAN.md](PLAN.md) 里程碑，**每項附驗證方法**，做完勾掉
-- **繁體中文**溝通；程式碼註解與 README 用**英文**
+- **正體中文（#zh-tw）**溝通；README、GitHub About、Release、架構圖與 commit message
+  以正體中文為主，專有名詞保留原文；Source Code identifier 與 comment 延續既有技術慣例
 - >2GB 下載或任何花錢動作**先問使用者**
 - 套件版本、模型名稱、價格**一律先上網查證再選型**，並把來源連結寫進文件
 - 自己產的圖表與樣本圖**要自己打開檢視**，不合理就修
@@ -72,6 +73,9 @@ Colab 產出由使用者放回 `results/colab/` 後，Claude Code 才接手分�
 ### Git 署名規則（不可違反）
 
 **GitHub 的 Contributors 只能出現 `kuotunyu` 一個人。**
+
+- 新增的 commit message 以正體中文為主；既有歷史 commit 不重寫，以保留 tag、Release 與
+  reproducibility evidence
 
 - commit message **不准**加 `Co-Authored-By:` trailer（任何人都不行，包含 Claude）
 - commit message **不准**出現 `🤖 Generated with Claude Code` 之類的署名
@@ -121,9 +125,9 @@ git log -1 --format="%an <%ae>"; git log -1 --format="%B" | Select-String "Co-[A
 | 項目 | 值 |
 |---|---|
 | 本機資料夾 | git checkout 的目前工作目錄 |
-| 未來 GitHub repo | `kuotunyu/01-defectforge-visa` |
+| GitHub repo | `kuotunyu/defectforge-visa-synthetic-data` |
 | 未來 Hugging Face | `steven0226`（合成資料集 + LoRA 權重，見 [docs/publish_spec.md](docs/publish_spec.md)） |
 | 資料集 | VisA（CC BY 4.0），先做 `pcb1` 與 `capsules` |
 | 目標 | 少樣本瑕疵情境下，證明合成資料能提升**瑕疵分類**與**瑕疵區域分割** |
 | 方法論來源 | NVIDIA GTC 2026 *Few-shot Industrial SDG (Cosmos AnomalyGen)*，用開源工具復刻，見 [docs/methodology.md](docs/methodology.md) |
-| 目前階段 | M0–M26、M28 已完成；M27 因預註冊 gate 未通過而正確停止，未讀 test、未跑 3 seeds。公開 Space、正體中文 UI 與 v2 validation addendum 已完成 |
+| 目前階段 | M0–M36 已完成；M27 因預註冊 gate 未通過而正確停止，未讀 test、未跑 3 seeds。公開 Space、正體中文 UI、v2 validation addendum 與 GitHub 正體中文資訊架構均已完成 |

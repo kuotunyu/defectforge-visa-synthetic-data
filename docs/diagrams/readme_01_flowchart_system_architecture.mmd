@@ -1,0 +1,56 @@
+flowchart TB
+    subgraph Source["📦 資料與防洩漏邊界"]
+        direction LR
+        Visa["VisA<br/>pcb1、capsules"]
+        Split["🔒 Frozen split<br/>SHA256、pHash、test blocklist"]
+        FewShot["🌱 Few-shot seeds<br/>每物件 10 張真實瑕疵圖"]
+        Visa --> Split --> FewShot
+    end
+
+    subgraph Synthetic["🧪 Synthetic Data 生成"]
+        direction LR
+        StageA["Stage A<br/>Copy-paste、Procedural"]
+        StageB["Stage B<br/>SD2／SDXL Inpainting LoRA"]
+        Placement["Auto Mask Placement<br/>crop-to-ROI、blend back"]
+        FewShot --> StageA
+        FewShot --> StageB
+        StageB --> Placement
+    end
+
+    subgraph Guard["🛡️ 品質與可追溯性"]
+        direction LR
+        Filter["Quality filtering<br/>六道規則"]
+        Views["Filtered／Unfiltered<br/>metadata provenance"]
+        StageA --> Filter
+        Placement --> Filter
+        Filter --> Views
+    end
+
+    subgraph Downstream["⚙️ 下游評估"]
+        direction LR
+        Classifier["Classification<br/>ConvNeXt-Tiny"]
+        Segmenter["Segmentation<br/>SegFormer-B0"]
+        Views --> Classifier
+        Views --> Segmenter
+    end
+
+    subgraph Publish["📊 公開結果與證據鏈"]
+        direction LR
+        Reports["Validated CSV、Figures<br/>SHA256-bound reports"]
+        Demo["🌐 正體中文 Demo<br/>分類、Binary mask、Heatmap"]
+        Classifier --> Reports
+        Segmenter --> Reports
+        Reports --> Demo
+    end
+
+    classDef source fill:#D8F3DC,stroke:#1B4332,stroke-width:2px,color:#081C15
+    classDef synthetic fill:#FFE8CC,stroke:#D9480F,stroke-width:2px,color:#5F2500
+    classDef guard fill:#D0EBFF,stroke:#1864AB,stroke-width:2px,color:#0B2E59
+    classDef downstream fill:#E5DBFF,stroke:#5F3DC4,stroke-width:2px,color:#2B1B5A
+    classDef publish fill:#FFF3BF,stroke:#E67700,stroke-width:2px,color:#4D2A00
+
+    class Visa,Split,FewShot source
+    class StageA,StageB,Placement synthetic
+    class Filter,Views guard
+    class Classifier,Segmenter downstream
+    class Reports,Demo publish

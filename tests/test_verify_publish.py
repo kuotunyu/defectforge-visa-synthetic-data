@@ -101,14 +101,14 @@ def test_plan_and_readme_audit_requires_all_prepublication_milestones(tmp_path: 
     )
     (tmp_path / "PLAN.md").write_text(plan, encoding="utf-8")
     (tmp_path / "README.md").write_text(
-        """# Project
-## Problem
-## Method
-## Experiments
-## Results
-## Limitations
-## Reproduce
-## License & Citations
+        """# 專案
+## 研究問題
+## 方法與系統架構
+## 實驗設計
+## 實驗結果
+## 限制與誠實揭露
+## 重現方式
+## 授權與引用
 """,
         encoding="utf-8",
     )

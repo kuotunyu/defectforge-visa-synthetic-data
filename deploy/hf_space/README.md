@@ -14,7 +14,7 @@ short_description: VisA 瑕疵分類與分割的可驗證研究 Demo。
 # DefectForge · VisA 瑕疵影像檢測
 
 這是
-[`kuotunyu/01-defectforge-visa`](https://github.com/kuotunyu/01-defectforge-visa).
+[`kuotunyu/defectforge-visa-synthetic-data`](https://github.com/kuotunyu/defectforge-visa-synthetic-data).
 的公開研究 Demo。選擇 `pcb1` 或 `capsules` 並上傳待檢影像，即可執行正式選定的
 ConvNeXt-Tiny classifier 與 SegFormer-B0 segmenter。
 
