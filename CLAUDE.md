@@ -130,4 +130,4 @@ git log -1 --format="%an <%ae>"; git log -1 --format="%B" | Select-String "Co-[A
 | 資料集 | VisA（CC BY 4.0），先做 `pcb1` 與 `capsules` |
 | 目標 | 少樣本瑕疵情境下，證明合成資料能提升**瑕疵分類**與**瑕疵區域分割** |
 | 方法論來源 | NVIDIA GTC 2026 *Few-shot Industrial SDG (Cosmos AnomalyGen)*，用開源工具復刻，見 [docs/methodology.md](docs/methodology.md) |
-| 目前階段 | M0–M36 已完成，M37 正在進行 Release Hardening 與永久封存；M27 因預註冊 gate 未通過而正確停止，未讀 test、未跑 3 seeds |
+| 目前階段 | M0–M37 已完成並永久封存；M27 因預註冊 gate 未通過而正確停止，未讀 test、未跑 3 seeds |

@@ -4,7 +4,7 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-08796c.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/kuotunyu/defectforge-visa-synthetic-data?color=08796c)](https://github.com/kuotunyu/defectforge-visa-synthetic-data/releases/latest)
 
-> **狀態：已公開；M0–M36 全數驗證完成。**
+> **狀態：已公開；M0–M37 全數驗證完成。**
 > 下游結果表與最終結論皆由通過獨立驗證的 CSV 自動產生，不手動填寫數字。
 > 驗證入口請見 `scripts/verify_readme.py` 與 GitHub Actions。
 

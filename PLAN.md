@@ -264,7 +264,7 @@
     舊 GitHub URL 可 redirect，新 URL、CI badge、clone command 與公開連結皆有效；
     完整 pytest、publication audit、GitHub Actions 與 Contributors 稽核全綠
 
-- [ ] **M37** 🤖 Release Hardening、引用資訊與永久封存
+- [x] **M37** 🤖 Release Hardening、引用資訊與永久封存
   - **驗證**：根目錄 `LICENSE` 可由 GitHub 辨識為標準 MIT，第三方資產義務移至
     `THIRD_PARTY_NOTICES.md`；`CITATION.cff`、Security／Contributing Policy、
     Issue Form、Changelog 與 1280×640 Social Preview 通過自動與目視驗證；

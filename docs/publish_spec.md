@@ -162,13 +162,13 @@ trigger token 清單與對應的瑕疵型別、推論範例程式碼（含 crop-
 
 ## 7. M37 收尾與永久封存
 
-- [ ] 根目錄 `LICENSE` 保持標準 MIT 原文；第三方 Dataset／Model／Artifact 義務只放
+- [x] 根目錄 `LICENSE` 保持標準 MIT 原文；第三方 Dataset／Model／Artifact 義務只放
       `THIRD_PARTY_NOTICES.md` 與 License Chain
-- [ ] `CITATION.cff` 的 Repository、Version、Author 與 Release Date 可由 YAML 解析
-- [ ] Social Preview 為 1280×640 PNG、低於 1 MiB，完成目視檢查後上傳 GitHub Settings
-- [ ] Hugging Face 三個公開 Repository 僅同步 Metadata／Source 小檔，不重傳大檔、
+- [x] `CITATION.cff` 的 Repository、Version、Author 與 Release Date 可由 YAML 解析
+- [x] Social Preview 為 1280×640 PNG、低於 1 MiB，完成目視檢查後上傳 GitHub Settings
+- [x] Hugging Face 三個公開 Repository 僅同步 Metadata／Source 小檔，不重傳大檔、
       不改 Visibility
-- [ ] `main` Protection 不要求 PR，但禁止 Force Push／刪除並維持 Linear History
-- [ ] 啟用 Vulnerability Alerts 與 Private Vulnerability Reporting；不開 Dependabot
+- [x] `main` Protection 不要求 PR，但禁止 Force Push／刪除並維持 Linear History
+- [x] 啟用 Vulnerability Alerts 與 Private Vulnerability Reporting；不開 Dependabot
       自動 Security Update，避免 Bot 自動 Commit
-- [ ] 最終 Commit 通過本機與 GitHub Actions 後才建立 `v1.2.0`，既有 Tag 不移動
+- [x] 最終 Commit 通過本機與 GitHub Actions 後才建立 `v1.2.0`，既有 Tag 不移動

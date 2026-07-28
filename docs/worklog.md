@@ -6,6 +6,64 @@
 
 ---
 
+## 2026-07-29 — Session 48：Social Preview 上線與 v1.2.0 Release Candidate
+
+### 做了什麼
+- 使用者已在 GitHub Settings 上傳 `assets/github-social-preview.png`
+- 遠端 Repository 的 `og:image` 已改為 GitHub `repository-images` 自訂圖片，不再是
+  預設 Open Graph 圖
+- 將 M37、README、執行規範與發布清單同步標記為完成；最終 Commit 將作為
+  `v1.2.0` 唯一 Release Candidate
+
+### 驗證與發布規則
+- 最終 Commit 必須重新通過 Ruff、198 項完整 pytest、publication audit 與
+  GitHub Actions，Release 才能指向該精確 Commit
+- `v1.0.0`、`v1.1.0` 既有 Tag 不移動；最終仍須確認 Contributors 只有
+  `kuotunyu`
+
+### 換你做
+目前不用操作；最終 Commit 的 CI 全綠後即可發布 `v1.2.0`。
+
+---
+
+## 2026-07-29 — Session 47：M37 Release Hardening 與永久封存
+
+### 做了什麼
+- 將根目錄 `LICENSE` 恢復為標準 MIT 原文，第三方 Dataset／Model／Synthetic
+  Artifact 義務移至 `THIRD_PARTY_NOTICES.md`；GitHub License 已從 `Other` 正確辨識為
+  `MIT`
+- 新增 `CITATION.cff`、`SECURITY.md`、`CONTRIBUTING.md`、`CHANGELOG.md`、Issue Form
+  與 Owner-only Pull Request Template
+- 依 `Signal Ledger` 視覺哲學建立 1280×640 GitHub Social Preview；第一次目視發現底部
+  長句碰到右側系統圖，重排後再驗證，最終 PNG 為 61,070 bytes
+- 擴充 publication audit：標準 MIT、Citation 欄位、第三方 Notices、Social Preview
+  尺寸／格式／大小與所有新公開檔案都採 fail-closed 驗證
+- 將 Hugging Face Dataset Card、Model Card 與 Space Source 同步至新 GitHub URL，
+  只更新四個小型文字／Source 檔，沒有重傳大型 Dataset、沒有改 Visibility
+- 設定 `main` Protection：Admin 也禁止 Force Push／刪除並維持 Linear History，
+  但不強迫單一作者改用 PR
+- 啟用 Vulnerability Alerts 與 Private Vulnerability Reporting；不啟用 Bot 自動
+  Security Update，以維持 Contributors 單一作者規則
+
+### 驗證
+- Ruff、198 項完整 pytest、README／License evidence 與 publication audit 全綠
+- Source Commit `ee6200f384f97f30b648a1e673e8f6167e2f917a` 的 GitHub Actions 成功
+- GitHub Community Profile 由 42% 提升為 85%，License API 回報 `MIT`
+- Hugging Face 遠端四份檔案的舊 Repository URL 命中皆為 0；Dataset、Model 與 Space
+  維持 Public，Space 使用 CPU Basic 且狀態為 `RUNNING`
+- Dependabot Open Alert、Secret Scanning Alert 皆為 0；Contributors 仍只有 `kuotunyu`
+
+### 尚待完成
+- GitHub 沒有支援 Social Preview Upload 的 REST／GraphQL API，且應用程式內瀏覽器目前
+  未登入 GitHub；需由使用者在 Settings → General → Social preview 上傳
+  `assets/github-social-preview.png`
+- 上傳後才將 M37 改為完成、建立最終封存 Commit、等 CI 全綠並發布 `v1.2.0`
+
+### 換你做
+只需上傳一張 Social Preview，完成後回覆「上傳好了」。
+
+---
+
 ## 2026-07-29 — Session 46：M36 GitHub 正體中文化與 Repository 重新命名
 
 ### 做了什麼
