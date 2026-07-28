@@ -273,6 +273,7 @@ def render_outputs(
     anomaly_probability: float,
     pixel_probability: np.ndarray,
     threshold: float,
+    heatmap_mode: str = "overlay",
 ) -> tuple[dict[str, float], np.ndarray, np.ndarray]:
     rgb = _as_rgb_array(image)
     probability = np.asarray(pixel_probability, dtype=np.float32)
@@ -281,10 +282,17 @@ def render_outputs(
     require(math.isfinite(anomaly_probability), "Classification probability is not finite")
     require(0.0 <= anomaly_probability <= 1.0, "Classification probability is outside [0, 1]")
     require(0.0 <= threshold <= 1.0, "Visualization threshold is outside [0, 1]")
+    require(
+        heatmap_mode in {"overlay", "probability"},
+        "Heatmap display mode is unsupported",
+    )
     mask = (probability >= threshold).astype(np.uint8) * 255
     color = _colorize_probability(probability)
-    alpha = (0.14 + 0.58 * np.clip(probability, 0.0, 1.0))[..., None]
-    heatmap = np.rint(rgb * (1.0 - alpha) + color * alpha).astype(np.uint8)
+    if heatmap_mode == "probability":
+        heatmap = color
+    else:
+        alpha = (0.20 + 0.64 * np.clip(probability, 0.0, 1.0))[..., None]
+        heatmap = np.rint(rgb * (1.0 - alpha) + color * alpha).astype(np.uint8)
     return (
         {
             "Defect（異常）": anomaly_probability,
@@ -300,6 +308,7 @@ def predict(
     image: Image.Image | np.ndarray | None,
     object_name: str,
     visualization_threshold: float,
+    heatmap_mode: str = "overlay",
 ) -> tuple[dict[str, float], np.ndarray, np.ndarray, str, dict[str, Any]]:
     require(image is not None, "請先上傳一張待檢影像")
     bundle = load_bundle(object_name)
@@ -347,6 +356,7 @@ def predict(
         anomaly_probability=anomaly_probability,
         pixel_probability=pixel_probability,
         threshold=float(visualization_threshold),
+        heatmap_mode=heatmap_mode,
     )
     localization = localization_statistics(
         pixel_probability,
@@ -369,6 +379,7 @@ def predict(
             "elapsed_ms": round(elapsed_ms, 3),
             "visualization_threshold": float(visualization_threshold),
             "formal_threshold": bundle.formal_threshold,
+            "heatmap_mode": heatmap_mode,
             "mask_coverage_percent": round(coverage, 4),
             "pixel_probability_minimum": round(localization["minimum"], 6),
             "pixel_probability_mean": round(localization["mean"], 6),

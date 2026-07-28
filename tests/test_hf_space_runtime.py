@@ -84,6 +84,47 @@ def test_space_render_outputs_respects_visualization_threshold() -> None:
     assert mask.shape == (4, 6)
     assert set(np.unique(mask)) == {0, 255}
     assert heatmap.shape == image.shape
+    _, exploratory_mask, exploratory_heatmap = render_outputs(
+        image,
+        anomaly_probability=0.7,
+        pixel_probability=probability,
+        threshold=0.2,
+    )
+    assert not np.array_equal(mask, exploratory_mask)
+    assert np.array_equal(heatmap, exploratory_heatmap)
+
+
+def test_space_render_outputs_offers_a_fixed_scale_probability_heatmap() -> None:
+    image = np.full((2, 2, 3), 90, dtype=np.uint8)
+    probability = np.asarray([[0.0, 0.25], [0.75, 1.0]], dtype=np.float32)
+    _, _, overlay = render_outputs(
+        image,
+        anomaly_probability=0.7,
+        pixel_probability=probability,
+        threshold=0.5,
+        heatmap_mode="overlay",
+    )
+    _, _, probability_only = render_outputs(
+        image,
+        anomaly_probability=0.7,
+        pixel_probability=probability,
+        threshold=0.5,
+        heatmap_mode="probability",
+    )
+    assert not np.array_equal(overlay, probability_only)
+    assert probability_only[0, 0].tolist() == [5, 18, 27]
+    assert probability_only[1, 1].tolist() == [239, 73, 51]
+
+
+def test_space_render_outputs_rejects_an_unknown_heatmap_mode() -> None:
+    with pytest.raises(SpaceContractError, match="Heatmap display mode"):
+        render_outputs(
+            np.zeros((2, 2, 3), dtype=np.uint8),
+            anomaly_probability=0.5,
+            pixel_probability=np.zeros((2, 2), dtype=np.float32),
+            threshold=0.5,
+            heatmap_mode="contrast-stretch",
+        )
 
 
 def test_space_localization_statistics_explain_an_empty_formal_mask() -> None:
@@ -152,6 +193,10 @@ def test_space_app_is_zh_tw_first_and_has_guided_empty_state() -> None:
     assert "正式結果 · 0.50" in source
     assert "探索弱訊號 · 0.20" in source
     assert "threshold.input(" in source
+    assert "純 Heatmap" in source
+    assert "固定 0–1 機率尺度" in source
+    assert "Threshold 只改變 Binary mask" in source
+    assert "heatmap_mode.input(" in source
     assert "目前沒有白色定位區域" in source
     assert "pixel_probability_maximum" in (
         root / "deploy/hf_space/runtime.py"

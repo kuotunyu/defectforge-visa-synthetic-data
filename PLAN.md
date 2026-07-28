@@ -241,8 +241,14 @@
 - [x] **M33** 🤖 公開 Demo Mask 結果引導與探索模式
   - **驗證**：預設先執行正式 threshold 0.50；若 Mask 全黑，結果區直接說明不是操作
     失敗、顯示最高 pixel probability，並提供「探索弱訊號 0.20」選項。使用者切換後
-    自動重新產生 Mask 與 heatmap，不需返回輸入區或理解 threshold；正式與探索狀態
-    有不同文案、圖例與研究邊界。Playwright 桌機與手機可來回切換且無水平溢位
+    自動重新產生 Mask，不需返回輸入區或理解 threshold；正式與探索狀態有不同文案、
+    圖例與研究邊界。Playwright 桌機與手機可來回切換且無水平溢位
+
+- [x] **M34** 🤖 公開 Demo Probability heatmap 可解讀性
+  - **驗證**：Binary mask threshold 與 Heatmap 顯示改為兩個獨立控制；Heatmap 提供
+    「疊加原圖／純 Heatmap」模式、固定 0–1 色階與此張影像最高 pixel probability。
+    單元測試確認切換 threshold 只改變 Mask、Heatmap 像素保持一致；Playwright 確認
+    純 Heatmap 顯示確實改變，桌機與手機均無水平溢位
 
 ---
 

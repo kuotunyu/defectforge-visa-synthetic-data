@@ -787,12 +787,19 @@ button#df-run:active {
   font-size: 1.125rem !important;
   line-height: 1.5;
 }
-#df-threshold-mode {
+#df-location-mode-stack {
+  gap: .7rem !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+#df-threshold-mode,
+#df-heatmap-mode {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
 }
-#df-threshold-mode > .wrap {
+#df-threshold-mode > .wrap,
+#df-heatmap-mode > .wrap {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: .65rem !important;
@@ -800,7 +807,8 @@ button#df-run:active {
   background: transparent !important;
   border: 0 !important;
 }
-#df-threshold-mode .wrap label {
+#df-threshold-mode .wrap label,
+#df-heatmap-mode .wrap label {
   min-height: 56px !important;
   padding: .65rem .8rem !important;
   background: var(--df-surface) !important;
@@ -808,24 +816,39 @@ button#df-run:active {
   border-radius: var(--df-radius-sm) !important;
   cursor: pointer;
 }
-#df-threshold-mode .wrap label:has(input:checked) {
+#df-threshold-mode .wrap label:has(input:checked),
+#df-heatmap-mode .wrap label:has(input:checked) {
   background: var(--df-primary-soft) !important;
   box-shadow: inset 0 0 0 2px var(--df-primary) !important;
 }
-#df-threshold-mode .wrap label:has(input:focus-visible) {
+#df-threshold-mode .wrap label:has(input:focus-visible),
+#df-heatmap-mode .wrap label:has(input:focus-visible) {
   outline: 3px solid color-mix(in srgb, var(--df-focus) 55%, transparent) !important;
   outline-offset: 2px !important;
 }
-#df-threshold-mode .wrap label span {
+#df-threshold-mode .wrap label span,
+#df-heatmap-mode .wrap label span {
   color: var(--df-ink) !important;
   font-size: 1.125rem !important;
   font-weight: 750 !important;
   line-height: 1.35 !important;
 }
-#df-threshold-mode .info-text {
+#df-threshold-mode .info-text,
+#df-heatmap-mode .info-text {
   color: var(--df-muted) !important;
   font-size: 1.125rem !important;
   line-height: 1.45 !important;
+}
+.df-mode-note {
+  margin: 0;
+  padding: .7rem .8rem;
+  background: var(--df-surface-blue);
+  color: var(--df-muted);
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+.df-mode-note strong {
+  color: var(--df-primary-strong);
 }
 #df-localization-guide {
   padding: 0 !important;
@@ -876,7 +899,7 @@ button#df-run:active {
 }
 .df-location-legend li {
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-columns: 126px minmax(0, 1fr);
   align-items: center;
   gap: .7rem;
   color: var(--df-ink);
@@ -886,7 +909,7 @@ button#df-run:active {
 .df-mask-key,
 .df-heatmap-key {
   display: block;
-  width: 78px;
+  width: 126px;
   height: 18px;
 }
 .df-mask-key {
@@ -902,6 +925,26 @@ button#df-run:active {
     rgb(250 194 63),
     rgb(239 73 51)
   );
+}
+.df-heatmap-scale {
+  display: grid;
+  gap: .25rem;
+  width: 126px;
+}
+.df-heatmap-ticks {
+  display: flex;
+  justify-content: space-between;
+  color: var(--df-muted);
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.df-heatmap-maximum {
+  display: block;
+  margin-top: .2rem;
+  color: var(--df-primary-strong);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 #df-localization {
   gap: var(--df-space-md) !important;
@@ -1052,8 +1095,17 @@ footer { display: none !important; }
   #df-localization {
     flex-direction: column !important;
   }
-  #df-threshold-mode > .wrap {
+  #df-threshold-mode > .wrap,
+  #df-heatmap-mode > .wrap {
     grid-template-columns: 1fr !important;
+  }
+  .df-location-legend li {
+    grid-template-columns: 1fr;
+  }
+  .df-mask-key,
+  .df-heatmap-key,
+  .df-heatmap-scale {
+    width: 100%;
   }
   .df-examples-intro {
     align-items: flex-start;
@@ -1153,6 +1205,8 @@ def _localization_guide_html(evidence: dict[str, object]) -> str:
     formal_threshold = float(inference.get("formal_threshold", 0.5))
     coverage = float(inference.get("mask_coverage_percent", 0.0))
     maximum = float(inference.get("pixel_probability_maximum", 0.0))
+    heatmap_mode = str(inference.get("heatmap_mode", "overlay"))
+    heatmap_mode_label = "純機率圖" if heatmap_mode == "probability" else "疊加原圖"
     is_exploratory = threshold < formal_threshold - 1e-6
     if coverage <= 0.0:
         tone = "empty"
@@ -1171,6 +1225,7 @@ def _localization_guide_html(evidence: dict[str, object]) -> str:
         message = (
             f"白色區域是 pixel probability ≥ <strong>{threshold:.2f}</strong> 的位置，"
             f"目前覆蓋影像 <strong>{coverage:.2f}%</strong>。"
+            f"最高 pixel probability 為 <strong>{maximum:.2f}</strong>。"
             f"這只協助閱讀弱訊號；正式結果仍以 {formal_threshold:.2f} 為準。"
         )
     else:
@@ -1178,7 +1233,8 @@ def _localization_guide_html(evidence: dict[str, object]) -> str:
         title = "已產生正式定位結果"
         message = (
             f"白色區域是 pixel probability ≥ <strong>{threshold:.2f}</strong> 的位置，"
-            f"目前覆蓋影像 <strong>{coverage:.2f}%</strong>。"
+            f"目前覆蓋影像 <strong>{coverage:.2f}%</strong>；"
+            f"最高 pixel probability 為 <strong>{maximum:.2f}</strong>。"
         )
     return (
         f"<section class='df-location-guide df-location-guide--{tone}' "
@@ -1188,18 +1244,28 @@ def _localization_guide_html(evidence: dict[str, object]) -> str:
         "<ul class='df-location-legend' aria-label='定位圖例'>"
         "<li><span class='df-mask-key' aria-hidden='true'></span>"
         "<span><strong>Binary mask</strong>：白色是達門檻區域</span></li>"
-        "<li><span class='df-heatmap-key' aria-hidden='true'></span>"
-        "<span><strong>Heatmap</strong>：由藍綠到黃紅代表分數升高</span></li>"
+        "<li><span class='df-heatmap-scale' aria-hidden='true'>"
+        "<span class='df-heatmap-key'></span>"
+        "<span class='df-heatmap-ticks'><span>0</span><span>1</span></span></span>"
+        "<span><strong>Probability heatmap</strong>：固定 0–1 機率尺度"
+        f"<span class='df-heatmap-maximum'>此張最高 {maximum:.2f} · "
+        f"{heatmap_mode_label}</span></span></li>"
         "</ul></section>"
     )
 
 
-def _run(image: object, object_name: str, threshold: float) -> tuple[object, ...]:
+def _run(
+    image: object,
+    object_name: str,
+    threshold: float,
+    heatmap_mode: str,
+) -> tuple[object, ...]:
     try:
         probabilities, mask, heatmap, _summary, evidence = predict(
             image,
             object_name,
             threshold,
+            heatmap_mode,
         )
         summary = _result_summary_html(probabilities, object_name, evidence)
         confidence = _confidence_html(probabilities)
@@ -1240,6 +1306,7 @@ def _clear_results() -> tuple[object, ...]:
         gr.Accordion(visible=False),
         gr.HTML(visible=False),
         gr.Radio(value=0.50),
+        gr.Radio(value="overlay"),
     )
 
 
@@ -1377,27 +1444,44 @@ def build_app() -> gr.Blocks:
                         "<div class='df-section-heading' lang='zh-Hant-TW'>"
                         "<span class='df-result-section-kicker'>瑕疵定位</span>"
                         "<h2>如何閱讀 Mask 與 heatmap</h2>"
-                        "<p>先看 Binary mask 的白色區域；若全黑，再切換探索模式查看弱訊號。</p>"
+                        "<p>Threshold 只改變 Binary mask；Probability heatmap "
+                        "固定呈現原始 0–1 機率。</p>"
                         "</div>"
                     )
                     with gr.Row(elem_id="df-localization-controls"):
                         gr.HTML(
                             "<div class='df-threshold-copy' lang='zh-Hant-TW'>"
                             "<h3>選擇定位顯示模式</h3>"
-                            "<p>第一次先看正式結果；只有在 Mask 全黑時，"
-                            "才需要切換探索模式。</p></div>"
+                            "<p>Binary mask 用門檻決定白色區域；Probability heatmap "
+                            "呈現未切割的原始機率。</p></div>"
                         )
-                        threshold = gr.Radio(
-                            choices=[
-                                ("正式結果 · 0.50", 0.50),
-                                ("探索弱訊號 · 0.20", 0.20),
-                            ],
-                            value=0.50,
-                            label="定位顯示模式",
-                            info="切換後會重新產生定位圖。探索模式不會改變 classification "
-                            "結果或已發布的正式指標。",
-                            elem_id="df-threshold-mode",
-                        )
+                        with gr.Column(elem_id="df-location-mode-stack"):
+                            threshold = gr.Radio(
+                                choices=[
+                                    ("正式結果 · 0.50", 0.50),
+                                    ("探索弱訊號 · 0.20", 0.20),
+                                ],
+                                value=0.50,
+                                label="Binary mask 門檻",
+                                info="只改變 Mask 的白色區域；不改變 heatmap "
+                                "或 classification。",
+                                elem_id="df-threshold-mode",
+                            )
+                            heatmap_mode = gr.Radio(
+                                choices=[
+                                    ("疊加原圖", "overlay"),
+                                    ("純 Heatmap", "probability"),
+                                ],
+                                value="overlay",
+                                label="Probability heatmap 顯示",
+                                info="只改變觀看方式；原始 pixel probability 保持不變。",
+                                elem_id="df-heatmap-mode",
+                            )
+                            gr.HTML(
+                                "<p class='df-mode-note' lang='zh-Hant-TW'>"
+                                "<strong>兩個控制互相獨立：</strong>threshold 只影響 "
+                                "Binary mask；Heatmap 模式只影響右圖的呈現方式。</p>"
+                            )
                     localization_guide = gr.HTML(
                         "<p>完成檢測後，這裡會直接說明定位結果。</p>",
                         elem_id="df-localization-guide",
@@ -1412,7 +1496,7 @@ def build_app() -> gr.Blocks:
                             elem_classes=["df-output-image"],
                         )
                         heatmap = gr.Image(
-                            label="Probability heatmap",
+                            label="Probability heatmap（機率圖）",
                             buttons=["download", "fullscreen"],
                             height=390,
                             elem_classes=["df-output-image"],
@@ -1455,7 +1539,7 @@ def build_app() -> gr.Blocks:
         ]
         run.click(
             fn=_run,
-            inputs=[image, object_name, threshold],
+            inputs=[image, object_name, threshold, heatmap_mode],
             outputs=run_outputs,
             concurrency_limit=1,
             concurrency_id="model-inference",
@@ -1465,7 +1549,17 @@ def build_app() -> gr.Blocks:
         )
         threshold.input(
             fn=_run,
-            inputs=[image, object_name, threshold],
+            inputs=[image, object_name, threshold, heatmap_mode],
+            outputs=run_outputs,
+            concurrency_limit=1,
+            concurrency_id="model-inference",
+            show_progress="minimal",
+            api_visibility="private",
+            scroll_to_output=False,
+        )
+        heatmap_mode.input(
+            fn=_run,
+            inputs=[image, object_name, threshold, heatmap_mode],
             outputs=run_outputs,
             concurrency_limit=1,
             concurrency_id="model-inference",
@@ -1485,7 +1579,7 @@ def build_app() -> gr.Blocks:
             component.change(
                 fn=_clear_results,
                 inputs=None,
-                outputs=[*run_outputs, threshold],
+                outputs=[*run_outputs, threshold, heatmap_mode],
                 show_progress="hidden",
                 api_visibility="private",
                 trigger_mode="always_last",

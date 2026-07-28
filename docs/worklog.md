@@ -303,6 +303,36 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-28 — Session 44：M34 Probability heatmap 可解讀性
+
+### 做了什麼
+- 將 Binary mask threshold 與 Probability heatmap 顯示拆成兩組獨立控制，介面直接
+  說明 threshold 只影響 Mask，Heatmap 顯示模式不會改變原始 pixel probability
+- 新增「疊加原圖」與「純 Heatmap」模式；疊加模式提高可視對比，純模式直接顯示
+  固定 0–1 機率色彩，不做 per-image contrast stretch，避免誇大低分訊號
+- 定位圖例新增固定 0–1 色階、此張影像最高 pixel probability 與目前 Heatmap 模式；
+  輸出標題補上「機率圖」，讓使用者不再期待 threshold 會改變 Heatmap
+- evidence 新增 `heatmap_mode`，保留每次展示方式的可追溯性
+
+### 驗證
+- 單元測試確認同一 probability map 切換 0.50／0.20 時 Mask 改變、Heatmap 像素不變
+- 單元測試確認純 Heatmap 使用固定色階端點，且拒絕未知顯示模式
+- Playwright 完成「正式疊加 → 探索疊加 → 純 Heatmap」流程；前兩者 Heatmap
+  SHA256 相同，純模式 SHA256 不同
+- 桌機 1680×1100、手機 390×844 均無水平溢位，browser console error 0
+- 195 項完整測試與發布稽核通過
+
+### 決策
+- Threshold 的科學語義只限二值切割，不用它重新縮放或改色 Probability heatmap
+- Heatmap 永遠採固定 0–1 色階；不以單張影像的 minimum／maximum 拉伸視覺對比
+- 高對比需求由明確標示的「純 Heatmap」處理，避免讓疊加圖看似沒有反應
+
+### 換你做
+目前不用操作；公開 Space 更新後，可切換 threshold 確認 Heatmap 不變，再切換
+「純 Heatmap」查看完整機率分布。
+
+---
+
 ## 2026-07-28 — Session 43：M33 Mask 結果引導與探索模式
 
 ### 做了什麼
