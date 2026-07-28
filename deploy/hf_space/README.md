@@ -32,7 +32,8 @@ ConvNeXt-Tiny classifier 與 SegFormer-B0 segmenter。
 - ConvNeXt base model：Apache-2.0。
 - SegFormer base 與衍生 segmenter checkpoints：NVIDIA Source Code License for
   SegFormer，**僅限 non-commercial research / evaluation**。
-- VisA source dataset：CC BY 4.0。本 Space 不包含任何原始 VisA 影像。
+- VisA source dataset：CC BY 4.0。本 Space 內含 5 張未修改的 VisA 範例影像，
+  僅供訪客直接操作 Demo；來源、原始路徑與 SHA256 見 `examples/README.md`。
 
 完整聲明請見 `THIRD_PARTY_NOTICES.md` 與 `licenses/`。
 

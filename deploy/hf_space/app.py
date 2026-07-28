@@ -3,12 +3,28 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import gradio as gr
 from runtime import MODEL_ROOT, SpaceContractError, load_manifest, predict, preferred_device
 
 GITHUB_URL = "https://github.com/kuotunyu/01-defectforge-visa"
 DATASET_URL = "https://huggingface.co/datasets/steven0226/defectforge-visa-synthetic"
+APP_ROOT = Path(__file__).resolve().parent
+DEMO_EXAMPLES = [
+    [str(APP_ROOT / "examples/pcb1_defect_a.JPG"), "pcb1"],
+    [str(APP_ROOT / "examples/pcb1_defect_b.JPG"), "pcb1"],
+    [str(APP_ROOT / "examples/pcb1_normal.JPG"), "pcb1"],
+    [str(APP_ROOT / "examples/capsules_defect.JPG"), "capsules"],
+    [str(APP_ROOT / "examples/capsules_normal.JPG"), "capsules"],
+]
+DEMO_GALLERY = [
+    (DEMO_EXAMPLES[0][0], "PCB 瑕疵 A"),
+    (DEMO_EXAMPLES[1][0], "PCB 瑕疵 B"),
+    (DEMO_EXAMPLES[2][0], "PCB 正常"),
+    (DEMO_EXAMPLES[3][0], "膠囊瑕疵"),
+    (DEMO_EXAMPLES[4][0], "膠囊正常"),
+]
 
 CSS = """
 :root {
@@ -55,8 +71,8 @@ body.dark .gradio-container {
   color: var(--df-ink) !important;
 }
 .gradio-container {
-  --text-xs: 1.125rem;
-  --text-sm: 1.125rem;
+  --text-xs: 1.1875rem;
+  --text-sm: 1.1875rem;
   --text-md: 1.25rem;
   --text-lg: 1.375rem;
   --body-background-fill: var(--df-canvas);
@@ -113,7 +129,7 @@ body.dark .gradio-container {
 .gradio-container .secondary-wrap *,
 .gradio-container .label-wrap,
 .gradio-container .label-wrap * {
-  font-size: 1.125rem !important;
+  font-size: 1.1875rem !important;
   line-height: 1.5 !important;
 }
 .gradio-container a {
@@ -147,7 +163,7 @@ body.dark .gradio-container {
   align-items: center;
   gap: .65rem;
   color: var(--df-primary-strong);
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 750;
 }
 .df-brand > span:last-child {
@@ -173,7 +189,7 @@ body.dark .gradio-container {
   border-radius: 3px;
   background: var(--df-primary-soft);
   color: var(--df-primary-strong);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -220,6 +236,7 @@ body.dark .gradio-container {
 .df-flow li {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: .7rem;
   min-height: 64px;
   padding: .85rem 1.5rem;
@@ -251,7 +268,7 @@ body.dark .gradio-container {
   border-radius: 2px;
   background: var(--df-surface);
   color: var(--df-primary-strong);
-  font-size: 1.125rem;
+  font-size: 1.25rem;
 }
 #df-workspace {
   gap: var(--df-space-md) !important;
@@ -282,7 +299,7 @@ body.dark .gradio-container {
 .df-panel-heading p {
   margin: 0;
   color: var(--df-muted);
-  font-size: 1.1875rem !important;
+  font-size: 1.25rem !important;
   line-height: 1.55 !important;
 }
 #df-object,
@@ -323,14 +340,14 @@ body.dark .gradio-container {
 .df-output-image label {
   color: var(--df-ink) !important;
 }
-#df-object > .wrap > span {
+#df-object > span[data-testid="block-info"] {
   color: var(--df-ink) !important;
   font-size: 1.25rem !important;
   font-weight: 700 !important;
 }
 #df-object .info-text {
   color: var(--df-muted) !important;
-  font-size: 1.125rem !important;
+  font-size: 1.1875rem !important;
   line-height: 1.5 !important;
 }
 .df-setup > .form {
@@ -340,24 +357,71 @@ body.dark .gradio-container {
   box-shadow: none !important;
 }
 #df-object .wrap {
-  gap: .65rem !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: .75rem !important;
 }
 #df-object .wrap label {
-  min-height: 52px !important;
-  padding: .7rem .85rem !important;
+  position: relative;
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: .7rem !important;
+  min-height: 88px !important;
+  padding: .8rem !important;
   border-radius: var(--df-radius-sm) !important;
   background: var(--df-surface) !important;
   border: 0 !important;
+  cursor: pointer;
+  transition:
+    background-color 160ms cubic-bezier(.16, 1, .3, 1),
+    transform 160ms cubic-bezier(.16, 1, .3, 1) !important;
+}
+#df-object .wrap label::before {
+  content: "PCB";
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  background: var(--df-surface-blue);
+  color: oklch(35% .07 230);
+  font-size: 1rem;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+#df-object .wrap label:nth-of-type(2)::before {
+  content: "CAP";
+  background: var(--df-surface-peach);
+  color: oklch(38% .08 60);
+}
+#df-object .wrap label input {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+}
+#df-object .wrap label span {
+  font-size: 1.1875rem !important;
+  font-weight: 750 !important;
+  line-height: 1.35 !important;
+  text-wrap: balance;
+}
+#df-object .wrap label:hover {
+  transform: translateY(-1px);
 }
 #df-object .wrap label:has(input:checked) {
   background: var(--df-primary-soft) !important;
   color: var(--df-primary-strong) !important;
   box-shadow: inset 0 0 0 2px var(--df-primary) !important;
 }
+#df-object .wrap label:has(input:focus-visible) {
+  outline: 3px solid color-mix(in srgb, var(--df-focus) 55%, transparent) !important;
+  outline-offset: 2px !important;
+}
 .df-object-help {
   margin: 0;
   color: var(--df-muted);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
 }
 .df-privacy {
   display: flex;
@@ -368,7 +432,7 @@ body.dark .gradio-container {
   border-radius: 0;
   background: var(--df-surface-soft);
   color: var(--df-primary-strong);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   line-height: 1.5;
 }
 .df-privacy strong {
@@ -405,13 +469,84 @@ body.dark .gradio-container {
 #df-advanced summary {
   min-height: 52px;
   color: var(--df-ink) !important;
-  font-size: 1.125rem !important;
+  font-size: 1.1875rem !important;
   font-weight: 700;
 }
 #df-advanced .label-wrap,
 #df-advanced .label-wrap * {
   color: var(--df-ink) !important;
+  font-size: 1.1875rem !important;
+}
+.df-examples-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 0 .55rem;
+}
+.df-examples-intro h3 {
+  margin: 0 0 .15rem;
+  color: var(--df-ink);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.df-examples-intro p {
+  margin: 0;
+  color: var(--df-muted);
+  font-size: 1.1875rem;
+  line-height: 1.5;
+}
+.df-examples-intro a {
+  flex: 0 0 auto;
+  font-size: 1.1875rem;
+  font-weight: 700;
+}
+#df-examples {
+  margin: 0 !important;
+  padding: .85rem !important;
+  background: var(--df-surface-muted) !important;
+  border: 0 !important;
+  border-radius: var(--df-radius-sm) !important;
+}
+#df-examples > label {
+  color: var(--df-ink) !important;
+  font-size: 1.1875rem !important;
+  font-weight: 750 !important;
+}
+#df-examples .label-wrap,
+#df-examples .label-wrap * {
+  color: var(--df-ink) !important;
+  font-size: 1.1875rem !important;
+  font-weight: 750 !important;
+}
+#df-examples button {
+  font-size: 1.1875rem !important;
+}
+#df-examples .thumbnail-item {
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: var(--df-radius-sm) !important;
+  background: var(--df-surface) !important;
+}
+#df-examples .grid-wrap {
+  overflow-y: hidden !important;
+}
+#df-examples .thumbnail-item:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--df-focus) 55%, transparent) !important;
+  outline-offset: 2px !important;
+}
+#df-examples .caption-label {
+  padding: .55rem .65rem !important;
+  background: oklch(23% .035 222 / .92) !important;
+  color: #fff !important;
   font-size: 1.125rem !important;
+  font-weight: 750 !important;
+}
+#df-examples img {
+  transition: transform 180ms cubic-bezier(.16, 1, .3, 1);
+}
+#df-examples .thumbnail-item:hover img {
+  transform: scale(1.018);
 }
 #df-upload .label-wrap,
 #df-upload .label-wrap *,
@@ -471,7 +606,7 @@ button#df-run:active {
   border-radius: 4px;
   background: var(--df-surface-soft);
   color: var(--df-primary-strong);
-  font-size: 1.0625rem;
+  font-size: 1.1875rem;
 }
 #df-probabilities {
   min-height: 210px !important;
@@ -535,7 +670,7 @@ button#df-run:active {
   border-radius: 0;
   background: var(--df-surface-peach);
   color: oklch(37% .07 65);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   line-height: 1.6;
 }
 .df-boundary strong {
@@ -549,7 +684,7 @@ button#df-run:active {
   margin-top: 1rem;
   padding: .85rem .15rem 0;
   color: var(--df-muted);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
 }
 .df-footer-links {
   display: flex;
@@ -592,7 +727,7 @@ footer { display: none !important; }
     justify-content: center;
     width: 100%;
     padding: .35rem .5rem;
-    font-size: 1rem;
+    font-size: 1.0625rem;
     white-space: nowrap;
   }
   #df-header h1 {
@@ -603,6 +738,26 @@ footer { display: none !important; }
   }
   .df-flow ol {
     grid-template-columns: 1fr;
+  }
+  .df-flow li {
+    justify-content: flex-start;
+  }
+  #df-object .wrap {
+    grid-template-columns: 1fr !important;
+  }
+  #df-examples {
+    height: 380px !important;
+  }
+  #df-examples .grid-wrap {
+    height: 380px !important;
+  }
+  #df-examples .grid-container {
+    --grid-cols: 2 !important;
+    --grid-rows: 3 !important;
+  }
+  .df-examples-intro {
+    align-items: flex-start;
+    flex-direction: column;
   }
   .df-panel {
     padding: 1rem !important;
@@ -675,6 +830,14 @@ def _clear_results() -> tuple[object, ...]:
         gr.Column(visible=False),
         gr.Accordion(visible=False),
     )
+
+
+def _select_example(evt: gr.SelectData) -> tuple[str, str]:
+    index = evt.index[0] if isinstance(evt.index, tuple) else evt.index
+    if not isinstance(index, int) or not 0 <= index < len(DEMO_EXAMPLES):
+        raise gr.Error("無法載入這張範例影像，請改選其他範例。", duration=6)
+    image_path, object_name = DEMO_EXAMPLES[index]
+    return image_path, object_name
 
 
 def build_app() -> gr.Blocks:
@@ -759,6 +922,24 @@ def build_app() -> gr.Blocks:
                             height=330,
                             elem_id="df-upload",
                         )
+                gr.HTML(
+                    "<div class='df-examples-intro' lang='zh-Hant-TW'>"
+                    "<div><h3>手上沒有影像？直接選一張範例</h3>"
+                    "<p>點一下會自動帶入正確物件與影像，再按「開始檢測」即可。</p></div>"
+                    "<a href='https://registry.opendata.aws/visa/' target='_blank' "
+                    "rel='noopener'>VisA · CC BY 4.0</a></div>"
+                )
+                examples = gr.Gallery(
+                    value=DEMO_GALLERY,
+                    label="5 張可直接試玩的範例影像",
+                    columns=5,
+                    rows=1,
+                    height=290,
+                    allow_preview=False,
+                    object_fit="cover",
+                    buttons=[],
+                    elem_id="df-examples",
+                )
                 gr.HTML(
                     "<div class='df-privacy' lang='zh-Hant-TW'>"
                     "<strong>隱私說明</strong><span>影像只在記憶體中處理；"
@@ -851,6 +1032,14 @@ def build_app() -> gr.Blocks:
             show_progress="full",
             api_visibility="private",
             scroll_to_output=True,
+        )
+        examples.select(
+            fn=_select_example,
+            inputs=None,
+            outputs=[image, object_name],
+            queue=False,
+            show_progress="hidden",
+            api_visibility="private",
         )
         for component in (image, object_name):
             component.change(

@@ -303,6 +303,38 @@ highshot TRAIN(normal)  ∩ fewshot TEST(normal)  = 401 (pcb1) / 241 (capsules)
 
 ---
 
+## 2026-07-28 — Session 41：M31 物件選擇與範例體驗精修
+
+### 做了什麼
+- 將三個操作流程在各自的等寬色帶內置中，讓步驟編號與文字形成一致的視覺軸線
+- 把 `pcb1／capsules` Radio 重做為 PCB／CAP 雙卡片：增加物件縮寫、中文名稱、
+  選取框、hover 與 keyboard focus 狀態，同時放大殘留的小型標籤與輔助文字
+- 加入 5 張未修改的 VisA 範例（pcb1 瑕疵 2 張、pcb1 正常 1 張、capsules 瑕疵與
+  正常各 1 張）；點選縮圖會自動選取相符物件並填入 uploader
+- 在介面直接顯示 VisA CC BY 4.0 attribution，並於 `examples/README.md` 記錄來源、
+  用途與逐檔 SHA256；Space card 與 third-party notices 同步更新
+- 手機圖庫改為 2 欄 × 3 列並依內容收合，避免空白過多；桌機維持單列五張快速掃讀
+
+### 驗證
+- 桌機 1680×958：三個流程欄位等寬置中，物件卡片與五張範例維持同一格線，
+  document width 小於 viewport width，無水平溢位
+- 手機 390×844：物件卡片堆疊、uploader 全寬、範例 2 欄排列且無水平溢位
+- 點選 capsules 範例後，物件自動切換為 `capsules` 並成功填入影像；按「開始檢測」
+  可展開 classification、binary mask 與 heatmap
+- 五張範例的 SHA256 由 automated test 鎖定，避免部署內容與 attribution inventory
+  悄悄漂移
+
+### 決策
+- 範例影像直接採用 VisA 官方資料並完整履行 CC BY 4.0 attribution，不以來源不明或
+  看似相似的合成縮圖替代研究資料
+- 範例點選只負責填入影像與正確物件，仍保留清楚的「開始檢測」主動作，避免一點縮圖
+  就突然觸發推論
+
+### 換你做
+目前沒有；公開 Space 部署完成後可直接點任一範例開始體驗。
+
+---
+
 ## 2026-07-28 — Session 40：M30 工整格線與克制馬卡龍視覺精修
 
 ### 做了什麼

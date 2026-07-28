@@ -123,7 +123,7 @@ def test_space_app_is_zh_tw_first_and_has_guided_empty_state() -> None:
     assert "請先上傳一張待檢影像" in (
         root / "deploy/hf_space/runtime.py"
     ).read_text(encoding="utf-8")
-    assert "--text-xs: 1.125rem" in source
+    assert "--text-xs: 1.1875rem" in source
     assert "--text-md: 1.25rem" in source
     assert "--df-radius-lg: 4px" in source
     assert "--df-surface-blue: oklch(" in source
@@ -136,3 +136,41 @@ def test_space_app_is_zh_tw_first_and_has_guided_empty_state() -> None:
     assert "border-left: 7px" not in source
     assert "border-left: 4px" not in source
     assert "border-left: 3px" not in source
+
+
+def test_space_demo_examples_are_complete_and_hash_bound() -> None:
+    root = Path(__file__).resolve().parents[1]
+    example_root = root / "deploy/hf_space/examples"
+    expected = {
+        "pcb1_defect_a.JPG": (
+            "e67db34e1045d7b8f01173a2f3e0138a6d89700e8a83d1426b6de0464e1e5e9d"
+        ),
+        "pcb1_defect_b.JPG": (
+            "f589eda90ce0b8865e102878d125f999949286339fa9bbc41f1354866976430f"
+        ),
+        "pcb1_normal.JPG": (
+            "c71fc38d4d03498c0827c114e21157b5e71d3da25b549a693ac23a961db68202"
+        ),
+        "capsules_defect.JPG": (
+            "76dd4a2f47089db32cc3c386be0efcdeb48c8b1858512a4272d698ccbb6e9d1c"
+        ),
+        "capsules_normal.JPG": (
+            "c5ffa21822a8759621e81deedfcbd94cfae213667044f995fbaa6d9affbc1a4f"
+        ),
+    }
+    actual = {
+        path.name: sha256_file(path)
+        for path in example_root.iterdir()
+        if path.suffix.lower() in {".jpg", ".jpeg", ".png"}
+    }
+    assert actual == expected
+
+    source = (root / "deploy/hf_space/app.py").read_text(encoding="utf-8")
+    notices = (root / "deploy/hf_space/THIRD_PARTY_NOTICES.md").read_text(
+        encoding="utf-8"
+    )
+    assert "DEMO_EXAMPLES" in source
+    assert "gr.Gallery(" in source
+    assert "examples.select(" in source
+    assert "CC BY 4.0" in source
+    assert "examples/README.md" in notices
