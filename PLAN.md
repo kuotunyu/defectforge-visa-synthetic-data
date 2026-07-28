@@ -172,12 +172,12 @@
   - **驗證**：[experiment_protocol.md §10](docs/experiment_protocol.md) 列的每張圖都存在；
     **每張都自己打開檢視**；頭號圖 `real_scaling_curve.png` 能直接回答「合成資料相當於幾張真實瑕疵」
 
-- [ ] **M22** 👀 Gradio demo（本機）＋ `assets/demo.gif`
+- [x] **M22** 👀 Gradio demo（本機）＋ `assets/demo.gif`
   - **驗證**：上傳真實 test 影像能同時輸出機率、mask、heatmap 與延遲；GIF **自己看過**確認畫面正確
     `scripts/record_demo_artifacts.py` 必須從 frozen highshot test 與 formal raw-bound
     checkpoints 原子產出四幀 GIF／`reports/demo_validation.json`，不以假資料或截圖替代
 
-- [ ] **M23** 🤖 README 完成 ＋ `scripts/verify_readme.py`
+- [x] **M23** 🤖 README 完成 ＋ `scripts/verify_readme.py`
   - **驗證**：`verify_readme.py` 跑過，README 每張表的數字都能從 `results/` 重算出來且完全相符；
     負面結果（若有）已寫進 Limitations；防洩漏聲明與授權表齊全
 

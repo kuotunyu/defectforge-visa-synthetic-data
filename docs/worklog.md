@@ -1145,6 +1145,57 @@ M11 SDXL notebook／Colab L4 執行與 M15 交接仍需使用者醒來後接續�
 
 ---
 
+## 2026-07-28 — Session 31：M22 真模型 demo、UI 實測與 M23 README
+
+### 做了什麼
+- 經使用者確認 RTX 4090 當下為 10.7 / 24.0 GB 後，在不終止、不修改
+  FormosaNLU 的前提下完成 M22；DefectForge 真模型推論沒有 OOM
+- `scripts/record_demo_artifacts.py` 從 frozen highshot test 決定性選四張圖，
+  重新核對 classification / segmentation CSV、formal raw reports 與 checkpoint hashes，
+  原子產生 `assets/demo.gif`、`reports/demo_checkpoint_selection.json` 與
+  `reports/demo_validation.json`
+- 以 headless Playwright 實際啟動本機 Gradio、上傳
+  `pcb1` frozen test anomaly `000.JPG`、按下 Run inspection，確認分類機率、mask、
+  heatmap 與 latency 都有渲染；沒有開 `share=True`
+- UI 實測抓到 confidence / latency 與標題對比不足；改用此版 Gradio 可穩定套用的
+  component classes 修正，重啟後再次上傳與截圖，畫面完整可讀
+- README 加入正式 GIF、真實負面結果與 demo 限制；`verify_readme.py --write`
+  重新生成全部驗證表格並通過
+- 打開七張 final PNG 原尺寸檢查，另逐幀檢查 GIF 四幀，寫入 hash-bound
+  `reports/phase2_visual_review.json`
+
+### 正式證據
+- GIF：4 frames、1280×720、SHA256
+  `1b77f4ebcef820d2634d10563374d24b8d214186682981b2faf8314b4c3b3cef`
+- post-evaluation checkpoint selection：
+  - pcb1 classifier `m16_full_real_pcb1_seed_42`
+  - pcb1 segmenter `m18_full_real_pcb1_seed42`
+  - capsules classifier `m16_full_real_capsules_seed_42`
+  - capsules segmenter `m18_full_real_capsules_seed42`
+- Gradio frozen test upload：Defect 73% / Normal 27%；最終 headless run latency
+  1240.2 ms，7 個 image DOM elements，share URL = false
+- README SHA256：
+  `bea4430ff05fb97bec0a0a2558d8da329ec3475ed59126e5adfabf5b9811a0cd`
+- `demo_validation.json`、`readme_validation.json`、
+  `phase2_visual_review.json` 皆為 `status=passed`
+
+### 誠實限制
+- 四張固定 demo 圖在 preregistered threshold 0.5 的 binary mask coverage 均為 0%
+- GIF 仍保留原始 classifier probability、空 mask、probability heatmap 與 latency；
+  沒有為了展示效果重選樣本或改 threshold
+- live UI anomaly 也得到 0% mask；這與 formal segmentation 指標的負面／不穩定結果一致，
+  已明列於 README Limitations
+
+### 下一步
+執行 M24 本機 release acceptance、完整測試、secret / contributor audit，整理成不公開的
+release candidate；建立 GitHub repo、push 與轉 public 必須等使用者最後過目後才做。
+
+### 換你做
+目前不用操作 GPU 或 Colab。待本機 M24 gate 全綠後，只需人工看 README / GIF，
+再決定是否建立並公開 GitHub repository。
+
+---
+
 ## 2026-07-27 — Session 07：M5 決定性 few-shot／validation 與 mask 統計
 
 ### 做了什麼

@@ -1,0 +1,62 @@
+{
+  "changes_reported_metrics": false,
+  "classification_results_sha256": "aa083aa7524cea80d211efa911616ea71b4888049deced5678441ee8f05cbce6",
+  "objects": {
+    "capsules": {
+      "classifier": {
+        "group_name": "full_real",
+        "model_sha256": "9a34ebba60d2b483da5b31e28c9f969bb10ba6afe29b5cf7eb129af855820a8d",
+        "object": "capsules",
+        "primary_metric": "macro_f1",
+        "primary_value": 0.6748487205265854,
+        "role": "classifier",
+        "run_name": "m16_full_real_capsules_seed_42",
+        "secondary_metric": "auroc",
+        "secondary_value": 0.858298755186722,
+        "training_report_sha256": "792b68af74b4cab838dbd6bb71922a3ad237ab00ea6f1721795d0805618c8e59"
+      },
+      "segmenter": {
+        "group_name": "full_real",
+        "model_sha256": "9632d2c64d6323e00e382e351d6ad8cc6ddfb4d101e32819e7a07f3351c73450",
+        "object": "capsules",
+        "primary_metric": "dice",
+        "primary_value": 0.6330528779866044,
+        "role": "segmenter",
+        "run_name": "m18_full_real_capsules_seed42",
+        "secondary_metric": "aupro",
+        "secondary_value": 0.9590810980914699,
+        "training_report_sha256": "7579b7417510067ffea10d2a940f02660702266a4fc7055fb60650dc71dcd773"
+      }
+    },
+    "pcb1": {
+      "classifier": {
+        "group_name": "full_real",
+        "model_sha256": "b9ee33d5236ca64b1386dc3f5bc9b54446252610022ae193e97f24b9fbda1d64",
+        "object": "pcb1",
+        "primary_metric": "macro_f1",
+        "primary_value": 0.6825689955883861,
+        "role": "classifier",
+        "run_name": "m16_full_real_pcb1_seed_42",
+        "secondary_metric": "auroc",
+        "secondary_value": 0.9294154228855721,
+        "training_report_sha256": "eac067d7e3214bdd96ecec03c55ed77159a2c0ff3a1235fabd97458936f5815a"
+      },
+      "segmenter": {
+        "group_name": "full_real",
+        "model_sha256": "82ee26e11e84283ae31a000bb5e11ff7f447751529d85c3088eb8f7e3b696940",
+        "object": "pcb1",
+        "primary_metric": "dice",
+        "primary_value": 0.6862354114128204,
+        "role": "segmenter",
+        "run_name": "m18_full_real_pcb1_seed42",
+        "secondary_metric": "aupro",
+        "secondary_value": 0.599875043965242,
+        "training_report_sha256": "d09cee147fe8ea81c5315ae2ea26fe24cbc330d8f754292a7b4bf074b4ea7130"
+      }
+    }
+  },
+  "schema_version": 1,
+  "segmentation_results_sha256": "fbe4f97379e2597713c1c7255bfd6b5df7ac49c948b396469f598d34b03615aa",
+  "selection_is_post_evaluation_demo_only": true,
+  "status": "passed"
+}

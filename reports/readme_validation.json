@@ -1,0 +1,19 @@
+{
+  "block_sha256": {
+    "CLASSIFICATION_MAIN": "e7db2f5b436cc7d8cb9ec493a3b06afaaae4e54a41c24bedd956ded732e1f186",
+    "RESULT_OUTCOME": "3b7bc49aa45ec80e141133dc6f3b0db7840db8d1025a7052e9d7a3617d51f7b0",
+    "SEGMENTATION_MAIN": "e1fe22e02813993ee8d71a2ee1299c3874944530a2b56a19d2097fa8df5301ce"
+  },
+  "classification_sha256": "aa083aa7524cea80d211efa911616ea71b4888049deced5678441ee8f05cbce6",
+  "negative_results_preserved": true,
+  "outcome": {
+    "classification_macro_f1_delta": -0.2286086910687714,
+    "classification_negative": true,
+    "segmentation_dice_delta": -0.22639121842051724,
+    "segmentation_negative": true
+  },
+  "readme_sha256": "bea4430ff05fb97bec0a0a2558d8da329ec3475ed59126e5adfabf5b9811a0cd",
+  "schema_version": 1,
+  "segmentation_sha256": "fbe4f97379e2597713c1c7255bfd6b5df7ac49c948b396469f598d34b03615aa",
+  "status": "passed"
+}

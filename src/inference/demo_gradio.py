@@ -363,7 +363,7 @@ def render_outputs(
         "Normal": 1.0 - anomaly_probability,
     }
     latency = (
-        f"**{elapsed_ms:.1f} ms** end-to-end  ·  "
+        f"**{elapsed_ms:.1f} ms** end-to-end  /  "
         f"mask coverage **{float((mask > 0).mean()) * 100.0:.2f}%**"
     )
     return probabilities, mask, heatmap, latency
@@ -479,30 +479,36 @@ DEMO_CSS = """
   color: var(--df-paper) !important;
   font-family: Bahnschrift, "DIN Alternate", sans-serif !important;
 }
-#df-shell { max-width: 1320px; margin: 0 auto; }
-#df-kicker {
-  color: var(--df-mint); font-size: .76rem; letter-spacing: .22em;
+.df-shell { max-width: 1320px; margin: 0 auto; }
+.df-kicker {
+  color: #173b47 !important; font-size: .76rem; letter-spacing: .22em;
   text-transform: uppercase; margin-bottom: .35rem;
 }
-#df-title h1 {
-  color: var(--df-paper); font-size: clamp(2rem, 5vw, 4.6rem);
+.df-title h1 {
+  color: #0d2631 !important; font-size: clamp(2rem, 5vw, 4.6rem);
   line-height: .93; letter-spacing: -.035em; margin: 0 0 1rem;
 }
-#df-title p { color: #a9c0bd; max-width: 67ch; }
+.df-title p { color: #35505a !important; max-width: 67ch; }
 .df-panel {
   border: 1px solid var(--df-rule) !important;
   border-radius: 2px !important;
   background: rgba(13,38,49,.82) !important;
   box-shadow: 8px 8px 0 rgba(0,0,0,.22) !important;
 }
-#df-run {
+.df-result-panel {
+  border: 1px solid var(--df-rule) !important;
+  border-radius: 2px !important;
+  background: rgba(232,240,236,.96) !important;
+  box-shadow: 8px 8px 0 rgba(0,0,0,.22) !important;
+}
+.df-run {
   background: var(--df-amber) !important; color: #1c210e !important;
   border: 0 !important; border-radius: 2px !important;
   font-weight: 800 !important; letter-spacing: .08em; text-transform: uppercase;
 }
-#df-object {
+.df-object {
   border-left: 3px solid var(--df-mint); padding-left: .75rem;
-  color: #a9c0bd;
+  color: #173b47 !important;
 }
 """
 
@@ -514,18 +520,18 @@ def build_app(runtime: InspectionRuntime) -> Any:
 
     with (
         gr.Blocks(title="DefectForge Inspection Console") as demo,
-        gr.Column(elem_id="df-shell"),
+        gr.Column(elem_classes=["df-shell"]),
     ):
-        gr.Markdown("MACHINE VISION / LOCAL INFERENCE", elem_id="df-kicker")
+        gr.Markdown("MACHINE VISION / LOCAL INFERENCE", elem_classes=["df-kicker"])
         gr.Markdown(
             "# DefectForge\n"
             "A paired classification + segmentation console for few-shot industrial defects.",
-            elem_id="df-title",
+            elem_classes=["df-title"],
         )
         gr.Markdown(
-            f"Object model: **{runtime.object_name}** · "
+            f"Object model: **{runtime.object_name}** / "
             "checkpoints verified against raw training reports",
-            elem_id="df-object",
+            elem_classes=["df-object"],
         )
         with gr.Row(equal_height=False):
             with gr.Column(scale=5, elem_classes=["df-panel"]):
@@ -534,16 +540,20 @@ def build_app(runtime: InspectionRuntime) -> Any:
                     type="pil",
                     sources=["upload", "clipboard"],
                 )
-                analyze = gr.Button("Run inspection", variant="primary", elem_id="df-run")
+                analyze = gr.Button(
+                    "Run inspection",
+                    variant="primary",
+                    elem_classes=["df-run"],
+                )
             with gr.Column(scale=4):
                 probabilities = gr.Label(
                     label="Classification confidence",
                     num_top_classes=2,
-                    elem_classes=["df-panel"],
+                    elem_classes=["df-result-panel"],
                 )
                 latency = gr.Markdown(
                     "Awaiting an inspection frame.",
-                    elem_classes=["df-panel"],
+                    elem_classes=["df-result-panel"],
                 )
         with gr.Row():
             mask = gr.Image(

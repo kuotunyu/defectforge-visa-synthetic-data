@@ -31,8 +31,11 @@ REQUIRED_M18_INSTRUCTION_ROWS = (
     "| 1. 上 Colab 方式 |",
     "| 2. Runtime 選型 |",
     "| 3. Colab Secrets |",
-    "| 4. 預估時數與 compute units |",
     "| 5. 跑完下載／回收 |",
+)
+REQUIRED_M18_TIMING_ROWS = (
+    "| 4. 預估時數與 compute units |",
+    "| 4. 實測時數與 compute units |",
 )
 REQUIRED_PASSED_JSON = (
     "reports/stageA_copypaste_validation.json",
@@ -100,7 +103,9 @@ def validate_instruction_handoff(instructions_text: str) -> dict[str, Any]:
     require("已完成" in notebook_1, "Notebook 1 is not marked complete")
 
     notebook_2 = instructions_text[notebook_2_start:]
-    m18_handoff_complete = all(row in notebook_2 for row in REQUIRED_M18_INSTRUCTION_ROWS)
+    m18_handoff_complete = all(
+        row in notebook_2 for row in REQUIRED_M18_INSTRUCTION_ROWS
+    ) and any(row in notebook_2 for row in REQUIRED_M18_TIMING_ROWS)
     require(
         m18_handoff_complete or ("M18" in notebook_2 and "尚未建立" in notebook_2),
         "M18 ownership or completed handoff is unclear",

@@ -35,7 +35,7 @@ def test_instruction_handoff_accepts_completed_m18_handoff() -> None:
     notebook_2_rows = """| 1. 上 Colab 方式 | complete |
 | 2. Runtime 選型 | complete |
 | 3. Colab Secrets | none |
-| 4. 預估時數與 compute units | recorded |
+| 4. 實測時數與 compute units | recorded |
 | 5. 跑完下載／回收 | exact ZIP names |"""
     text = (
         f"## Notebook 1\n{notebook_1_rows}\n"
