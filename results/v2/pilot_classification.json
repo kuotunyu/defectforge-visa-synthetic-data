@@ -1,0 +1,316 @@
+{
+  "base_config_sha256": "9b6f4048ea05057c75dcfbe0661ad9c3449c74d6abe945518eaa7fed53651634",
+  "experiment": "M26 validation-only domain-mixing pilot",
+  "gate": {
+    "confirmatory_run_authorized_by_gate": false,
+    "mean_macro_f1_gain_vs_real_only": -0.078095238095238,
+    "object_checks": {
+      "capsules": {
+        "auroc_delta": -0.05092592592592604,
+        "auroc_noninferior": false,
+        "macro_f1_delta": -0.1561904761904761,
+        "macro_f1_noninferior": false
+      },
+      "pcb1": {
+        "auroc_delta": -0.036111111111111094,
+        "auroc_noninferior": false,
+        "macro_f1_delta": 0.0,
+        "macro_f1_noninferior": true
+      }
+    },
+    "ranking": [
+      "domain_balanced_75",
+      "domain_balanced_50"
+    ],
+    "status": "stopped",
+    "winner": "domain_balanced_75"
+  },
+  "pilot_config_sha256": "413139dbd89604717d76e33e8e231c4761369eed1b192a64a7f71c030fb649e5",
+  "runs": [
+    {
+      "best_step": 100,
+      "data_manifest_sha256": "0ea5350d70caf92f35d6e4f28cd2728b619264743fc795eac64a4c8cf89611d4",
+      "executed_steps": 100,
+      "metrics": {
+        "anomaly_f1": 0.5,
+        "auroc": 0.9166666666666666,
+        "bad": 6,
+        "confusion": {
+          "fn": 0,
+          "fp": 12,
+          "tn": 48,
+          "tp": 6
+        },
+        "good": 60,
+        "macro_f1": 0.6944444444444444,
+        "n": 66,
+        "normal_false_positive_rate": 0.2,
+        "step": 100
+      },
+      "model_sha256": "5618528164f186981cced3ddb199d9ad024a0c9128b3015a01b53c94fc206982",
+      "object": "pcb1",
+      "output_directory_name": "m26_real_only_pcb1_seed_42_dev",
+      "peak_vram_gib": 3.1747636795043945,
+      "real_bad_share": 0.5,
+      "run_name": "m26_real_only_pcb1_seed_42_dev",
+      "run_signature": "21ea3e42e4dc41ec4296866eb651a9295eded9f4ade1de472fac5851edadcecb",
+      "sample_exposure": {
+        "real_bad": 818,
+        "real_good": 782,
+        "synthetic_bad": 0
+      },
+      "sampler_strategy": "class_balanced",
+      "training_seconds": 43.177098599999226
+    },
+    {
+      "best_step": 100,
+      "data_manifest_sha256": "a0445b60dafd35b6fca66dec0c82dc207e0b1b6fb424c449675ba9e32ce08a3a",
+      "executed_steps": 100,
+      "metrics": {
+        "anomaly_f1": 0.6666666666666666,
+        "auroc": 0.9120370370370371,
+        "bad": 6,
+        "confusion": {
+          "fn": 3,
+          "fp": 0,
+          "tn": 36,
+          "tp": 3
+        },
+        "good": 36,
+        "macro_f1": 0.8133333333333332,
+        "n": 42,
+        "normal_false_positive_rate": 0.0,
+        "step": 100
+      },
+      "model_sha256": "538e3112c9f765b5216c8e8b14b0a852042b7b2a742ff80d2101c7b82d8b05d4",
+      "object": "capsules",
+      "output_directory_name": "m26_real_only_capsules_seed_42_dev",
+      "peak_vram_gib": 3.1747636795043945,
+      "real_bad_share": 0.5,
+      "run_name": "m26_real_only_capsules_seed_42_dev",
+      "run_signature": "9904812c626534c362370d7b7ab31d3eb7fc44d49c09c82f77c5252af27b3f95",
+      "sample_exposure": {
+        "real_bad": 818,
+        "real_good": 782,
+        "synthetic_bad": 0
+      },
+      "sampler_strategy": "class_balanced",
+      "training_seconds": 40.106824999999844
+    },
+    {
+      "best_step": 25,
+      "data_manifest_sha256": "541ad7efe1fbf51806f90ed5ba834e7c35e47d0f49a29bb069a207847221cc34",
+      "executed_steps": 100,
+      "metrics": {
+        "anomaly_f1": 0.18181818181818182,
+        "auroc": 0.3138888888888889,
+        "bad": 6,
+        "confusion": {
+          "fn": 5,
+          "fp": 4,
+          "tn": 56,
+          "tp": 1
+        },
+        "good": 60,
+        "macro_f1": 0.5537190082644629,
+        "n": 66,
+        "normal_false_positive_rate": 0.06666666666666667,
+        "step": 25
+      },
+      "model_sha256": "cace5efbe88c36693341a48d82570e22b43590ff116a295feae1276a9a208e87",
+      "object": "pcb1",
+      "output_directory_name": "m26_v1_class_balanced_pcb1_seed_42_dev",
+      "peak_vram_gib": 3.1747636795043945,
+      "real_bad_share": 0.5,
+      "run_name": "m26_v1_class_balanced_pcb1_seed_42_dev",
+      "run_signature": "5d2552cb884e3630ee21d662b3c59b075adeb0705bff53ecd6d5a0b342f8db28",
+      "sample_exposure": {
+        "real_bad": 14,
+        "real_good": 817,
+        "synthetic_bad": 769
+      },
+      "sampler_strategy": "class_balanced",
+      "training_seconds": 56.223558600000615
+    },
+    {
+      "best_step": 25,
+      "data_manifest_sha256": "28f75be168366073aed2478c165b9709a6d2a2a1062b8d34303a0699f2804473",
+      "executed_steps": 100,
+      "metrics": {
+        "anomaly_f1": 0.0,
+        "auroc": 0.20833333333333337,
+        "bad": 6,
+        "confusion": {
+          "fn": 6,
+          "fp": 1,
+          "tn": 35,
+          "tp": 0
+        },
+        "good": 36,
+        "macro_f1": 0.45454545454545453,
+        "n": 42,
+        "normal_false_positive_rate": 0.027777777777777776,
+        "step": 25
+      },
+      "model_sha256": "eee4466971c46e08f3bafb002e2990e27131f0016b5b4395c026b6cd733cd911",
+      "object": "capsules",
+      "output_directory_name": "m26_v1_class_balanced_capsules_seed_42_dev",
+      "peak_vram_gib": 3.1747636795043945,
+      "real_bad_share": 0.5,
+      "run_name": "m26_v1_class_balanced_capsules_seed_42_dev",
+      "run_signature": "96f6f4f1f9773fe8239a423bf9877c090ee9c92c3f06dcebaa5b1c683a60a920",
+      "sample_exposure": {
+        "real_bad": 14,
+        "real_good": 817,
+        "synthetic_bad": 769
+      },
+      "sampler_strategy": "class_balanced",
+      "training_seconds": 56.23727659999986
+    },
+    {
+      "best_step": 75,
+      "data_manifest_sha256": "541ad7efe1fbf51806f90ed5ba834e7c35e47d0f49a29bb069a207847221cc34",
+      "executed_steps": 100,
+      "metrics": {
+        "anomaly_f1": 0.5,
+        "auroc": 0.9388888888888889,
+        "bad": 6,
+        "confusion": {
+          "fn": 0,
+          "fp": 12,
+          "tn": 48,
+          "tp": 6
+        },
+        "good": 60,
+        "macro_f1": 0.6944444444444444,
+        "n": 66,
+        "normal_false_positive_rate": 0.2,
+        "step": 75
+      },
+      "model_sha256": "cd1ab0a30ee1b47f7d5d290fd3f484e2f2c49518fe54bfcab39501ecac8671b6",
+      "object": "pcb1",
+      "output_directory_name": "m26_domain_balanced_50_pcb1_seed_42_dev",
+      "peak_vram_gib": 3.1747636795043945,
+      "real_bad_share": 0.5,
+      "run_name": "m26_domain_balanced_50_pcb1_seed_42_dev",
+      "run_signature": "96f1638dca0814f8333c4339f808316994123bf36241830113b436b8774b29ba",
+      "sample_exposure": {
+        "real_bad": 405,
+        "real_good": 812,
+        "synthetic_bad": 383
+      },
+      "sampler_strategy": "domain_balanced",
+      "training_seconds": 44.288934600000175
+    },
+    {
+      "best_step": 50,
+      "data_manifest_sha256": "28f75be168366073aed2478c165b9709a6d2a2a1062b8d34303a0699f2804473",
+      "executed_steps": 100,
+      "metrics": {
+        "anomaly_f1": 0.42857142857142855,
+        "auroc": 0.75,
+        "bad": 6,
+        "confusion": {
+          "fn": 3,
+          "fp": 5,
+          "tn": 31,
+          "tp": 3
+        },
+        "good": 36,
+        "macro_f1": 0.6571428571428571,
+        "n": 42,
+        "normal_false_positive_rate": 0.1388888888888889,
+        "step": 50
+      },
+      "model_sha256": "ff8939050e10daba846a45e2652694a10fffe8bffc4cf35b7d37affb4a5dac72",
+      "object": "capsules",
+      "output_directory_name": "m26_domain_balanced_50_capsules_seed_42_dev",
+      "peak_vram_gib": 3.1747636795043945,
+      "real_bad_share": 0.5,
+      "run_name": "m26_domain_balanced_50_capsules_seed_42_dev",
+      "run_signature": "d3d77de5913c03ba150370633264e38fb16ca13f7bceb2e67faf5abe083742f6",
+      "sample_exposure": {
+        "real_bad": 405,
+        "real_good": 812,
+        "synthetic_bad": 383
+      },
+      "sampler_strategy": "domain_balanced",
+      "training_seconds": 42.75788780000039
+    },
+    {
+      "best_step": 100,
+      "data_manifest_sha256": "541ad7efe1fbf51806f90ed5ba834e7c35e47d0f49a29bb069a207847221cc34",
+      "executed_steps": 100,
+      "metrics": {
+        "anomaly_f1": 0.5,
+        "auroc": 0.8805555555555555,
+        "bad": 6,
+        "confusion": {
+          "fn": 0,
+          "fp": 12,
+          "tn": 48,
+          "tp": 6
+        },
+        "good": 60,
+        "macro_f1": 0.6944444444444444,
+        "n": 66,
+        "normal_false_positive_rate": 0.2,
+        "step": 100
+      },
+      "model_sha256": "00587bf2cf1b148a01402cd9e3ec2aad9d17620ad8962ec1a9c4b9847b79f570",
+      "object": "pcb1",
+      "output_directory_name": "m26_domain_balanced_75_pcb1_seed_42_dev",
+      "peak_vram_gib": 3.1747636795043945,
+      "real_bad_share": 0.75,
+      "run_name": "m26_domain_balanced_75_pcb1_seed_42_dev",
+      "run_signature": "c0dbd028f16691f3c5e54c757c5d162d038f66c0361ccd5f1aa7c3ee884b3eef",
+      "sample_exposure": {
+        "real_bad": 613,
+        "real_good": 772,
+        "synthetic_bad": 215
+      },
+      "sampler_strategy": "domain_balanced",
+      "training_seconds": 41.34430880000036
+    },
+    {
+      "best_step": 100,
+      "data_manifest_sha256": "28f75be168366073aed2478c165b9709a6d2a2a1062b8d34303a0699f2804473",
+      "executed_steps": 100,
+      "metrics": {
+        "anomaly_f1": 0.42857142857142855,
+        "auroc": 0.861111111111111,
+        "bad": 6,
+        "confusion": {
+          "fn": 3,
+          "fp": 5,
+          "tn": 31,
+          "tp": 3
+        },
+        "good": 36,
+        "macro_f1": 0.6571428571428571,
+        "n": 42,
+        "normal_false_positive_rate": 0.1388888888888889,
+        "step": 100
+      },
+      "model_sha256": "50ecd9ca72eb08a2e5784c7c9cade3f2eccfe437abaab319a21a7a3e4cf03a9d",
+      "object": "capsules",
+      "output_directory_name": "m26_domain_balanced_75_capsules_seed_42_dev",
+      "peak_vram_gib": 3.1747636795043945,
+      "real_bad_share": 0.75,
+      "run_name": "m26_domain_balanced_75_capsules_seed_42_dev",
+      "run_signature": "8247a2c839706752c5d363b3afdd8341c25802b721489cbf57aba5e2c0a5f9f5",
+      "sample_exposure": {
+        "real_bad": 613,
+        "real_good": 772,
+        "synthetic_bad": 215
+      },
+      "sampler_strategy": "domain_balanced",
+      "training_seconds": 49.45196489999944
+    }
+  ],
+  "schema_version": 1,
+  "seed": 42,
+  "status": "passed",
+  "test_data_loaded": false,
+  "total_steps": 100
+}

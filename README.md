@@ -161,6 +161,26 @@ The figures are built from the same two CSVs and carry their input hashes in
 
 ![Nine logical segmentation groups](reports/figures/segmentation_table.png)
 
+## v2 follow-up: did sampling cause the failure?
+
+After v1.0.0 was frozen, we tested one explicit failure hypothesis without touching the
+test set: label balancing gave the 500 synthetic anomalies almost all positive-class
+exposure, leaving the 10 real anomalies only 14 of 1,600 sampled positions.
+
+| Validation candidate | pcb1 Macro-F1 | pcb1 AUROC | capsules Macro-F1 | capsules AUROC |
+|---|---:|---:|---:|---:|
+| Real-only | 0.6944 | 0.9167 | 0.8133 | 0.9120 |
+| v1 class-balanced mixing | 0.5537 | 0.3139 | 0.4545 | 0.2083 |
+| Domain-balanced 50% real bad | 0.6944 | **0.9389** | 0.6571 | 0.7500 |
+| Domain-balanced 75% real bad | 0.6944 | 0.8806 | 0.6571 | **0.8611** |
+
+Domain balancing rescued pcb1 and much of capsules, confirming that exposure collapse
+was real. It still failed the preregistered cross-object gate: the selected 75% candidate
+was `-0.0781` mean Macro-F1 versus real-only and capsules remained `-0.1562`. Therefore
+we stopped before test evaluation or a three-seed confirmatory run. This is an
+**exploratory validation result**, not a replacement for the v1 tables above.
+[Protocol and full report](reports/v2_pilot_report.md).
+
 ## Local demo
 
 ![DefectForge deterministic local demo](assets/demo.gif)

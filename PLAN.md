@@ -198,12 +198,12 @@
     pcb1／capsules 上傳、分類、mask、heatmap 與 provenance 檢視；預設 CPU Basic，
     只有實測不敷使用才升級 GPU；頁面與 bundle 完整附帶研究用途及第三方授權界線
 
-- [ ] **M26** 🤖 v2 低成本 pilot：修正合成樣本淹沒真實瑕疵的取樣問題
+- [x] **M26** 🤖 v2 低成本 pilot：修正合成樣本淹沒真實瑕疵的取樣問題
   - **驗證**：先凍結候選策略與 validation-only 選模規則；以 real-only、v1 mixing 與
     domain-balanced／curriculum mixing 做小規模對照，記錄每域曝光量、walltime、VRAM、
     validation Macro-F1／AUROC；pilot 未過門檻就停止，不消耗 A100 額度做正式重跑
 
-- [ ] **M27** 🙋 v2 confirmatory run 與公開 addendum
+- [x] **M27** 🙋 v2 confirmatory run 與公開 addendum（**gate 未通過，依預註冊正確停止而未執行**）
   - **驗證**：只有 M26 在兩物件 validation 都未退步且至少一項主要指標改善才啟動；
     以凍結設定跑 3 seeds、最後一次性評估 test，輸出獨立 `results/v2/` 與報告；
     README 清楚並列 v1 與 v2，不能把探索性 pilot 當成預註冊主結果

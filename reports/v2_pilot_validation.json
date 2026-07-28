@@ -1,0 +1,52 @@
+{
+  "gate_status": "stopped",
+  "m27_authorized": false,
+  "pilot_config_sha256": "413139dbd89604717d76e33e8e231c4761369eed1b192a64a7f71c030fb649e5",
+  "raw_runs": [
+    {
+      "data_manifest_sha256": "8b450656c69b6c5df7e94ee2dfe62f2a5cfd3b84ff5145242a31c023eff55298",
+      "run_name": "m26_domain_balanced_50_capsules_seed_42_dev",
+      "training_report_sha256": "e423f812878d9dcbd42ad852618129101f9403f8b163455bb4760f1e45bb4e23"
+    },
+    {
+      "data_manifest_sha256": "4995718a65e03e64f66cd2a9045cec5ac670fd1a8645fc770bd19cdb9d343f42",
+      "run_name": "m26_domain_balanced_50_pcb1_seed_42_dev",
+      "training_report_sha256": "40d3e55a29ca860760151a59c390e250cd40b1d2e4da8bf8ece4d7162bec1b4c"
+    },
+    {
+      "data_manifest_sha256": "8b450656c69b6c5df7e94ee2dfe62f2a5cfd3b84ff5145242a31c023eff55298",
+      "run_name": "m26_domain_balanced_75_capsules_seed_42_dev",
+      "training_report_sha256": "52448cfd203dfb28a3753c8effe53035d7fcc1c1980bb8b47881f925158edd91"
+    },
+    {
+      "data_manifest_sha256": "4995718a65e03e64f66cd2a9045cec5ac670fd1a8645fc770bd19cdb9d343f42",
+      "run_name": "m26_domain_balanced_75_pcb1_seed_42_dev",
+      "training_report_sha256": "88ee6aa624e1e0b40ca0be04c1beff067d4adaa77d8a7825d86cb8d17a153eac"
+    },
+    {
+      "data_manifest_sha256": "1b18d093dd531bc6eeca66e6fa930f17b94d2e4d94926cfcb7681e6361bde83e",
+      "run_name": "m26_real_only_capsules_seed_42_dev",
+      "training_report_sha256": "e4afa01db49446c2ff00f3b4643f92253888029e791af5e45ea4112b464ef403"
+    },
+    {
+      "data_manifest_sha256": "b5b1d038bab6d2d0483bcc61a1775f9347376632f05198a33ef2d0b7e618e343",
+      "run_name": "m26_real_only_pcb1_seed_42_dev",
+      "training_report_sha256": "2b1f84ac5dde60975f84edf23d51c6147269a7ff844c5f8e4076e1925a82f3a6"
+    },
+    {
+      "data_manifest_sha256": "8b450656c69b6c5df7e94ee2dfe62f2a5cfd3b84ff5145242a31c023eff55298",
+      "run_name": "m26_v1_class_balanced_capsules_seed_42_dev",
+      "training_report_sha256": "8f5f1c4c6ed79bdffadf681fbba0c4ec33a2474faa2dede1580d9add7cacd3c2"
+    },
+    {
+      "data_manifest_sha256": "4995718a65e03e64f66cd2a9045cec5ac670fd1a8645fc770bd19cdb9d343f42",
+      "run_name": "m26_v1_class_balanced_pcb1_seed_42_dev",
+      "training_report_sha256": "f695501885bab6a124807abb31210c26675257651f4fadbd1dc318daf93df7ce"
+    }
+  ],
+  "result_sha256": "1e33f6828e25e566fff72ffef3fb2d7142c663b44facd2f65f132a3440863f2a",
+  "run_count": 8,
+  "schema_version": 1,
+  "status": "passed",
+  "test_data_loaded": false
+}

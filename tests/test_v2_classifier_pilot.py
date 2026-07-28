@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -77,3 +79,15 @@ def test_v2_gate_stops_object_regression() -> None:
     assert gate["confirmatory_run_authorized_by_gate"] is False
     assert gate["object_checks"]["capsules"]["macro_f1_noninferior"] is False
     assert gate["mean_macro_f1_gain_vs_real_only"] == pytest.approx(0.025)
+
+
+def test_v2_verifier_exposes_help() -> None:
+    root = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [sys.executable, "scripts/verify_v2_classifier_pilot.py", "--help"],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr

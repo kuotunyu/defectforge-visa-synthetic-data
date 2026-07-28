@@ -1393,6 +1393,53 @@ M26：在不讀 test 指標的前提下，加入 domain-balanced sampler，讓�
 
 ---
 
+## 2026-07-28 — Session 36：M26 完成、M27 依 gate 停止
+
+### 做了什麼
+- 在預註冊 commit `0df3f666cc...` 之後才執行 8 個 development runs
+- real-only、v1 mixing、domain-balanced 50%／75% 各跑 pcb1 與 capsules；
+  全部 100 steps、seed 42、同一 base／optimizer／validation
+- 新增獨立 `verify_v2_classifier_pilot.py`，由 raw report 與 data manifest 重算結果與 gate
+- 新增 `results/v2/pilot_classification.json` 與 `reports/v2_pilot_report.md`；
+  README 以 exploratory validation addendum 呈現，不覆寫 v1 表格
+
+### 結果
+- real-only validation：
+  - pcb1 Macro-F1 0.6944 / AUROC 0.9167
+  - capsules 0.8133 / 0.9120
+- v1 mixing（14 real bad / 769 synthetic bad exposure）：
+  - pcb1 0.5537 / 0.3139
+  - capsules 0.4545 / 0.2083
+- domain-balanced 50%（405 / 383 exposure）：
+  - pcb1 0.6944 / 0.9389
+  - capsules 0.6571 / 0.7500
+- domain-balanced 75%（613 / 215 exposure）：
+  - pcb1 0.6944 / 0.8806
+  - capsules 0.6571 / 0.8611
+
+### Gate 與決策
+- 兩個 domain-balanced candidate 的 mean Macro-F1 同分，依 secondary mean AUROC 選 75%
+- 相對 real-only：pcb1 Macro-F1 +0.0000 / AUROC -0.0361；
+  capsules -0.1562 / -0.0509；mean Macro-F1 -0.0781
+- `confirmatory_run_authorized_by_gate=false`；M27 依規格停止，不讀 test、不跑 3 seeds、
+  不用 Colab/A100，也不追加 candidate 追結果
+
+### 驗證
+- 8 個 raw manifest 全部 `mode=development`、`test=[]`、validation 全為 real
+- verifier 綁定 run signature、model SHA、metrics、exposure 與 config SHA；
+  result SHA256 `1e33f6828e25e566fff72ffef3fb2d7142c663b44facd2f65f132a3440863f2a`
+- 全 run 峰值皆 3.1748 GiB；其他專案程序未終止或修改
+
+### 結論
+曝光失衡確實是 v1 失敗原因之一：修正後 pcb1 完全恢復，capsules 也大幅回升。
+但 capsules 的剩餘 domain gap 仍太大，現有 synthetic set 不能支持跨物件提升主張。
+停止正式重跑比花更多 GPU 尋找幸運設定更符合本專案的誠實研究原則。
+
+### 換你做
+目前沒有；公開 Demo 與 v2 pilot 都已完成。下一步只剩完整驗收、推送與 Contributors 稽核。
+
+---
+
 ## 2026-07-27 — Session 08：M6 DINOv2 + morphology 瑕疵分型凍結
 
 ### 做了什麼
