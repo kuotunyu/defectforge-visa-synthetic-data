@@ -59,10 +59,14 @@ html, body, #root, .gradio-container {
 }
 #df-hero p { position: relative; z-index: 1; color: var(--df-muted); max-width: 820px; }
 #df-hero strong { color: var(--df-amber) !important; }
-.df-kicker { color: var(--df-mint); letter-spacing: .23em; text-transform: uppercase; font-size: .75rem; }
+.df-kicker {
+  color: var(--df-mint) !important; letter-spacing: .23em;
+  text-transform: uppercase; font-size: .75rem;
+}
 .df-status {
   display: inline-flex; gap: .55rem; align-items: center; margin-top: 1rem;
-  padding: .42rem .72rem; border: 1px solid var(--df-rule); color: var(--df-mint);
+  padding: .42rem .72rem; border: 1px solid var(--df-rule);
+  color: var(--df-mint) !important;
   background: rgba(70,215,175,.06); text-transform: uppercase; letter-spacing: .11em;
   font-size: .72rem;
 }
@@ -102,7 +106,13 @@ html, body, #root, .gradio-container {
   font-family: "Chakra Petch", sans-serif !important;
   text-transform: uppercase; letter-spacing: .04em;
 }
-.df-note { border-left: 3px solid var(--df-danger); padding-left: 1rem; color: var(--df-muted); }
+.df-note {
+  border-left: 3px solid var(--df-danger); padding-left: 1rem;
+  color: var(--df-muted) !important;
+}
+.df-note p, .df-note h3 { color: var(--df-muted) !important; }
+.df-note strong { color: var(--df-ink) !important; }
+.df-note a { color: var(--df-mint) !important; }
 footer { display: none !important; }
 """
 
