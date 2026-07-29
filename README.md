@@ -181,13 +181,18 @@ Dice 依賴固定 threshold 0.5，AUPRO 不依賴 threshold。兩者對同一批
 | capsules | Full-real（60 張） | 0.6331 | 0.9591 | +0.0373 | +0.1103 |
 <!-- END VERIFIED SEGMENTATION_THRESHOLD -->
 
-原因是有相當比例的 run 在 threshold 0.5 下輸出全背景 Mask（Dice 恰為 0），
-但它們的 pixel AUROC 仍然很高——代表機率圖是有訊號的，是固定 threshold 把它切成全黑，
-而不是模型完全失效。確切的 run 數與最高 pixel AUROC 列在下方「限制與誠實揭露」。
+原因不是模型失效，而是**機率天花板**。重跑全部 run 的推論後量測到：所有零 Dice 的 run，
+其在整個 test set 上的最高預測機率都低於 threshold 0.5，因此不可能存在任何正像素——
+空 Mask 是**算術上必然**。這些 run 的 pixel AUROC 分布很廣，代表 Dice 是否退化
+與模型的排序能力無關。逐 run 量測值見
+[零 Dice 診斷報告](reports/zero_dice_diagnosis.md)，由
+`scripts/diagnose_zero_dice_segmentation.py` 產生；該腳本會**先重算已發佈指標並要求相符**，
+才輸出診斷。
 
-本專案**不因此改換主指標**：預註冊的主結論仍以 Dice 與 Macro-F1 為準，
-AUPRO 與 threshold 敏感度併列揭露，讓讀者自行判斷。決策見
-[ADR-027](docs/decisions.md#adr-027)。
+本專案**不因此改換主指標，也不調校 threshold**：在 test 上挑一個讓 Dice 好看的 threshold
+等同於用 test 做模型選擇。預註冊的主結論仍以 Dice 與 Macro-F1 為準，AUPRO、threshold
+敏感度與上述診斷一律**併列揭露**。決策見 [ADR-027](docs/decisions.md#adr-027) 與
+[ADR-030](docs/decisions.md#adr-030)。
 
 ## v2 後續實驗：退步是否來自 Sampling？
 

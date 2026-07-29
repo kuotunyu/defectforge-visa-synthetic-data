@@ -1141,3 +1141,67 @@ CI 的實查步驟用 `--output` 寫到 `runner.temp`，**不覆寫已提交的�
 `verify.yml` 從 M35 建立後就沒有實際在遠端執行過。**本次 push 後必須確認 CI 真的跑起來
 且為綠**；若 runner 上有本機沒有的失敗（例如 CRLF、路徑大小寫、缺 owner-local 測試檔），
 要在下一個 commit 修掉而不是關掉 CI。
+→ 已確認：commit `5d1027f` 的 Lint／Test／Re-verify upstream model licences／Audit
+四個步驟全部 `success`。
+
+---
+
+<a id="adr-030"></a>
+## ADR-030 — 零 Dice 完全由機率天花板造成；主指標不因此更換
+
+**狀態：Accepted**（2026-07-29）
+
+### 背景
+16 個 physical 分割 run 中有 6 個在預註冊 threshold 0.5 下 Dice 恰為 0。
+[ADR-027](#adr-027) 當時只能從 `pixel_auroc` 間接推論：3 個「機率圖有訊號、
+被 threshold 切成全黑」，另 3 個「接近隨機」。那是**推論**，不是量測。
+
+`scripts/diagnose_zero_dice_segmentation.py` 重跑全部 16 個 run 的推論，
+先重算已發佈指標並要求相符（最大差異 `1.58e-03`，跨 Colab L4 與本機 4090 的浮點差），
+再回報預測機率分布。
+
+### 量測結果
+
+**天花板完全決定 Dice 是否退化：**
+
+| | 最高預測機率 |
+|---|---|
+| 6 個零 Dice run | 全部 **< 0.5**（最大 `0.4530`） |
+| 10 個非零 Dice run | 全部 **> 0.5**（最小 `0.7360`） |
+
+沒有任何一個 run 落在中間。也就是說在這批結果上，Dice 是否為 0 **與模型排序能力無關**
+——零 Dice 那 6 個的 `pixel_auroc` 從 `0.4919` 一路分布到 `0.9015`。
+空 Mask 是**算術上必然**，不是分割失敗。
+
+**峰值位置才是有意義的第二層判準：**
+
+| 峰值落在 | run | 意義 |
+|---|---|---|
+| 真實瑕疵**內** | pcb1 `copypaste_only`（`0.4530` vs 區域外 `0.2950`）、pcb1 `diffusion_only` | 排序正確但信心不足 |
+| 真實瑕疵**外** | capsules 的 `std_aug`／`procedural_only`／`diffusion_only`／`unfiltered_syn` | 最有信心的像素是偽陽性 |
+
+**最乾淨的對照是 capsules `std_aug`**：它的真實瑕疵曝光是 **100%**（完全沒有合成資料），
+與 `real_only` 唯一差別是開了標準增強。機率天花板從 `0.9920` 掉到 `0.3157`，
+`pixel_auroc` 只從 `0.9858` 降到 `0.8661`。**至少一個零 Dice 案例與合成資料完全無關**，
+是增強造成的信心校準崩潰。
+
+### 決策
+1. **主指標不變。** 預註冊的 Dice 與 Macro-F1 結論、[ADR-027](#adr-027) 的措辭與
+   `negative_results_preserved` 全部維持。
+2. **不做 threshold 調校，也不回報調校後的 Dice。** 在 test 上挑一個讓 Dice 變好看的
+   threshold，就是用 test 做模型選擇，違反 [autonomy_policy 的誠實性紅線](autonomy_policy.md)。
+   本 ADR 只新增**量測**，不新增結果。
+3. **修正 ADR-027 的敘述強度**：正確說法不是「3 個仍有訊號」，而是
+   「**6 個全部**的機率天花板低於 threshold」。這個說法更強、更簡單，也更容易驗證。
+4. 診斷腳本、`reports/zero_dice_diagnosis.{json,md}` 與其單元測試納入公開版面，
+   README 的 threshold 段落連結該報告但**不複述任何數字**。
+
+### 後果
+- 「固定 threshold 的 Dice 在本設定下不是穩健主指標」從觀點變成有量測支撐的結論
+- 未來若要讓 Dice 有意義，正確做法是在**不看 test** 的前提下處理校準
+  （例如以 validation 訂 threshold、調整 loss 的正負權重），而不是事後挑 threshold
+- `capsules/std_aug` 的崩潰顯示標準增強在此資料規模下可能有害；這是獨立於合成資料的
+  新問題，尚未診斷
+
+### 未做
+未重跑訓練、未改動 `results/*.csv`、未改動任何已發佈結論。

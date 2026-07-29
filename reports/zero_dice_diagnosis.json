@@ -1,0 +1,800 @@
+{
+  "max_metric_delta": 0.0015832701109622649,
+  "runs": [
+    {
+      "canonical_group": "copypaste_only",
+      "defect_exposure": {
+        "real": 15,
+        "real_share": 0.015182186234817813,
+        "synthetic": 973
+      },
+      "metric_deltas": {
+        "aupro": 0.00013753182843107004,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 3.514755975930761e-06
+      },
+      "object": "pcb1",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 442,
+        "images_with_any_pixel_at_or_above_threshold": 0,
+        "max_probability": 0.45298245549201965,
+        "max_probability_inside_ground_truth": 0.45298245549201965,
+        "max_probability_outside_ground_truth": 0.29504871368408203,
+        "mean_probability_inside_ground_truth": 0.18841025233268738,
+        "mean_probability_outside_ground_truth": 0.12838247418403625,
+        "peak_inside_ground_truth": true,
+        "percentiles": {
+          "p50": 0.11911333352327347,
+          "p95": 0.1717301905155182,
+          "p99": 0.19939148426055908,
+          "p99.9": 0.22056186199188232
+        },
+        "pixels_at_or_above_threshold": 0
+      },
+      "published_metrics": {
+        "aupro": 0.43864891141393525,
+        "dice": 0.0,
+        "miou": 0.4997431379637567,
+        "pixel_auroc": 0.9014626386042132
+      },
+      "recomputed_metrics": {
+        "aupro": 0.4387864432423663,
+        "dice": 0.0,
+        "miou": 0.4997431379637567,
+        "pixel_auroc": 0.9014591238482372
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_copypaste_only_pcb1_seed42",
+      "threshold": 0.5,
+      "verdict": "underconfident_peak_inside_ground_truth"
+    },
+    {
+      "canonical_group": "diffusion_only",
+      "defect_exposure": {
+        "real": 15,
+        "real_share": 0.015182186234817813,
+        "synthetic": 973
+      },
+      "metric_deltas": {
+        "aupro": 7.035169881336456e-05,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 2.839147328304037e-05
+      },
+      "object": "pcb1",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 442,
+        "images_with_any_pixel_at_or_above_threshold": 0,
+        "max_probability": 0.27084776759147644,
+        "max_probability_inside_ground_truth": 0.27084776759147644,
+        "max_probability_outside_ground_truth": 0.26516398787498474,
+        "mean_probability_inside_ground_truth": 0.16112662851810455,
+        "mean_probability_outside_ground_truth": 0.12829707562923431,
+        "peak_inside_ground_truth": true,
+        "percentiles": {
+          "p50": 0.11580335348844528,
+          "p95": 0.1829787790775299,
+          "p99": 0.20406071841716766,
+          "p99.9": 0.2228856086730957
+        },
+        "pixels_at_or_above_threshold": 0
+      },
+      "published_metrics": {
+        "aupro": 0.4555946723723677,
+        "dice": 0.0,
+        "miou": 0.4997431379637567,
+        "pixel_auroc": 0.8288060077775325
+      },
+      "recomputed_metrics": {
+        "aupro": 0.4556650240711811,
+        "dice": 0.0,
+        "miou": 0.4997431379637567,
+        "pixel_auroc": 0.8287776163042495
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_diffusion_only_pcb1_seed42",
+      "threshold": 0.5,
+      "verdict": "underconfident_peak_inside_ground_truth"
+    },
+    {
+      "canonical_group": "filtered_syn",
+      "defect_exposure": {
+        "real": 15,
+        "real_share": 0.015182186234817813,
+        "synthetic": 973
+      },
+      "metric_deltas": {
+        "aupro": 0.0003140103207514011,
+        "dice": 2.0953836052911567e-05,
+        "miou": 5.4718673314635424e-06,
+        "pixel_auroc": 6.601054695454245e-05
+      },
+      "object": "pcb1",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 442,
+        "images_with_any_pixel_at_or_above_threshold": 40,
+        "max_probability": 0.8871676921844482,
+        "max_probability_inside_ground_truth": 0.884188711643219,
+        "max_probability_outside_ground_truth": 0.8871676921844482,
+        "mean_probability_inside_ground_truth": 0.24559150636196136,
+        "mean_probability_outside_ground_truth": 0.12886309623718262,
+        "peak_inside_ground_truth": false,
+        "percentiles": {
+          "p50": 0.11519131064414978,
+          "p95": 0.18854038417339325,
+          "p99": 0.23932403326034546,
+          "p99.9": 0.3929101824760437
+        },
+        "pixels_at_or_above_threshold": 45366
+      },
+      "published_metrics": {
+        "aupro": 0.7470872439177954,
+        "dice": 0.06214317711758595,
+        "miou": 0.5156093659637621,
+        "pixel_auroc": 0.9010364592753061
+      },
+      "recomputed_metrics": {
+        "aupro": 0.746773233597044,
+        "dice": 0.06212222328153304,
+        "miou": 0.5156038940964306,
+        "pixel_auroc": 0.9009704487283515
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_filtered_syn_pcb1_seed42",
+      "threshold": 0.5,
+      "verdict": "non_zero_dice"
+    },
+    {
+      "canonical_group": "full_real",
+      "defect_exposure": {
+        "real": 1008,
+        "real_share": 1.0,
+        "synthetic": 0
+      },
+      "metric_deltas": {
+        "aupro": 8.672203475246221e-05,
+        "dice": 9.717499746597635e-05,
+        "miou": 5.633610904798303e-05,
+        "pixel_auroc": 2.850951146382563e-06
+      },
+      "object": "pcb1",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 442,
+        "images_with_any_pixel_at_or_above_threshold": 4,
+        "max_probability": 0.9838905930519104,
+        "max_probability_inside_ground_truth": 0.9838905930519104,
+        "max_probability_outside_ground_truth": 0.9303178191184998,
+        "mean_probability_inside_ground_truth": 0.602139413356781,
+        "mean_probability_outside_ground_truth": 0.13491901755332947,
+        "peak_inside_ground_truth": true,
+        "percentiles": {
+          "p50": 0.12887592613697052,
+          "p95": 0.1781308352947235,
+          "p99": 0.20977462828159332,
+          "p99.9": 0.24110987782478333
+        },
+        "pixels_at_or_above_threshold": 42779
+      },
+      "published_metrics": {
+        "aupro": 0.599875043965242,
+        "dice": 0.6862354114128204,
+        "miou": 0.7610328141837459,
+        "pixel_auroc": 0.9295723532617873
+      },
+      "recomputed_metrics": {
+        "aupro": 0.5999617659999945,
+        "dice": 0.6861382364153544,
+        "miou": 0.7609764780746979,
+        "pixel_auroc": 0.9295752042129337
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_full_real_pcb1_seed42",
+      "threshold": 0.5,
+      "verdict": "non_zero_dice"
+    },
+    {
+      "canonical_group": "procedural_only",
+      "defect_exposure": {
+        "real": 0,
+        "real_share": 0.0,
+        "synthetic": 992
+      },
+      "metric_deltas": {
+        "aupro": 5.1240851908995744e-05,
+        "dice": 6.578173270915116e-05,
+        "miou": 1.726268676338627e-05,
+        "pixel_auroc": 1.8017218604171603e-05
+      },
+      "object": "pcb1",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 442,
+        "images_with_any_pixel_at_or_above_threshold": 36,
+        "max_probability": 0.9181618690490723,
+        "max_probability_inside_ground_truth": 0.8839319348335266,
+        "max_probability_outside_ground_truth": 0.9181618690490723,
+        "mean_probability_inside_ground_truth": 0.20931077003479004,
+        "mean_probability_outside_ground_truth": 0.13631920516490936,
+        "peak_inside_ground_truth": false,
+        "percentiles": {
+          "p50": 0.12754446268081665,
+          "p95": 0.18565991520881653,
+          "p99": 0.22743862867355347,
+          "p99.9": 0.3378296196460724
+        },
+        "pixels_at_or_above_threshold": 31046
+      },
+      "published_metrics": {
+        "aupro": 0.5963189670345592,
+        "dice": 0.03157825050754701,
+        "miou": 0.5076424547393283,
+        "pixel_auroc": 0.8550925544322173
+      },
+      "recomputed_metrics": {
+        "aupro": 0.5962677261826502,
+        "dice": 0.03164403224025616,
+        "miou": 0.5076597174260917,
+        "pixel_auroc": 0.8551105716508215
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_procedural_only_pcb1_seed42",
+      "threshold": 0.5,
+      "verdict": "non_zero_dice"
+    },
+    {
+      "canonical_group": "real_only",
+      "defect_exposure": {
+        "real": 1008,
+        "real_share": 1.0,
+        "synthetic": 0
+      },
+      "metric_deltas": {
+        "aupro": 0.0005162979470338946,
+        "dice": 0.0003443061944231607,
+        "miou": 0.00013061592386465204,
+        "pixel_auroc": 3.786335045674605e-05
+      },
+      "object": "pcb1",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 442,
+        "images_with_any_pixel_at_or_above_threshold": 7,
+        "max_probability": 0.9642423987388611,
+        "max_probability_inside_ground_truth": 0.9642423987388611,
+        "max_probability_outside_ground_truth": 0.8361595869064331,
+        "mean_probability_inside_ground_truth": 0.3648030161857605,
+        "mean_probability_outside_ground_truth": 0.13188667595386505,
+        "peak_inside_ground_truth": true,
+        "percentiles": {
+          "p50": 0.12550829350948334,
+          "p95": 0.17541858553886414,
+          "p99": 0.20919513702392578,
+          "p99.9": 0.23976388573646545
+        },
+        "pixels_at_or_above_threshold": 18466
+      },
+      "published_metrics": {
+        "aupro": 0.6027983441018951,
+        "dice": 0.3761873629965773,
+        "miou": 0.6156245759357658,
+        "pixel_auroc": 0.9460468575559333
+      },
+      "recomputed_metrics": {
+        "aupro": 0.6022820461548613,
+        "dice": 0.37584305680215413,
+        "miou": 0.6154939600119012,
+        "pixel_auroc": 0.9460089942054766
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_real_only_pcb1_seed42",
+      "threshold": 0.5,
+      "verdict": "non_zero_dice"
+    },
+    {
+      "canonical_group": "std_aug",
+      "defect_exposure": {
+        "real": 1008,
+        "real_share": 1.0,
+        "synthetic": 0
+      },
+      "metric_deltas": {
+        "aupro": 0.0006854612037070495,
+        "dice": 0.00035408838972350587,
+        "miou": 0.00013562133904043705,
+        "pixel_auroc": 0.00010376657250721344
+      },
+      "object": "pcb1",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 442,
+        "images_with_any_pixel_at_or_above_threshold": 6,
+        "max_probability": 0.9717897772789001,
+        "max_probability_inside_ground_truth": 0.9717897772789001,
+        "max_probability_outside_ground_truth": 0.6136901378631592,
+        "mean_probability_inside_ground_truth": 0.35256344079971313,
+        "mean_probability_outside_ground_truth": 0.12850773334503174,
+        "peak_inside_ground_truth": true,
+        "percentiles": {
+          "p50": 0.12191089987754822,
+          "p95": 0.16637539863586426,
+          "p99": 0.20504532754421234,
+          "p99.9": 0.2476353496313095
+        },
+        "pixels_at_or_above_threshold": 14600
+      },
+      "published_metrics": {
+        "aupro": 0.5739876864883188,
+        "dice": 0.3835701466758423,
+        "miou": 0.6184501634339045,
+        "pixel_auroc": 0.9143590594447806
+      },
+      "recomputed_metrics": {
+        "aupro": 0.5733022252846117,
+        "dice": 0.38392423506556583,
+        "miou": 0.6185857847729449,
+        "pixel_auroc": 0.9142552928722734
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_std_aug_pcb1_seed42",
+      "threshold": 0.5,
+      "verdict": "non_zero_dice"
+    },
+    {
+      "canonical_group": "unfiltered_syn",
+      "defect_exposure": {
+        "real": 15,
+        "real_share": 0.015182186234817813,
+        "synthetic": 973
+      },
+      "metric_deltas": {
+        "aupro": 0.00024489902119062545,
+        "dice": 0.00020529316332770775,
+        "miou": 6.700253218250296e-05,
+        "pixel_auroc": 1.900556184475377e-05
+      },
+      "object": "pcb1",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 442,
+        "images_with_any_pixel_at_or_above_threshold": 4,
+        "max_probability": 0.7359561324119568,
+        "max_probability_inside_ground_truth": 0.7359561324119568,
+        "max_probability_outside_ground_truth": 0.5348867774009705,
+        "mean_probability_inside_ground_truth": 0.29880592226982117,
+        "mean_probability_outside_ground_truth": 0.12976129353046417,
+        "peak_inside_ground_truth": true,
+        "percentiles": {
+          "p50": 0.11468189209699631,
+          "p95": 0.19251450896263123,
+          "p99": 0.21734090149402618,
+          "p99.9": 0.2690253257751465
+        },
+        "pixels_at_or_above_threshold": 8709
+      },
+      "published_metrics": {
+        "aupro": 0.6065337271823633,
+        "dice": 0.2490289483327226,
+        "miou": 0.5708905601905749,
+        "pixel_auroc": 0.932390956881369
+      },
+      "recomputed_metrics": {
+        "aupro": 0.6067786262035539,
+        "dice": 0.2492342414960503,
+        "miou": 0.5709575627227574,
+        "pixel_auroc": 0.9324099624432137
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_unfiltered_syn_pcb1_seed42",
+      "threshold": 0.5,
+      "verdict": "non_zero_dice"
+    },
+    {
+      "canonical_group": "copypaste_only",
+      "defect_exposure": {
+        "real": 15,
+        "real_share": 0.015182186234817813,
+        "synthetic": 973
+      },
+      "metric_deltas": {
+        "aupro": 2.0995429589332204e-05,
+        "dice": 4.321589621025801e-05,
+        "miou": 2.2539949858901842e-05,
+        "pixel_auroc": 6.3793440887582875e-06
+      },
+      "object": "capsules",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 281,
+        "images_with_any_pixel_at_or_above_threshold": 40,
+        "max_probability": 0.9752121567726135,
+        "max_probability_inside_ground_truth": 0.9752121567726135,
+        "max_probability_outside_ground_truth": 0.9707632660865784,
+        "mean_probability_inside_ground_truth": 0.6790115833282471,
+        "mean_probability_outside_ground_truth": 0.12770478427410126,
+        "peak_inside_ground_truth": true,
+        "percentiles": {
+          "p50": 0.1209699809551239,
+          "p95": 0.169123113155365,
+          "p99": 0.21470850706100464,
+          "p99.9": 0.5349727869033813
+        },
+        "pixels_at_or_above_threshold": 80965
+      },
+      "published_metrics": {
+        "aupro": 0.9439804197561812,
+        "dice": 0.6100648755635377,
+        "miou": 0.7190967766122796,
+        "pixel_auroc": 0.9869033591491194
+      },
+      "recomputed_metrics": {
+        "aupro": 0.9440014151857705,
+        "dice": 0.610108091459748,
+        "miou": 0.7191193165621385,
+        "pixel_auroc": 0.9869097384932082
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_copypaste_only_capsules_seed42",
+      "threshold": 0.5,
+      "verdict": "non_zero_dice"
+    },
+    {
+      "canonical_group": "diffusion_only",
+      "defect_exposure": {
+        "real": 15,
+        "real_share": 0.015182186234817813,
+        "synthetic": 973
+      },
+      "metric_deltas": {
+        "aupro": 0.00037764521588623534,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.00016618426595826907
+      },
+      "object": "capsules",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 281,
+        "images_with_any_pixel_at_or_above_threshold": 0,
+        "max_probability": 0.31687045097351074,
+        "max_probability_inside_ground_truth": 0.2666425406932831,
+        "max_probability_outside_ground_truth": 0.31687045097351074,
+        "mean_probability_inside_ground_truth": 0.12810465693473816,
+        "mean_probability_outside_ground_truth": 0.1270240843296051,
+        "peak_inside_ground_truth": false,
+        "percentiles": {
+          "p50": 0.12294560670852661,
+          "p95": 0.16731737554073334,
+          "p99": 0.20662811398506165,
+          "p99.9": 0.2377641350030899
+        },
+        "pixels_at_or_above_threshold": 0
+      },
+      "published_metrics": {
+        "aupro": 0.2556225973228921,
+        "dice": 0.0,
+        "miou": 0.49962395365976353,
+        "pixel_auroc": 0.5177740837745254
+      },
+      "recomputed_metrics": {
+        "aupro": 0.25600024253877834,
+        "dice": 0.0,
+        "miou": 0.49962395365976353,
+        "pixel_auroc": 0.5176078995085671
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_diffusion_only_capsules_seed42",
+      "threshold": 0.5,
+      "verdict": "underconfident_peak_outside_ground_truth_ranking_near_random"
+    },
+    {
+      "canonical_group": "filtered_syn",
+      "defect_exposure": {
+        "real": 15,
+        "real_share": 0.015182186234817813,
+        "synthetic": 973
+      },
+      "metric_deltas": {
+        "aupro": 0.00023455483523915355,
+        "dice": 0.00016836548667897855,
+        "miou": 7.107780491211191e-05,
+        "pixel_auroc": 1.228774622308304e-05
+      },
+      "object": "capsules",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 281,
+        "images_with_any_pixel_at_or_above_threshold": 47,
+        "max_probability": 0.9014003872871399,
+        "max_probability_inside_ground_truth": 0.9014003872871399,
+        "max_probability_outside_ground_truth": 0.898242175579071,
+        "mean_probability_inside_ground_truth": 0.493836909532547,
+        "mean_probability_outside_ground_truth": 0.12774509191513062,
+        "peak_inside_ground_truth": true,
+        "percentiles": {
+          "p50": 0.12112198024988174,
+          "p95": 0.17240211367607117,
+          "p99": 0.2218794971704483,
+          "p99.9": 0.4769781529903412
+        },
+        "pixels_at_or_above_threshold": 65381
+      },
+      "published_metrics": {
+        "aupro": 0.9137250781414354,
+        "dice": 0.45702451954937046,
+        "miou": 0.647653350816465,
+        "pixel_auroc": 0.9737402359450872
+      },
+      "recomputed_metrics": {
+        "aupro": 0.9139596329766746,
+        "dice": 0.4568561540626915,
+        "miou": 0.6475822730115529,
+        "pixel_auroc": 0.9737525236913103
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_filtered_syn_capsules_seed42",
+      "threshold": 0.5,
+      "verdict": "non_zero_dice"
+    },
+    {
+      "canonical_group": "full_real",
+      "defect_exposure": {
+        "real": 1008,
+        "real_share": 1.0,
+        "synthetic": 0
+      },
+      "metric_deltas": {
+        "aupro": 0.00021533907320381296,
+        "dice": 3.81781865604891e-05,
+        "miou": 2.05073398712452e-05,
+        "pixel_auroc": 8.449723781778218e-07
+      },
+      "object": "capsules",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 281,
+        "images_with_any_pixel_at_or_above_threshold": 33,
+        "max_probability": 0.9949002861976624,
+        "max_probability_inside_ground_truth": 0.9949002861976624,
+        "max_probability_outside_ground_truth": 0.9933379888534546,
+        "mean_probability_inside_ground_truth": 0.8781187534332275,
+        "mean_probability_outside_ground_truth": 0.1329042911529541,
+        "peak_inside_ground_truth": true,
+        "percentiles": {
+          "p50": 0.12953691184520721,
+          "p95": 0.16882379353046417,
+          "p99": 0.21344274282455444,
+          "p99.9": 0.7449424862861633
+        },
+        "pixels_at_or_above_threshold": 107773
+      },
+      "published_metrics": {
+        "aupro": 0.9590810980914699,
+        "dice": 0.6330528779866044,
+        "miou": 0.7311504527960176,
+        "pixel_auroc": 0.9990569480148784
+      },
+      "recomputed_metrics": {
+        "aupro": 0.9588657590182661,
+        "dice": 0.6330910561731649,
+        "miou": 0.7311709601358889,
+        "pixel_auroc": 0.9990561030425003
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_full_real_capsules_seed42",
+      "threshold": 0.5,
+      "verdict": "non_zero_dice"
+    },
+    {
+      "canonical_group": "procedural_only",
+      "defect_exposure": {
+        "real": 0,
+        "real_share": 0.0,
+        "synthetic": 992
+      },
+      "metric_deltas": {
+        "aupro": 0.0003061083672634135,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0002415340848584968
+      },
+      "object": "capsules",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 281,
+        "images_with_any_pixel_at_or_above_threshold": 0,
+        "max_probability": 0.3234994411468506,
+        "max_probability_inside_ground_truth": 0.23045089840888977,
+        "max_probability_outside_ground_truth": 0.3234994411468506,
+        "mean_probability_inside_ground_truth": 0.13457399606704712,
+        "mean_probability_outside_ground_truth": 0.12727952003479004,
+        "peak_inside_ground_truth": false,
+        "percentiles": {
+          "p50": 0.12264946103096008,
+          "p95": 0.16158708930015564,
+          "p99": 0.2020290344953537,
+          "p99.9": 0.24162018299102783
+        },
+        "pixels_at_or_above_threshold": 0
+      },
+      "published_metrics": {
+        "aupro": 0.3505565539010738,
+        "dice": 0.0,
+        "miou": 0.49962395365976353,
+        "pixel_auroc": 0.612695831828606
+      },
+      "recomputed_metrics": {
+        "aupro": 0.3502504455338104,
+        "dice": 0.0,
+        "miou": 0.49962395365976353,
+        "pixel_auroc": 0.6129373659134645
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_procedural_only_capsules_seed42",
+      "threshold": 0.5,
+      "verdict": "underconfident_peak_outside_ground_truth_ranking_near_random"
+    },
+    {
+      "canonical_group": "real_only",
+      "defect_exposure": {
+        "real": 1008,
+        "real_share": 1.0,
+        "synthetic": 0
+      },
+      "metric_deltas": {
+        "aupro": 0.0015832701109622649,
+        "dice": 0.00010685273258315142,
+        "miou": 5.426019875676147e-05,
+        "pixel_auroc": 8.118101533449718e-06
+      },
+      "object": "capsules",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 281,
+        "images_with_any_pixel_at_or_above_threshold": 26,
+        "max_probability": 0.9920193552970886,
+        "max_probability_inside_ground_truth": 0.9920193552970886,
+        "max_probability_outside_ground_truth": 0.9762435555458069,
+        "mean_probability_inside_ground_truth": 0.559997022151947,
+        "mean_probability_outside_ground_truth": 0.13233613967895508,
+        "peak_inside_ground_truth": true,
+        "percentiles": {
+          "p50": 0.1261185109615326,
+          "p95": 0.1755121350288391,
+          "p99": 0.22465017437934875,
+          "p99.9": 0.33413276076316833
+        },
+        "pixels_at_or_above_threshold": 45752
+      },
+      "published_metrics": {
+        "aupro": 0.848775221649169,
+        "dice": 0.5957627705114136,
+        "miou": 0.7118527292506931,
+        "pixel_auroc": 0.9857729273879243
+      },
+      "recomputed_metrics": {
+        "aupro": 0.8471919515382067,
+        "dice": 0.5958696232439967,
+        "miou": 0.7119069894494499,
+        "pixel_auroc": 0.9857648092863909
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_real_only_capsules_seed42",
+      "threshold": 0.5,
+      "verdict": "non_zero_dice"
+    },
+    {
+      "canonical_group": "std_aug",
+      "defect_exposure": {
+        "real": 1008,
+        "real_share": 1.0,
+        "synthetic": 0
+      },
+      "metric_deltas": {
+        "aupro": 0.0003069861047382272,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 7.884490371901087e-05
+      },
+      "object": "capsules",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 281,
+        "images_with_any_pixel_at_or_above_threshold": 0,
+        "max_probability": 0.31574103236198425,
+        "max_probability_inside_ground_truth": 0.30466610193252563,
+        "max_probability_outside_ground_truth": 0.31574103236198425,
+        "mean_probability_inside_ground_truth": 0.16785988211631775,
+        "mean_probability_outside_ground_truth": 0.1310092806816101,
+        "peak_inside_ground_truth": false,
+        "percentiles": {
+          "p50": 0.128575399518013,
+          "p95": 0.18234087526798248,
+          "p99": 0.22132758796215057,
+          "p99.9": 0.2582521140575409
+        },
+        "pixels_at_or_above_threshold": 0
+      },
+      "published_metrics": {
+        "aupro": 0.5591203974295269,
+        "dice": 0.0,
+        "miou": 0.49962395365976353,
+        "pixel_auroc": 0.8660863291859695
+      },
+      "recomputed_metrics": {
+        "aupro": 0.5588134113247887,
+        "dice": 0.0,
+        "miou": 0.49962395365976353,
+        "pixel_auroc": 0.8660074842822505
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_std_aug_capsules_seed42",
+      "threshold": 0.5,
+      "verdict": "underconfident_peak_outside_ground_truth_ranking_informative"
+    },
+    {
+      "canonical_group": "unfiltered_syn",
+      "defect_exposure": {
+        "real": 15,
+        "real_share": 0.015182186234817813,
+        "synthetic": 973
+      },
+      "metric_deltas": {
+        "aupro": 9.959783448912352e-05,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 1.6331307786665583e-06
+      },
+      "object": "capsules",
+      "probability": {
+        "defect_images": 40,
+        "images_total": 281,
+        "images_with_any_pixel_at_or_above_threshold": 0,
+        "max_probability": 0.3013646602630615,
+        "max_probability_inside_ground_truth": 0.25868627429008484,
+        "max_probability_outside_ground_truth": 0.3013646602630615,
+        "mean_probability_inside_ground_truth": 0.12705528736114502,
+        "mean_probability_outside_ground_truth": 0.12650848925113678,
+        "peak_inside_ground_truth": false,
+        "percentiles": {
+          "p50": 0.1251196712255478,
+          "p95": 0.16609618067741394,
+          "p99": 0.20750248432159424,
+          "p99.9": 0.2374105006456375
+        },
+        "pixels_at_or_above_threshold": 0
+      },
+      "published_metrics": {
+        "aupro": 0.1666301117599849,
+        "dice": 0.0,
+        "miou": 0.49962395365976353,
+        "pixel_auroc": 0.49192781394568724
+      },
+      "recomputed_metrics": {
+        "aupro": 0.16672970959447403,
+        "dice": 0.0,
+        "miou": 0.49962395365976353,
+        "pixel_auroc": 0.4919294470764659
+      },
+      "reproduced_published_metrics": true,
+      "run_name": "m18_unfiltered_syn_capsules_seed42",
+      "threshold": 0.5,
+      "verdict": "underconfident_peak_outside_ground_truth_ranking_near_random"
+    }
+  ],
+  "runs_total": 16,
+  "schema_version": 1,
+  "status": "passed",
+  "threshold": 0.5,
+  "verdict_counts": {
+    "non_zero_dice": 10,
+    "underconfident_peak_inside_ground_truth": 2,
+    "underconfident_peak_outside_ground_truth_ranking_informative": 1,
+    "underconfident_peak_outside_ground_truth_ranking_near_random": 3
+  },
+  "zero_dice_runs": 6
+}

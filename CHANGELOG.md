@@ -4,6 +4,18 @@
 
 ## [未發布]
 
+### 零 Dice 分割 run 的診斷（ADR-030）
+
+- 新增 `scripts/diagnose_zero_dice_segmentation.py`：重跑全部 16 個 physical run 的推論，
+  **先重算已發佈指標並要求相符**，再回報預測機率分布。
+- 量測結果：所有零 Dice 的 run，其最高預測機率都低於 threshold 0.5；
+  所有非零 Dice 的 run 都高於。空 Mask 是**算術上必然**，與模型排序能力無關。
+- 峰值位置區分「排序正確但信心不足」與「最有信心的像素是偽陽性」。
+- `capsules / std_aug` 的真實瑕疵曝光為 100%，與 `real_only` 僅差標準增強，
+  機率天花板卻從 0.9920 掉到 0.3157 —— 至少一個零 Dice 案例與合成資料無關。
+- **不調校 threshold、不更換主指標**：在 test 上挑 threshold 等同於用 test 做模型選擇。
+  未重跑訓練，`results/*.csv` 位元不變。
+
 ### 持續驗證（ADR-029）
 
 - 恢復 GitHub Actions workflow。M38 停止追蹤 `.github/` 時把它一併從遠端移除，

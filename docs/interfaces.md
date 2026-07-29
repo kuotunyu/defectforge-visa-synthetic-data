@@ -518,11 +518,34 @@ validation 保存兩份 CSV、selection、GIF、test image 與輸出 array SHA25
 | `scripts/verify_generation_quality.py` | 核對 M14 CSV／Markdown／validation、sanity gate、圖與 feature-cache SHA256 |
 | `scripts/verify_readme.py` | 從 `results/*.csv` 重算 README 每張表的數字並比對 |
 | `scripts/verify_splits.py` | 重跑 [ADR-007](decisions.md#adr-007) 的四項斷言 |
-| `scripts/verify_publish.py` | M24 唯讀稽核：M0–M23、README、raw-hash evidence、正式圖/GIF、24 小時內上游授權、HF dry-run、必備檔、13 skills、token／個人路徑、檔案大小、Git 身分與 co-author trailer |
+| `scripts/verify_publish.py` | 唯讀稽核：里程碑、README、raw-hash evidence、正式圖/GIF、24 小時內上游授權、HF dry-run、必備檔、公開版面邊界（2 個 skill + CI workflow 必須存在，其餘 owner-local 必須不被追蹤）、token／個人路徑、檔案大小、Git 身分與 co-author trailer。CI 版加 `--allow-stale-license-check`（[ADR-029](decisions.md#adr-029)），時效如實回報但不 gating；**Release 一律不加 flag** |
 | `scripts/build_release_acceptance.py` | M24 一頁驗收報告：除自身檔案外任一 local gate 未過即拒寫；只記通過項、修正項、殘留風險，不發佈 |
 | `scripts/record_phase2_visual_review.py` | M21/M22 人工目視 evidence：所有正式 PNG/GIF 可解碼且實際逐張開啟後，需明確 confirmation 與觀察 note，保存目前檔案 SHA256 |
 | `scripts/package_hf_release.py` | M24 本機封裝：預設只讀 inventory；`--build` 才原子建立 D 槽 HF dataset／model bundles，不連網 |
 | `scripts/upload_hf.py` | **預設 `--dry-run`，上傳要顯式加 `--confirm`** |
+
+### 診斷用腳本
+
+#### `scripts/diagnose_zero_dice_segmentation.py`
+```
+--paths --config configs/segmenter.yaml
+--runs-root PATH           # 預設 results/colab/segmentation
+--object STR               # 可重複；預設兩個物件
+--device STR --batch-size INT
+--output PATH              # 預設 reports/zero_dice_diagnosis.json
+--report PATH              # 預設 reports/zero_dice_diagnosis.md
+```
+解釋為何部分 M20 分割 run 在 threshold 0.5 下 Dice 恰為 0。對每個 run 重載凍結的
+`data_manifest.json` test 記錄與該 run 自己的 final checkpoint，重跑推論後：
+
+1. **先重算已發佈指標並要求相符**（容差 `5e-3`，跨機器浮點差異），
+   證明診斷與released 數字量的是同一件事；不符即 `exit 2`
+2. 回報預測機率分布，重點是**最高機率**——它決定空 Mask 是否在預註冊 threshold 下
+   **算術上必然**
+
+**這是對已完成結果的事後量測**：不擬合模型、不選 checkpoint／threshold／超參，
+不寫入 `results/`。Evaluation 是唯一允許讀 frozen test 的階段
+（見 `.claude/skills/df-guard`）。
 
 ---
 
