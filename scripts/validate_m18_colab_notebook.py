@@ -12,8 +12,8 @@ REQUIRED_SECTIONS = (
     "## 1. Runtime and GPU preflight",
     "## 2. Mount Drive and stage one object locally",
     "## 3. Reproducible environment and packaged selection",
-    "## 4. Dry-run, eight formal groups, and automatic resume",
-    "## 5. Independently validate and collect one result ZIP",
+    "## 4. Dry-run, eight formal groups across three seeds, and automatic resume",
+    "## 5. Independently validate all three seeds and collect one result ZIP",
 )
 
 
@@ -42,6 +42,9 @@ def main() -> int:
         "procedural_only",
         "all_mixed",
         "m18_seg_results_{OBJECT_NAME}",
+        # ADR-032: the seed replication must not be silently dropped by a later edit.
+        "SEEDS = (42, 43, 44)",
+        "'--seed'",
     )
     for fragment in required_fragments:
         if fragment not in text:

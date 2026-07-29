@@ -319,6 +319,15 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--object", dest="objects", action="append")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--source-only",
+        action="store_true",
+        help=(
+            "Rebuild only defectforge_m18_source.zip and leave the multi-GB per-object "
+            "data archives untouched. Use when source changed but the frozen sample "
+            "selection did not, so the uploaded data archives stay valid (ADR-032)."
+        ),
+    )
     args = parser.parse_args()
     paths = load_paths(args.paths)
     config = yaml.safe_load(args.config.read_text(encoding="utf-8"))
@@ -345,6 +354,7 @@ def main() -> int:
         "formal_groups_per_object": len(FORMAL_GROUPS),
         "all_mixed_alias_of": "filtered_syn",
         "dry_run": args.dry_run,
+        "source_only": args.source_only,
     }
     if not args.dry_run:
         manifest["source_archive"].update(
@@ -354,7 +364,23 @@ def main() -> int:
             }
         )
 
-    for object_name in objects:
+    manifest_path = output_dir / "m18_colab_bundle.json"
+    if args.source_only:
+        # Preserve the existing data-archive facts so the manifest keeps describing the
+        # archives that are actually uploaded. Rebuilding them would change their SHA256
+        # and force a multi-GB re-upload for no reason.
+        require(
+            manifest_path.is_file(),
+            "--source-only needs an existing m18_colab_bundle.json to preserve",
+        )
+        previous = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["data_archives"] = previous.get("data_archives", {})
+        require(
+            set(manifest["data_archives"]) == set(objects),
+            "--source-only requires the existing manifest to cover every requested object",
+        )
+
+    for object_name in () if args.source_only else objects:
         groups = _build_groups(paths, config, object_name)
         real_members = _real_members(paths, groups["full_real"])
         synthetic_members, pooled_records, selections = _synthetic_pool(paths, groups)
@@ -402,7 +428,6 @@ def main() -> int:
         manifest["data_archives"][object_name] = archive_manifest
 
     if not args.dry_run:
-        manifest_path = output_dir / "m18_colab_bundle.json"
         manifest_path.write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",

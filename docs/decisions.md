@@ -1272,3 +1272,82 @@ pcb1 的兩條曲線幾乎逐窗重疊——增強在該物件近乎中性。
 
 ### 未做
 未重跑訓練、未改動 `results/*.csv`、未改動任何已發佈結論、未調整任何超參。
+
+---
+
+<a id="adr-032"></a>
+## ADR-032 — 分割 3-seed 複跑的**預註冊**：全部 8 組，判定規則先寫死
+
+**狀態：Pre-registered**（2026-07-29）｜**執行前必須先 commit 本 ADR**
+
+### 背景
+分割目前 18 列**全部是 seed 42**。這同時卡住兩個已量測、但無法判定的問題：
+
+1. [ADR-027](#adr-027)：`filtered_syn` 相對 `real_only` 的 Dice 為 `-0.2264`、
+   AUPRO 為 `+0.1046`，**方向相反**。單 seed 無法判斷哪個方向是真的。
+2. [ADR-031](#adr-031)：`capsules/std_aug` 的 Dice 項在訓練期從未啟動。
+   單 seed 無法區分系統性與雜訊。
+
+原協定（[experiment_protocol §6](experiment_protocol.md)）只要求 `real_only` 與最佳
+Filtered 組補到 3 seeds。那是為了省算力訂的；但實測 M19 單 run 僅約 5 分鐘
+（pcb1 八組 2,509 秒、capsules 八組 2,321 秒），全部補完的成本並不高。
+
+### 決策：**全部 8 個 formal group 都補**
+
+| 項目 | 值 |
+|---|---|
+| 組別 | 8 個 formal group（`all_mixed` 是 alias，**不重跑**） |
+| Seeds | `42`（已有）、`43`、`44` |
+| 物件 | `pcb1`、`capsules` |
+| **新增 run** | 8 × 2 × 2 = **32** |
+| 估時 | 約 5 分鐘/run → 每物件約 80 分鐘 |
+
+選「全部」而非只補兩組的理由：**不挑哪些組有誤差棒**。只補兩組會讓表格一半有
+mean±std、一半沒有，而且會招致「看到結果才選複跑對象」的合理質疑。
+全補是這三個選項中**最不具選擇性**的一個。
+
+### 執行前就固定的判定規則（看到結果後不得更改）
+
+**Dice／AUPRO 方向矛盾**
+對每個物件，計算 `filtered_syn − real_only` 的**逐 seed** Dice 差與 AUPRO 差。
+若在**至少一個物件**上，兩者符號相反的情況出現在 **3 個 seed 中的 ≥2 個**，
+則判定「方向矛盾為真實現象」；否則判定為單 seed 假象。
+
+**`capsules/std_aug` 崩潰**
+若 `capsules/std_aug` 的 Dice 在 **3 個 seed 中的 ≥2 個**為 `0.0000`，
+判定為**系統性**；若僅 1 個為 0，判定為 **seed 雜訊**，
+並據此撤回 ADR-031 對「標準增強可能有害」的推測強度。
+
+### 不得發生的事
+- **不改任何超參、步數或增強設定**（[ADR-021](#adr-021) 的預算維持凍結）
+- **不重新抽樣資料**：沿用已打包的 `m18_colab_selection.json` sample ID，
+  seed 只影響訓練期隨機性（sampler draw、augmentation draw、head 初始化）
+- **不丟棄任何 seed**，即使某個 seed 的結果不好看
+- **不調 threshold**（[ADR-030](#adr-030) 已明令）
+- seed 42 的既有數字與已發佈結論**在複跑完成前完全不動**
+
+### 呈現方式
+主表仍以預註冊協定為錨，另加 mean ± std——與 [ADR-027](#adr-027) 對分類的處理方式一致。
+`results/segmentation.csv` 由 M20 聚合器從 raw report 重建，
+`verify_readme.py` 的分割驗證需同步放寬到「每組 3 個 seed」。
+
+### 後果（數字為實測，非估計）
+- 需要使用者再上一次 Colab。只需重傳**兩個小檔**：
+  - `defectforge_m18_source.zip`：**618,669 bytes（0.6 MB）**、107 檔，
+    SHA256 `1a8c90e5a4cd2495e503642b96229369115a46ddc51bdeb830f89f48abab0473`
+  - `notebooks/02_train_segformer.ipynb`
+- **兩個 data bundle 完全不必重傳**：`m18_seg_pcb1.zip` **3.59 GB**、
+  `m18_seg_capsules.zip` **3.77 GB**，sample ID 已凍在裡面，seed 不影響資料選擇
+- 為此在 `package_m18_colab.py` 新增 `--source-only`：只重建 source archive，
+  並沿用既有 manifest 的 data archive 事實，**不會改變兩個 data zip 的 SHA256**
+- 舊的 100 MB source zip 是 [ADR-023](#adr-023) 收緊白名單**之前**的產物；
+  重建後只剩 0.6 MB（不再夾帶 `reports/figures/`），舊檔保留為 `*.prev-2026-07-28.zip`
+- 結果 ZIP 會從約 108 MB 增為約 325 MB／物件（24 個 run 的 checkpoint）
+- `validate_segmenter_runs.py` 支援 seed 清單；預設維持 `[42]`，
+  既有 seed-42 證據實測仍 `status=passed`
+
+### 資料回來之後才做（不在本次範圍）
+`aggregate_segmentation.py`、`verify_publish.py` 的
+`physical_runs == 16` / `logical_rows == 18` 硬編值，以及 `verify_readme.py` 的
+「18 列且 seed 必須是 42」驗證，**都必須同步放寬到 3 seeds**。
+現在不改，因為改了會讓目前的證據鏈立刻失效。

@@ -7,7 +7,7 @@ import hashlib
 import json
 import math
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -175,7 +175,11 @@ def validate(
     run_root: Path,
     object_name: str,
     reload_model: bool,
+    seeds: Sequence[int] = (42,),
 ) -> dict[str, Any]:
+    """Validate every formal run for `object_name` across `seeds` (ADR-032)."""
+    seeds = tuple(dict.fromkeys(int(seed) for seed in seeds))
+    require(bool(seeds), "At least one seed is required")
     expected_test_images, expected_test_masks, manifest_sha256 = _frozen_test_inventory(
         paths,
         object_name,
@@ -196,16 +200,19 @@ def validate(
         if path.is_dir() and path.name.startswith("m18_") and f"_{object_name}_" in path.name
     }
     expected_run_dirs = {
-        f"m18_{group}_{object_name}_seed42" for group in FORMAL_GROUPS
+        f"m18_{group}_{object_name}_seed{seed}"
+        for group in FORMAL_GROUPS
+        for seed in seeds
     }
     require(expected_run_dirs <= observed_run_dirs, "One or more formal M18 runs are missing")
-    require(
-        f"m18_all_mixed_{object_name}_seed42" not in observed_run_dirs,
-        "all_mixed alias was rerun",
-    )
+    for seed in seeds:
+        require(
+            f"m18_all_mixed_{object_name}_seed{seed}" not in observed_run_dirs,
+            f"all_mixed alias was rerun for seed {seed}",
+        )
 
-    for group_name in FORMAL_GROUPS:
-        run_name = f"m18_{group_name}_{object_name}_seed42"
+    for group_name, seed in ((group, seed) for seed in seeds for group in FORMAL_GROUPS):
+        run_name = f"m18_{group_name}_{object_name}_seed{seed}"
         run_dir = run_root / run_name
         report = _load_mapping(run_dir / "training_report.json")
         run_config = _load_mapping(run_dir / "run_config.json")
@@ -217,7 +224,10 @@ def validate(
         require(report["status"] == "passed", f"Run did not pass: {run_name}")
         require(report["mode"] == "final" and not report["smoke"], f"Run is not formal: {run_name}")
         require(report["canonical_group"] == group_name, f"Report group changed: {run_name}")
-        require(report["object"] == object_name and report["seed"] == 42, "Run identity changed")
+        require(
+            report["object"] == object_name and report["seed"] == seed,
+            f"Run identity changed: {run_name}",
+        )
         require(report["model_repository"] == config["model"]["repository"], "Model repo changed")
         require(report["model_revision"] == config["model"]["revision"], "Model revision changed")
         require(report["base_weight_sha256"] == config["model"]["sha256"], "Base hash changed")
@@ -240,7 +250,7 @@ def validate(
             blocklist=blocklist,
         )
         _validate_model(run_dir, report=report, reload_model=reload_model)
-        summaries[group_name] = {
+        summaries.setdefault(group_name, {})[str(seed)] = {
             **counts,
             "metrics": {name: float(report["metrics"][name]) for name in METRICS},
             "model_sha256": report["model_sha256"],
@@ -249,9 +259,10 @@ def validate(
 
     return {
         "status": "passed",
-        "schema_version": 1,
+        "schema_version": 2,
         "object": object_name,
-        "runs": len(summaries),
+        "seeds": list(seeds),
+        "runs": sum(len(per_seed) for per_seed in summaries.values()),
         "all_mixed_alias_of": "filtered_syn",
         "alias_reruns": 0,
         "split_manifest_sha256": manifest_sha256,
@@ -268,6 +279,13 @@ def main() -> int:
     parser.add_argument("--run-root", type=Path, required=True)
     parser.add_argument("--object", dest="object_name", required=True)
     parser.add_argument("--reload", action="store_true")
+    parser.add_argument(
+        "--seed",
+        dest="seeds",
+        type=int,
+        action="append",
+        help="Repeatable. Defaults to 42 only, so existing single-seed evidence is unaffected.",
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     paths = load_paths(args.paths)
@@ -280,6 +298,7 @@ def main() -> int:
         run_root=args.run_root.resolve(strict=True),
         object_name=args.object_name,
         reload_model=args.reload,
+        seeds=tuple(args.seeds) if args.seeds else (42,),
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
