@@ -1,0 +1,532 @@
+{
+  "augmentation": {
+    "color_jitter": [
+      0.15,
+      0.15,
+      0.1,
+      0.03
+    ],
+    "horizontal_flip_probability": 0.5,
+    "random_resized_crop_ratio": [
+      0.9,
+      1.1
+    ],
+    "random_resized_crop_scale": [
+      0.8,
+      1.0
+    ],
+    "rotation_degrees": 10.0,
+    "scale": [
+      0.95,
+      1.05
+    ],
+    "translation_fraction": 0.03
+  },
+  "augmentation_comparison": [
+    {
+      "dice_term_engaged_with_augmentation": true,
+      "dice_term_engaged_without_augmentation": true,
+      "object": "pcb1",
+      "trajectories": {
+        "real_only": {
+          "bce_loss_improvement": 0.5779311329126358,
+          "canonical_group": "real_only",
+          "dice_loss_first_window": 0.9924637115001679,
+          "dice_loss_improvement": 0.02747632265090949,
+          "dice_loss_last_window": 0.9649873888492584,
+          "final_dice": 0.3761873629965773,
+          "run_name": "m18_real_only_pcb1_seed42",
+          "standard_augmentation": false,
+          "windows": [
+            {
+              "bce_loss": 0.7236899042129517,
+              "dice_loss": 0.9924637115001679,
+              "step": 50
+            },
+            {
+              "bce_loss": 0.5432877027988434,
+              "dice_loss": 0.9840640342235565,
+              "step": 100
+            },
+            {
+              "bce_loss": 0.39135031282901767,
+              "dice_loss": 0.9803931665420532,
+              "step": 150
+            },
+            {
+              "bce_loss": 0.28952007949352265,
+              "dice_loss": 0.9874277877807617,
+              "step": 200
+            },
+            {
+              "bce_loss": 0.22520127683877944,
+              "dice_loss": 0.9688607668876648,
+              "step": 250
+            },
+            {
+              "bce_loss": 0.1889223164319992,
+              "dice_loss": 0.9741377198696136,
+              "step": 300
+            },
+            {
+              "bce_loss": 0.16553451597690583,
+              "dice_loss": 0.9616036128997802,
+              "step": 350
+            },
+            {
+              "bce_loss": 0.15344381392002104,
+              "dice_loss": 0.9494495403766632,
+              "step": 400
+            },
+            {
+              "bce_loss": 0.146790075302124,
+              "dice_loss": 0.9602311480045319,
+              "step": 450
+            },
+            {
+              "bce_loss": 0.14575877130031586,
+              "dice_loss": 0.9649873888492584,
+              "step": 500
+            }
+          ]
+        },
+        "std_aug": {
+          "bce_loss_improvement": 0.5797159740328788,
+          "canonical_group": "std_aug",
+          "dice_loss_first_window": 0.9908560192584992,
+          "dice_loss_improvement": 0.025630042552948096,
+          "dice_loss_last_window": 0.9652259767055511,
+          "final_dice": 0.3835701466758423,
+          "run_name": "m18_std_aug_pcb1_seed42",
+          "standard_augmentation": true,
+          "windows": [
+            {
+              "bce_loss": 0.7261587703227996,
+              "dice_loss": 0.9908560192584992,
+              "step": 50
+            },
+            {
+              "bce_loss": 0.5476329457759858,
+              "dice_loss": 0.9817196953296662,
+              "step": 100
+            },
+            {
+              "bce_loss": 0.3934887433052063,
+              "dice_loss": 0.9774921655654907,
+              "step": 150
+            },
+            {
+              "bce_loss": 0.29126683294773104,
+              "dice_loss": 0.9857812178134918,
+              "step": 200
+            },
+            {
+              "bce_loss": 0.2256113111972809,
+              "dice_loss": 0.9658192920684815,
+              "step": 250
+            },
+            {
+              "bce_loss": 0.1888825097680092,
+              "dice_loss": 0.9734798014163971,
+              "step": 300
+            },
+            {
+              "bce_loss": 0.16530876398086547,
+              "dice_loss": 0.9618169140815734,
+              "step": 350
+            },
+            {
+              "bce_loss": 0.1535759961605072,
+              "dice_loss": 0.9492740046977997,
+              "step": 400
+            },
+            {
+              "bce_loss": 0.14720828980207443,
+              "dice_loss": 0.9602087318897248,
+              "step": 450
+            },
+            {
+              "bce_loss": 0.1464427962899208,
+              "dice_loss": 0.9652259767055511,
+              "step": 500
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dice_term_engaged_with_augmentation": false,
+      "dice_term_engaged_without_augmentation": true,
+      "object": "capsules",
+      "trajectories": {
+        "real_only": {
+          "bce_loss_improvement": 0.5886930096149444,
+          "canonical_group": "real_only",
+          "dice_loss_first_window": 0.9955563390254974,
+          "dice_loss_improvement": 0.02591903328895573,
+          "dice_loss_last_window": 0.9696373057365417,
+          "final_dice": 0.5957627705114136,
+          "run_name": "m18_real_only_capsules_seed42",
+          "standard_augmentation": false,
+          "windows": [
+            {
+              "bce_loss": 0.7349799382686615,
+              "dice_loss": 0.9955563390254974,
+              "step": 50
+            },
+            {
+              "bce_loss": 0.5726640206575394,
+              "dice_loss": 0.9941601133346558,
+              "step": 100
+            },
+            {
+              "bce_loss": 0.42606121480464937,
+              "dice_loss": 0.9951641619205475,
+              "step": 150
+            },
+            {
+              "bce_loss": 0.3161812347173691,
+              "dice_loss": 0.9910414457321167,
+              "step": 200
+            },
+            {
+              "bce_loss": 0.24259641647338867,
+              "dice_loss": 0.985075786113739,
+              "step": 250
+            },
+            {
+              "bce_loss": 0.19618398129940032,
+              "dice_loss": 0.980998705625534,
+              "step": 300
+            },
+            {
+              "bce_loss": 0.16841087758541107,
+              "dice_loss": 0.9695755028724671,
+              "step": 350
+            },
+            {
+              "bce_loss": 0.1548433718085289,
+              "dice_loss": 0.9680437529087067,
+              "step": 400
+            },
+            {
+              "bce_loss": 0.1486900943517685,
+              "dice_loss": 0.9743894493579864,
+              "step": 450
+            },
+            {
+              "bce_loss": 0.14628692865371704,
+              "dice_loss": 0.9696373057365417,
+              "step": 500
+            }
+          ]
+        },
+        "std_aug": {
+          "bce_loss_improvement": 0.5851406958699226,
+          "canonical_group": "std_aug",
+          "dice_loss_first_window": 0.9960793507099152,
+          "dice_loss_improvement": 0.0016399180889129505,
+          "dice_loss_last_window": 0.9944394326210022,
+          "final_dice": 0.0,
+          "run_name": "m18_std_aug_capsules_seed42",
+          "standard_augmentation": true,
+          "windows": [
+            {
+              "bce_loss": 0.7368846607208251,
+              "dice_loss": 0.9960793507099152,
+              "step": 50
+            },
+            {
+              "bce_loss": 0.5587388396263122,
+              "dice_loss": 0.9959099078178406,
+              "step": 100
+            },
+            {
+              "bce_loss": 0.40297237038612366,
+              "dice_loss": 0.9963985002040863,
+              "step": 150
+            },
+            {
+              "bce_loss": 0.3012752115726471,
+              "dice_loss": 0.9962267792224884,
+              "step": 200
+            },
+            {
+              "bce_loss": 0.23429855436086655,
+              "dice_loss": 0.9961526393890381,
+              "step": 250
+            },
+            {
+              "bce_loss": 0.1969396713376045,
+              "dice_loss": 0.9953347599506378,
+              "step": 300
+            },
+            {
+              "bce_loss": 0.1722959789633751,
+              "dice_loss": 0.9938105010986328,
+              "step": 350
+            },
+            {
+              "bce_loss": 0.16013624459505083,
+              "dice_loss": 0.9945869362354278,
+              "step": 400
+            },
+            {
+              "bce_loss": 0.15290669560432435,
+              "dice_loss": 0.995070766210556,
+              "step": 450
+            },
+            {
+              "bce_loss": 0.15174396485090255,
+              "dice_loss": 0.9944394326210022,
+              "step": 500
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "draws": 500,
+  "loss_window": 50,
+  "objects": [
+    {
+      "defect_images": 10,
+      "empty_mask_draws": 0,
+      "empty_mask_rate": 0.0,
+      "images_that_ever_lose_the_defect": 0,
+      "object": "pcb1",
+      "retained_area_ratio_mean": 1.2078135706518218,
+      "samples": [
+        {
+          "baseline_mask_pixels": 383.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.2099216710182767,
+          "retained_area_ratio_median": 1.2114882506527416,
+          "sample_id": "real::pcb1/Data/Images/Anomaly/004.JPG",
+          "source_defect_area_fraction": 0.0014651063716484276
+        },
+        {
+          "baseline_mask_pixels": 833.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.198484993997599,
+          "retained_area_ratio_median": 1.1956782713085234,
+          "sample_id": "real::pcb1/Data/Images/Anomaly/009.JPG",
+          "source_defect_area_fraction": 0.003174508081050137
+        },
+        {
+          "baseline_mask_pixels": 905.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.1928773480662982,
+          "retained_area_ratio_median": 1.187292817679558,
+          "sample_id": "real::pcb1/Data/Images/Anomaly/010.JPG",
+          "source_defect_area_fraction": 0.003430119551614879
+        },
+        {
+          "baseline_mask_pixels": 617.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.2002398703403567,
+          "retained_area_ratio_median": 1.1985413290113454,
+          "sample_id": "real::pcb1/Data/Images/Anomaly/016.JPG",
+          "source_defect_area_fraction": 0.0023577495540112363
+        },
+        {
+          "baseline_mask_pixels": 290.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.219103448275862,
+          "retained_area_ratio_median": 1.2206896551724138,
+          "sample_id": "real::pcb1/Data/Images/Anomaly/037.JPG",
+          "source_defect_area_fraction": 0.0011056527411667598
+        },
+        {
+          "baseline_mask_pixels": 440.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.198590909090909,
+          "retained_area_ratio_median": 1.1977272727272728,
+          "sample_id": "real::pcb1/Data/Images/Anomaly/038.JPG",
+          "source_defect_area_fraction": 0.0016754533109673297
+        },
+        {
+          "baseline_mask_pixels": 16737.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.2051848001433947,
+          "retained_area_ratio_median": 1.2115671864730835,
+          "sample_id": "real::pcb1/Data/Images/Anomaly/050.JPG",
+          "source_defect_area_fraction": 0.0638602657294246
+        },
+        {
+          "baseline_mask_pixels": 742.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.2441563342318058,
+          "retained_area_ratio_median": 1.2425876010781671,
+          "sample_id": "real::pcb1/Data/Images/Anomaly/051.JPG",
+          "source_defect_area_fraction": 0.0028856138669222783
+        },
+        {
+          "baseline_mask_pixels": 1104.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.202213768115942,
+          "retained_area_ratio_median": 1.1983695652173914,
+          "sample_id": "real::pcb1/Data/Images/Anomaly/081.JPG",
+          "source_defect_area_fraction": 0.004242218494554943
+        },
+        {
+          "baseline_mask_pixels": 593.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.207362563237774,
+          "retained_area_ratio_median": 1.205733558178752,
+          "sample_id": "real::pcb1/Data/Images/Anomaly/084.JPG",
+          "source_defect_area_fraction": 0.002271214420747131
+        }
+      ],
+      "source_defect_area_fraction": {
+        "p25": 0.00182439358841228,
+        "p5": 0.0012674068748835105,
+        "p50": 0.0026216817104667573,
+        "p75": 0.0033662166839736932,
+        "p95": 0.0370321444737333
+      },
+      "total_draws": 5000
+    },
+    {
+      "defect_images": 10,
+      "empty_mask_draws": 72,
+      "empty_mask_rate": 0.0144,
+      "images_that_ever_lose_the_defect": 1,
+      "object": "capsules",
+      "retained_area_ratio_mean": 1.2443854477057432,
+      "samples": [
+        {
+          "baseline_mask_pixels": 4207.0,
+          "draws": 500,
+          "empty_mask_draws": 72,
+          "empty_mask_rate": 0.144,
+          "retained_area_ratio_mean": 0.10545139053957689,
+          "retained_area_ratio_median": 0.14404563822201094,
+          "sample_id": "real::capsules/Data/Images/Anomaly/084.JPG",
+          "source_defect_area_fraction": 0.016080666666666667
+        },
+        {
+          "baseline_mask_pixels": 207.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.3438743961352657,
+          "retained_area_ratio_median": 1.3429951690821256,
+          "sample_id": "real::capsules/Data/Images/Anomaly/004.JPG",
+          "source_defect_area_fraction": 0.0007913333333333333
+        },
+        {
+          "baseline_mask_pixels": 393.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.3707735368956744,
+          "retained_area_ratio_median": 1.3715012722646311,
+          "sample_id": "real::capsules/Data/Images/Anomaly/009.JPG",
+          "source_defect_area_fraction": 0.0014946666666666667
+        },
+        {
+          "baseline_mask_pixels": 458.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.3614410480349346,
+          "retained_area_ratio_median": 1.3646288209606987,
+          "sample_id": "real::capsules/Data/Images/Anomaly/010.JPG",
+          "source_defect_area_fraction": 0.0017646666666666668
+        },
+        {
+          "baseline_mask_pixels": 339.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.3692094395280234,
+          "retained_area_ratio_median": 1.368731563421829,
+          "sample_id": "real::capsules/Data/Images/Anomaly/016.JPG",
+          "source_defect_area_fraction": 0.00129
+        },
+        {
+          "baseline_mask_pixels": 32.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.34,
+          "retained_area_ratio_median": 1.34375,
+          "sample_id": "real::capsules/Data/Images/Anomaly/037.JPG",
+          "source_defect_area_fraction": 0.00012866666666666666
+        },
+        {
+          "baseline_mask_pixels": 20.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.547,
+          "retained_area_ratio_median": 1.55,
+          "sample_id": "real::capsules/Data/Images/Anomaly/038.JPG",
+          "source_defect_area_fraction": 7.866666666666666e-05
+        },
+        {
+          "baseline_mask_pixels": 1045.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.3479311004784689,
+          "retained_area_ratio_median": 1.3406698564593302,
+          "sample_id": "real::capsules/Data/Images/Anomaly/050.JPG",
+          "source_defect_area_fraction": 0.003976
+        },
+        {
+          "baseline_mask_pixels": 1163.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.3624677558039553,
+          "retained_area_ratio_median": 1.358555460017197,
+          "sample_id": "real::capsules/Data/Images/Anomaly/051.JPG",
+          "source_defect_area_fraction": 0.004455333333333334
+        },
+        {
+          "baseline_mask_pixels": 4045.0,
+          "draws": 500,
+          "empty_mask_draws": 0,
+          "empty_mask_rate": 0.0,
+          "retained_area_ratio_mean": 1.2957058096415328,
+          "retained_area_ratio_median": 1.3100123609394314,
+          "sample_id": "real::capsules/Data/Images/Anomaly/081.JPG",
+          "source_defect_area_fraction": 0.015412666666666667
+        }
+      ],
+      "source_defect_area_fraction": {
+        "p25": 0.000916,
+        "p5": 0.00010116666666666667,
+        "p50": 0.0016296666666666669,
+        "p75": 0.004335500000000001,
+        "p95": 0.01578006666666667
+      },
+      "total_draws": 5000
+    }
+  ],
+  "schema_version": 1,
+  "seed": 42,
+  "status": "passed"
+}

@@ -547,6 +547,26 @@ validation 保存兩份 CSV、selection、GIF、test image 與輸出 array SHA25
 不寫入 `results/`。Evaluation 是唯一允許讀 frozen test 的階段
 （見 `.claude/skills/df-guard`）。
 
+#### `scripts/diagnose_augmentation_mask_loss.py`
+```
+--paths --config configs/segmenter.yaml
+--runs-root PATH           # 預設 results/colab/segmentation
+--run-group STR            # 預設 std_aug
+--object STR               # 可重複；預設兩個物件
+--draws INT                # 每張瑕疵圖重放次數，預設 500
+--seed INT --loss-window INT
+--output PATH --report PATH
+```
+診斷標準增強為何讓 `capsules/std_aug` 崩潰（[ADR-031](decisions.md#adr-031)），兩段量測：
+
+1. **重放**：對 frozen train partition 的每張真實瑕疵圖，重放 trainer 實際會抽到的
+   同一組 draw（同 transform、同 `_stable_seed(seed, sample_id, draw_index)` 序列），
+   量測空 mask 比率與保留面積比
+2. **loss 軌跡**：比較同物件 `real_only` 與 `std_aug` 的窗平均 dice/BCE loss，
+   判定 **Dice 項是否曾經啟動**（BCE 在每個 run 都會降，不能當判準）
+
+**只讀 train partition**，不載入模型、不重算指標、不做任何選擇。
+
 ---
 
 ## 4. 設定檔

@@ -4,6 +4,16 @@
 
 ## [未發布]
 
+### `capsules/std_aug` 崩潰的診斷（ADR-031）
+
+- 新增 `scripts/diagnose_augmentation_mask_loss.py`。
+- **推翻**「增強把小瑕疵裁出畫面」的假設：重放 trainer 實際 draw 序列後，
+  pcb1 的空 mask 比率為 0.00%、capsules 僅 1.44%，且唯一被切掉的是瑕疵**最大**的一張。
+- 改以訓練 loss 軌跡定位：BCE 在四個 run 都正常下降，只有 `capsules/std_aug` 的
+  **Dice 項從頭到尾平的** —— 崩潰發生在**訓練期**，不是測試期的校準假象。
+- **不修增強設定、不加步數、不重跑**：那會動到凍結的訓練預算，且是在看過 test 之後才調。
+- 明確標示：單一 seed 無法區分系統性與雜訊，此診斷卡在「分割補 3 seeds」。
+
 ### 零 Dice 分割 run 的診斷（ADR-030）
 
 - 新增 `scripts/diagnose_zero_dice_segmentation.py`：重跑全部 16 個 physical run 的推論，
