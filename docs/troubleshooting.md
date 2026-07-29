@@ -257,3 +257,39 @@ near-copy 規則過濾。
 
 **預防**：不能只看平均 refine score。獨立 validator 必須逐 sample 比對 candidate 0
 與 original evidence、selected score 下界，以及選回 baseline 時的 image SHA256。
+
+---
+
+## 2026-07-29 — Evidence 報告之間有 hash 相依，重跑順序錯了會一直不過
+
+**里程碑**：M39
+
+**症狀**：改動 README 後 `verify_publish.py` 回報 `final_evidence_hashes_current=false`。
+依提示重跑 `verify_license_chain.py` 之後仍然失敗，只是 mismatch 換了一個欄位。
+
+**根因**：final evidence 之間是**有向相依**的，不是一組獨立報告：
+
+```
+verify_model_licenses.py  →  reports/model_license_verification.json
+                                    ↑ 被 license_chain 綁 hash
+verify_readme.py --write  →  README.md + reports/readme_validation.json
+                                    ↑ 被 license_chain 綁 hash
+verify_license_chain.py   →  reports/license_chain_validation.json
+```
+
+先跑 `license_chain` 再跑 `model_licenses`，等於把上游的舊 hash 寫進下游報告。
+
+**解法**：固定用這個順序重跑，最後才做總稽核：
+
+```powershell
+uv run --frozen python scripts/verify_model_licenses.py
+uv run --frozen python scripts/verify_readme.py --write
+uv run --frozen python scripts/verify_license_chain.py
+uv run --frozen python scripts/verify_publish.py
+```
+
+**預防**：`verify_publish.py` 的 `hash_mismatches` 會直接指出
+`<下游報告> | <欄位> -> <上游檔案>`，照著箭頭往上游找就能定位；
+不要看到失敗就把所有 verifier 隨意重跑一輪。另外
+`model_license_verification_fresh` 有 **24 小時**時效，隔天再驗一定要重跑
+（需連 Hugging Face API）。

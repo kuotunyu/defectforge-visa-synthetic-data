@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from scripts.build_phase2_figures import OBJECTS
 from scripts.run_classifier_matrix import matrix_plan
 from scripts.verify_readme import (
     BLOCK_NAMES,
+    MIN_REPLICATED_SEEDS,
     ReadmeVerificationError,
     main,
     render_blocks,
@@ -87,7 +89,9 @@ def _segmentation_rows() -> list[dict[str, str]]:
 
 def _readme_with_blocks(blocks: Mapping[str, str]) -> str:
     text = "# 專案\n\n## 實驗結果\n\n"
-    for name in ("CLASSIFICATION_MAIN", "SEGMENTATION_MAIN"):
+    for name in BLOCK_NAMES:
+        if name == "RESULT_OUTCOME":
+            continue
         text += f"<!-- BEGIN VERIFIED {name} -->\nstale\n<!-- END VERIFIED {name} -->\n\n"
     text += "## 限制與誠實揭露\n\n"
     text += (
@@ -111,6 +115,54 @@ def test_rendered_readme_preserves_negative_result() -> None:
     assert outcome["classification_negative"] is True
     assert "Classification 負面結果：**是" in blocks["RESULT_OUTCOME"]
     assert outcome["segmentation_negative"] is False
+
+
+def test_seed_variance_block_only_lists_replicated_groups() -> None:
+    counts: Counter[tuple[str, str]] = Counter(
+        (spec.object_name, spec.group) for spec in matrix_plan()
+    )
+    replicated = {key for key, count in counts.items() if count >= MIN_REPLICATED_SEEDS}
+    assert replicated, "the protocol requires at least one replicated classification group"
+
+    blocks, _ = render_blocks(_classification_rows(), _segmentation_rows())
+    table = blocks["CLASSIFICATION_SEED_VARIANCE"]
+    body = [
+        line
+        for line in table.splitlines()
+        if line.startswith("| ") and "---" not in line and "Seeds" not in line
+    ]
+    assert len(body) == len(replicated)
+    assert "±" in table
+    assert all(f"| {MIN_REPLICATED_SEEDS} |" in line for line in body)
+
+
+def test_outcome_discloses_threshold_sensitivity_without_replacing_dice() -> None:
+    segmentation_rows = _segmentation_rows()
+    for row in segmentation_rows:
+        group = row["logical_group"]
+        if group == "real_only":
+            row["dice"], row["aupro"] = "0.50", "0.40"
+        elif group in {"filtered_syn", "all_mixed"}:
+            row["dice"], row["aupro"] = "0.10", "0.90"
+        elif group == "copypaste_only":
+            row["dice"], row["pixel_auroc"] = "0.0", "0.95"
+        elif group == "diffusion_only":
+            row["dice"], row["pixel_auroc"] = "0.0", "0.55"
+
+    blocks, outcome = render_blocks(_classification_rows(), segmentation_rows)
+
+    # The pre-registered Dice conclusion must survive untouched.
+    assert outcome["segmentation_negative"] is True
+    assert outcome["segmentation_dice_delta"] < 0.0
+    # AUPRO points the other way and is disclosed alongside, never substituted.
+    assert outcome["segmentation_aupro_delta"] > 0.0
+    assert outcome["segmentation_metric_directions_agree"] is False
+    assert "併列揭露" in blocks["RESULT_OUTCOME"]
+    # all_mixed is an alias of filtered_syn and must not inflate the run count.
+    assert outcome["segmentation_physical_runs"] == len(segmentation_rows) - len(OBJECTS)
+    assert outcome["segmentation_zero_dice_runs"] == 2 * len(OBJECTS)
+    assert outcome["segmentation_zero_dice_informative_runs"] == len(OBJECTS)
+    assert outcome["segmentation_zero_dice_max_pixel_auroc"] == pytest.approx(0.95)
 
 
 def test_verify_readme_rejects_stale_numeric_block() -> None:

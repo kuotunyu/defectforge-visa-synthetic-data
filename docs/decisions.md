@@ -971,3 +971,57 @@ synthetic run 的 domain collapse，先換大模型或重新生成會同時改�
   才可執行 `--execute`，避免看到 validation 後改門檻。
 - GIF 可由同一套正式 checkpoint selector 重現，且不需開 share URL 或人工剪貼
   notebook／UI 數字。
+
+---
+
+<a id="adr-027"></a>
+## ADR-027 — M39 併列揭露 seed 變異與 Dice／AUPRO 方向矛盾，但不更換預註冊主指標
+
+**狀態：Accepted**（2026-07-29）
+
+### 背景
+公開 README 只呈現 seed 42 的單次結果，也只用 Dice 宣告 Segmentation 的負面結論。
+重新稽核 `results/*.csv` 的原始欄位後，發現兩個已存在但未被呈現的事實：
+
+1. `results/classification.csv` 已含 `real_only` 與 `filtered_syn` 各 3 個 seed
+   （ADR-020 預註冊），但 README 從未呈現 mean ± std。實際變異很大：
+   `filtered_syn` 的 seed 間標準差比 `real_only` 高一個數量級以上，
+   單一 seed 的細部差異不足以支撐結論。
+2. 16 個實跑的 Segmentation run 中有 6 個在固定 threshold 0.5 下 Dice 恰為 0
+   （整張預測為背景），其中 3 個的 pixel AUROC 仍達 0.80 以上（最高 `0.9015`）。
+   代表機率圖有訊號，是固定 threshold 把 Mask 切成全黑。
+   同一批 run 的 threshold-free AUPRO 給出與 Dice **相反**的方向：
+   `filtered_syn` 相對 `real_only` 的平均 Dice 為 `-0.2264`，平均 AUPRO 為 `+0.1046`。
+
+只報 Dice 會讓讀者以為結論是單一方向；改報 AUPRO 則會踩到「因為結果不好看就換指標」
+這條誠實性紅線。兩者都不可接受。
+
+### 決策
+**兩個指標併列揭露，主結論不變。**
+
+- `RESULT_OUTCOME` 的 `classification_negative` / `segmentation_negative` 仍由
+  預註冊的 Macro-F1 與 Dice 決定，措辭與數值一字不改；
+  `negative_results_preserved` 保持 `true`。
+- 新增兩個 VERIFIED block，數值同樣只能由 `scripts/verify_readme.py --write` 產生：
+  - `CLASSIFICATION_SEED_VARIANCE`：自動找出所有達到
+    `MIN_REPLICATED_SEEDS`（3）的 (物件, 組別)，輸出 Macro-F1 與 AUROC 的
+    mean ± std。未達 3 seed 的組別不得出現在表內。
+  - `SEGMENTATION_THRESHOLD`：五個主組的 Dice（threshold 0.5）與 AUPRO
+    （threshold-free）及各自相對 Real-only 的差值。
+- `RESULT_OUTCOME` 追加三行：AUPRO 差值與方向是否一致、零 Dice run 的數量與其中
+  pixel AUROC ≥ `INFORMATIVE_PIXEL_AUROC`（0.80）的數量與最大值，以及一句明確聲明
+  「AUPRO 與 threshold 敏感度是**併列揭露**，不是事後換指標」。
+- 計數一律以 **physical run** 為準：`all_mixed` 是 `filtered_syn` 的 alias
+  （ADR-009／ADR-021），不得被算成第二個 run。
+- README 說明文字**不得複述**任何由 block 產生的數值，避免 CSV 更新後 prose 走鐘。
+
+### 後果
+- README 同時揭露「單 seed 不可靠」與「兩個分割指標互相矛盾」，讀者可自行判斷；
+  這正好呼應課程 slide 8 自陳的 cons：影像／閾值指標未必反映真實下游效果。
+- 這**不是**新的實驗結果，只是把既有 CSV 中已存在、先前未呈現的欄位攤開；
+  沒有重跑任何訓練，`results/*.csv` 位元不變。
+- 遺留缺口照實列入 README 限制：Segmentation 目前完全沒有 seed 複跑，
+  因此 Dice／AUPRO 的矛盾**無法**用單 seed 判定孰是孰非；要解決必須補跑
+  Segmentation 的 3-seed 複跑。
+- `verify_readme.py` 的 block 數由 3 增為 5，`reports/readme_validation.json`
+  的 `block_sha256` 隨之擴充；`verify_publish.py` 的既有綁定不需改動。

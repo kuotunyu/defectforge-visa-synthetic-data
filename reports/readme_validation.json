@@ -1,18 +1,27 @@
 {
   "block_sha256": {
     "CLASSIFICATION_MAIN": "ead86a7d207f7bae42fbe7fbd6d0763e381729fc403e33e704a3492d9fd2d258",
-    "RESULT_OUTCOME": "7a11b3d928942362e34bcaee4e25e6f89a0d465c036cf035c43f616558c64de9",
-    "SEGMENTATION_MAIN": "dd119d1a937904aaa0108e641a3195f98a1e3246b6f7c66c13e3b13f9985f13a"
+    "CLASSIFICATION_SEED_VARIANCE": "974c8597fb90b466b91d1b6b1d59bdeffd41e877d8f5a164a3f4000187dd6917",
+    "RESULT_OUTCOME": "3d0f203f3ab1fb41cf880bca2ee7a058feb1a1ebf9041b21e8c9ddb5e4539c01",
+    "SEGMENTATION_MAIN": "dd119d1a937904aaa0108e641a3195f98a1e3246b6f7c66c13e3b13f9985f13a",
+    "SEGMENTATION_THRESHOLD": "f2edecf5ea881783d4fc015e775e9bd917b7df091c7c240afcee4f0fbfc63d84"
   },
   "classification_sha256": "aa083aa7524cea80d211efa911616ea71b4888049deced5678441ee8f05cbce6",
   "negative_results_preserved": true,
   "outcome": {
     "classification_macro_f1_delta": -0.2286086910687714,
     "classification_negative": true,
+    "segmentation_aupro_delta": 0.1046193781540834,
+    "segmentation_aupro_negative": false,
     "segmentation_dice_delta": -0.22639121842051724,
-    "segmentation_negative": true
+    "segmentation_metric_directions_agree": false,
+    "segmentation_negative": true,
+    "segmentation_physical_runs": 16,
+    "segmentation_zero_dice_informative_runs": 3,
+    "segmentation_zero_dice_max_pixel_auroc": 0.9014626386042132,
+    "segmentation_zero_dice_runs": 6
   },
-  "readme_sha256": "45b234442dd72e029a90d18542d9a97d7987a39f078a3132ec8ff324e02334c3",
+  "readme_sha256": "d8309e8d23748060bc1bee748eb27c7ec9890fb7e8e39f6babe9b2954c3c0f31",
   "schema_version": 1,
   "segmentation_sha256": "fbe4f97379e2597713c1c7255bfd6b5df7ac49c948b396469f598d34b03615aa",
   "status": "passed"

@@ -100,6 +100,24 @@ Classification 與 Segmentation 的獨立 validator。所有 Figure 也從相同
 
 ![五組 Classification 比較](reports/figures/main_comparison_table.png)
 
+#### 預註冊 3-seed 複跑的 mean ± std
+
+實驗協定要求 Real-only 與最佳 Filtered 組各複跑 3 個 seed。上表為 seed 42 的單次結果，
+下表是同一批 run 的 seed 變異：
+
+<!-- BEGIN VERIFIED CLASSIFICATION_SEED_VARIANCE -->
+| 物件 | 訓練組別 | Seeds | Macro-F1（mean ± std） | AUROC（mean ± std） |
+| --- | --- | --- | --- | --- |
+| pcb1 | Real-only（10 張） | 3 | 0.6808 ± 0.0031 | 0.9265 ± 0.0231 |
+| pcb1 | + 已篩選 Synthetic Data | 3 | 0.3175 ± 0.1066 | 0.1677 ± 0.0502 |
+| capsules | Real-only（10 張） | 3 | 0.5471 ± 0.0268 | 0.8160 ± 0.0224 |
+| capsules | + 已篩選 Synthetic Data | 3 | 0.3609 ± 0.0201 | 0.3243 ± 0.0426 |
+<!-- END VERIFIED CLASSIFICATION_SEED_VARIANCE -->
+
+已篩選 Synthetic 組的 seed 間標準差比 Real-only 大一個數量級以上。這個變異度本身就說明：
+在這個資料規模下，單一 seed 的細部差異不足以支撐結論。其餘組別只有 seed 42，因此不在表內；
+Segmentation 目前完全沒有 seed 複跑，這一點列在下方「限制與誠實揭露」。
+
 ### 瑕疵區域分割（Segmentation）
 
 <!-- BEGIN VERIFIED SEGMENTATION_MAIN -->
@@ -126,6 +144,33 @@ Classification 與 Segmentation 的獨立 validator。所有 Figure 也從相同
 <!-- END VERIFIED SEGMENTATION_MAIN -->
 
 ![九個 Segmentation 邏輯組別](reports/figures/segmentation_table.png)
+
+#### Dice 與 AUPRO 的方向不一致
+
+Dice 依賴固定 threshold 0.5，AUPRO 不依賴 threshold。兩者對同一批 run 給出相反的方向：
+
+<!-- BEGIN VERIFIED SEGMENTATION_THRESHOLD -->
+| 物件 | 訓練組別 | Dice（threshold 0.5） | AUPRO（不依賴 threshold） | Dice Δ vs Real-only | AUPRO Δ vs Real-only |
+| --- | --- | --- | --- | --- | --- |
+| pcb1 | Real-only（10 張） | 0.3762 | 0.6028 | — | — |
+| pcb1 | + Standard Augmentation | 0.3836 | 0.5740 | +0.0074 | -0.0288 |
+| pcb1 | + 未篩選 Synthetic Data | 0.2490 | 0.6065 | -0.1272 | +0.0037 |
+| pcb1 | + 已篩選 Synthetic Data | 0.0621 | 0.7471 | -0.3140 | +0.1443 |
+| pcb1 | Full-real（60 張） | 0.6862 | 0.5999 | +0.3100 | -0.0029 |
+| capsules | Real-only（10 張） | 0.5958 | 0.8488 | — | — |
+| capsules | + Standard Augmentation | 0.0000 | 0.5591 | -0.5958 | -0.2897 |
+| capsules | + 未篩選 Synthetic Data | 0.0000 | 0.1666 | -0.5958 | -0.6821 |
+| capsules | + 已篩選 Synthetic Data | 0.4570 | 0.9137 | -0.1387 | +0.0649 |
+| capsules | Full-real（60 張） | 0.6331 | 0.9591 | +0.0373 | +0.1103 |
+<!-- END VERIFIED SEGMENTATION_THRESHOLD -->
+
+原因是有相當比例的 run 在 threshold 0.5 下輸出全背景 Mask（Dice 恰為 0），
+但它們的 pixel AUROC 仍然很高——代表機率圖是有訊號的，是固定 threshold 把它切成全黑，
+而不是模型完全失效。確切的 run 數與最高 pixel AUROC 列在下方「限制與誠實揭露」。
+
+本專案**不因此改換主指標**：預註冊的主結論仍以 Dice 與 Macro-F1 為準，
+AUPRO 與 threshold 敏感度併列揭露，讓讀者自行判斷。決策見
+[ADR-027](docs/decisions.md#adr-027)。
 
 ## v2 後續實驗：退步是否來自 Sampling？
 
@@ -162,8 +207,19 @@ non-commercial research／evaluation。
 - Segmentation：已篩選 Synthetic Data 相對 Real-only 的平均 Dice 差異為 `-0.2264`。
 - Classification 負面結果：**是——已篩選 Synthetic Data 未提升平均 Macro-F1。**
 - Segmentation 負面結果：**是——已篩選 Synthetic Data 未提升平均 Dice。**
+- Segmentation（threshold-free）：同一組 run 的平均 AUPRO 差異為 `+0.1046`，與 Dice **方向相反**。
+- 16 個實跑的 Segmentation run 中有 6 個在固定 threshold 0.5 下 Dice = 0（整張預測為背景），其中 3 個的 pixel AUROC 仍達 0.80 以上（最高 `0.9015`）。
+- 主結論仍以預註冊的 Macro-F1 與 Dice 為準；AUPRO 與 threshold 敏感度是**併列揭露**，不是事後換指標。
 <!-- END VERIFIED RESULT_OUTCOME -->
 
+- **Segmentation 完全沒有 seed 複跑**（全部 seed 42）。Classification 只有 Real-only 與
+  已篩選 Synthetic 兩組達到預註冊的 3 seed。因此 Dice 與 AUPRO 的方向矛盾**無法**
+  用現有證據判定孰是孰非；要解決必須補跑 Segmentation 的 3-seed 複跑。
+- 合成組的正樣本曝光高度偏向 Synthetic Data：`results/classification.csv` 的
+  `sampled_real_bad` / `sampled_synthetic_bad` 顯示，加入 500 張合成瑕疵後，
+  真實瑕疵在同一份 sampling schedule 中的曝光量遠低於 Real-only。
+  這是 v2 pilot 檢驗的假說，也代表 v1 的負面結果**同時**受合成品質與 sampling 設計影響，
+  不能單獨歸因於「合成資料無效」。
 - 僅研究 `pcb1` 與 `capsules`，不能直接推廣到其他工業物件。
 - Synthetic Data 的視覺品質不等於下游任務有效性。
 - 預註冊 threshold 0.5 下，四張決定性 Demo frame 的 Binary Mask coverage 都是 0。

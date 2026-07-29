@@ -8,7 +8,9 @@ import hashlib
 import json
 import math
 import os
+import statistics
 import sys
+from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -24,9 +26,18 @@ from src.common.integrity import write_text_lf  # isort: skip
 
 BLOCK_NAMES = (
     "CLASSIFICATION_MAIN",
+    "CLASSIFICATION_SEED_VARIANCE",
     "SEGMENTATION_MAIN",
+    "SEGMENTATION_THRESHOLD",
     "RESULT_OUTCOME",
 )
+# docs/experiment_protocol.md requires Real-only and the best Filtered group to be
+# replicated across three seeds and reported as mean +/- std.
+MIN_REPLICATED_SEEDS = 3
+# A run whose thresholded Dice is exactly zero predicted background everywhere; a high
+# pixel AUROC on such a run means the probability map was informative and the fixed
+# threshold, not the model, produced the empty mask.
+INFORMATIVE_PIXEL_AUROC = 0.80
 CLASSIFICATION_METRICS = (
     "macro_f1",
     "anomaly_f1",
@@ -200,6 +211,99 @@ def classification_block(rows: Sequence[Mapping[str, str]]) -> str:
     )
 
 
+def _group_order(group_name: str) -> tuple[int, str]:
+    if group_name in MAIN_GROUPS:
+        return (MAIN_GROUPS.index(group_name), group_name)
+    return (len(MAIN_GROUPS), group_name)
+
+
+def seed_variance_block(rows: Sequence[Mapping[str, str]]) -> str:
+    """Report mean +/- std for every group that reached the replicated-seed policy."""
+    grouped: dict[tuple[str, str], list[Mapping[str, str]]] = defaultdict(list)
+    for row in rows:
+        grouped[(row["object"], row["canonical_group"])].append(row)
+    replicated = sorted(
+        (key for key, items in grouped.items() if len(items) >= MIN_REPLICATED_SEEDS),
+        key=lambda key: (OBJECTS.index(key[0]), _group_order(key[1])),
+    )
+    require(
+        bool(replicated),
+        f"No classification group reaches {MIN_REPLICATED_SEEDS} seeds",
+    )
+    output: list[list[str]] = []
+    for object_name, group_name in replicated:
+        items = grouped[(object_name, group_name)]
+        seeds = [int(item["seed"]) for item in items]
+        require(
+            len(set(seeds)) == len(seeds),
+            f"Duplicate seeds for {object_name}/{group_name}",
+        )
+        macro = [float(item["macro_f1"]) for item in items]
+        auroc = [float(item["auroc"]) for item in items]
+        output.append(
+            [
+                object_name,
+                GROUP_LABELS.get(group_name, group_name),
+                str(len(items)),
+                f"{statistics.fmean(macro):.4f} ± {statistics.stdev(macro):.4f}",
+                f"{statistics.fmean(auroc):.4f} ± {statistics.stdev(auroc):.4f}",
+            ]
+        )
+    return _markdown_table(
+        ("物件", "訓練組別", "Seeds", "Macro-F1（mean ± std）", "AUROC（mean ± std）"),
+        output,
+    )
+
+
+def threshold_block(rows: Sequence[Mapping[str, str]]) -> str:
+    """Contrast the thresholded Dice with the threshold-free AUPRO for the main groups."""
+    output: list[list[str]] = []
+    for object_name in OBJECTS:
+        baseline = _one(
+            rows,
+            key="logical_group",
+            value="real_only",
+            object_name=object_name,
+        )
+        base_dice = float(baseline["dice"])
+        base_aupro = float(baseline["aupro"])
+        for group_name in MAIN_GROUPS:
+            row = _one(
+                rows,
+                key="logical_group",
+                value=group_name,
+                object_name=object_name,
+            )
+            dice = float(row["dice"])
+            aupro = float(row["aupro"])
+            if group_name == "real_only":
+                dice_delta = aupro_delta = "—"
+            else:
+                dice_delta = f"{dice - base_dice:+.4f}"
+                aupro_delta = f"{aupro - base_aupro:+.4f}"
+            output.append(
+                [
+                    object_name,
+                    GROUP_LABELS[group_name],
+                    f"{dice:.4f}",
+                    f"{aupro:.4f}",
+                    dice_delta,
+                    aupro_delta,
+                ]
+            )
+    return _markdown_table(
+        (
+            "物件",
+            "訓練組別",
+            "Dice（threshold 0.5）",
+            "AUPRO（不依賴 threshold）",
+            "Dice Δ vs Real-only",
+            "AUPRO Δ vs Real-only",
+        ),
+        output,
+    )
+
+
 def segmentation_block(rows: Sequence[Mapping[str, str]]) -> str:
     output: list[list[str]] = []
     for object_name in OBJECTS:
@@ -277,11 +381,38 @@ def outcome_payload(
         group_name="real_only",
         metric="dice",
     )
+    aupro_delta = _mean_metric(
+        segmentation_rows,
+        key="logical_group",
+        group_name="filtered_syn",
+        metric="aupro",
+    ) - _mean_metric(
+        segmentation_rows,
+        key="logical_group",
+        group_name="real_only",
+        metric="aupro",
+    )
+    # all_mixed is an alias of filtered_syn, so it must not be counted as a second run.
+    physical = [row for row in segmentation_rows if row["logical_group"] != "all_mixed"]
+    zero_dice = [row for row in physical if float(row["dice"]) == 0.0]
+    informative = [
+        row for row in zero_dice if float(row["pixel_auroc"]) >= INFORMATIVE_PIXEL_AUROC
+    ]
     return {
         "classification_macro_f1_delta": classification_delta,
         "segmentation_dice_delta": segmentation_delta,
         "classification_negative": classification_delta <= 0.0,
         "segmentation_negative": segmentation_delta <= 0.0,
+        "segmentation_aupro_delta": aupro_delta,
+        "segmentation_aupro_negative": aupro_delta <= 0.0,
+        "segmentation_metric_directions_agree": (segmentation_delta <= 0.0)
+        == (aupro_delta <= 0.0),
+        "segmentation_physical_runs": len(physical),
+        "segmentation_zero_dice_runs": len(zero_dice),
+        "segmentation_zero_dice_informative_runs": len(informative),
+        "segmentation_zero_dice_max_pixel_auroc": (
+            max(float(row["pixel_auroc"]) for row in zero_dice) if zero_dice else 0.0
+        ),
     }
 
 
@@ -298,6 +429,16 @@ def outcome_block(payload: Mapping[str, Any]) -> str:
         if payload["segmentation_negative"]
         else "否——已篩選 Synthetic Data 提升了平均 Dice。"
     )
+    aupro_delta = float(payload["segmentation_aupro_delta"])
+    physical_runs = int(payload["segmentation_physical_runs"])
+    zero_dice_runs = int(payload["segmentation_zero_dice_runs"])
+    informative_runs = int(payload["segmentation_zero_dice_informative_runs"])
+    max_zero_dice_auroc = float(payload["segmentation_zero_dice_max_pixel_auroc"])
+    directions = (
+        "方向一致"
+        if payload["segmentation_metric_directions_agree"]
+        else "**方向相反**"
+    )
     return "\n".join(
         [
             (
@@ -310,6 +451,20 @@ def outcome_block(payload: Mapping[str, Any]) -> str:
             ),
             f"- Classification 負面結果：**{classification_statement}**",
             f"- Segmentation 負面結果：**{segmentation_statement}**",
+            (
+                f"- Segmentation（threshold-free）：同一組 run 的平均 AUPRO 差異為 "
+                f"`{aupro_delta:+.4f}`，與 Dice {directions}。"
+            ),
+            (
+                f"- {physical_runs} 個實跑的 Segmentation run 中有 {zero_dice_runs} 個在固定 "
+                f"threshold 0.5 下 Dice = 0（整張預測為背景），其中 {informative_runs} 個的 "
+                f"pixel AUROC 仍達 {INFORMATIVE_PIXEL_AUROC:.2f} 以上"
+                f"（最高 `{max_zero_dice_auroc:.4f}`）。"
+            ),
+            (
+                "- 主結論仍以預註冊的 Macro-F1 與 Dice 為準；AUPRO 與 threshold 敏感度是"
+                "**併列揭露**，不是事後換指標。"
+            ),
         ]
     )
 
@@ -321,7 +476,9 @@ def render_blocks(
     outcome = outcome_payload(classification_rows, segmentation_rows)
     return {
         "CLASSIFICATION_MAIN": classification_block(classification_rows),
+        "CLASSIFICATION_SEED_VARIANCE": seed_variance_block(classification_rows),
         "SEGMENTATION_MAIN": segmentation_block(segmentation_rows),
+        "SEGMENTATION_THRESHOLD": threshold_block(segmentation_rows),
         "RESULT_OUTCOME": outcome_block(outcome),
     }, outcome
 
