@@ -5,6 +5,7 @@ import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 from scripts.verify_publish import (
@@ -13,12 +14,14 @@ from scripts.verify_publish import (
     EXPECTED_NAME,
     FINAL_EVIDENCE_REPORTS,
     FINAL_FIGURES,
+    PublishVerificationError,
     audit_closeout_metadata,
     audit_evidence,
     audit_final_media,
     audit_identities,
     audit_plan_and_readme,
     audit_required_paths,
+    build_audit,
     scan_text,
     sha256_file,
 )
@@ -137,25 +140,59 @@ def test_required_path_audit_rejects_owner_local_files_in_git(tmp_path: Path) ->
     assert audit["owner_local_tracked"] == ["CLAUDE.md"]
 
 
-def test_published_skills_are_exempt_but_other_skills_are_not(tmp_path: Path) -> None:
-    """ADR-028 publishes exactly two skills; the rest stay owner-local."""
+def test_published_skills_and_ci_are_exempt_but_siblings_are_not(tmp_path: Path) -> None:
+    """ADR-028 publishes two skills and ADR-029 the CI workflow; siblings stay local."""
     _git(tmp_path, "init")
     published = [
         ".claude/skills/defectforge/SKILL.md",
         ".claude/skills/df-guard/SKILL.md",
         ".claude/skills/df-guard/agents/openai.yaml",
+        ".github/workflows/verify.yml",
     ]
-    private = ".claude/skills/df-eval/SKILL.md"
-    for relative in [*published, private]:
+    private = [
+        ".claude/skills/df-eval/SKILL.md",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+    ]
+    for relative in [*published, *private]:
         path = tmp_path / relative
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("skill\n", encoding="utf-8")
+        path.write_text("content\n", encoding="utf-8")
         _git(tmp_path, "add", relative)
 
     audit = audit_required_paths(tmp_path)
 
-    assert audit["owner_local_tracked"] == [private]
+    assert audit["owner_local_tracked"] == sorted(private)
     assert not any(item in audit["owner_local_tracked"] for item in published)
+
+
+def _minimal_repo_with_history(repo: Path) -> None:
+    _git(repo, "init")
+    _git(repo, "config", "user.name", EXPECTED_NAME)
+    _git(repo, "config", "user.email", EXPECTED_EMAIL)
+    (repo / "tracked.txt").write_text("content\n", encoding="utf-8")
+    _git(repo, "add", "tracked.txt")
+    _git(repo, "commit", "-m", "seed history")
+
+
+def test_stale_license_waiver_is_reported_not_faked(tmp_path: Path) -> None:
+    """CI may waive the 24-hour window, but the reported value must stay honest."""
+    _minimal_repo_with_history(tmp_path)
+
+    audit = build_audit(tmp_path, waived_checks=("model_license_verification_fresh",))
+
+    assert audit["checks"]["model_license_verification_fresh"] is False
+    assert audit["waived_checks"] == ["model_license_verification_fresh"]
+    assert "model_license_verification_fresh" not in audit["failed_checks"]
+    # An otherwise empty repository still fails plenty of real checks.
+    assert audit["failed_checks"]
+    assert audit["status"] == "incomplete"
+
+
+def test_unknown_waived_check_is_rejected(tmp_path: Path) -> None:
+    _minimal_repo_with_history(tmp_path)
+
+    with pytest.raises(PublishVerificationError, match="Unknown waived check"):
+        build_audit(tmp_path, waived_checks=("not_a_real_check",))
 
 
 def test_final_media_audit_rejects_single_frame_gif(tmp_path: Path) -> None:

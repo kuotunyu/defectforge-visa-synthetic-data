@@ -2,6 +2,19 @@
 
 本專案採用 [Semantic Versioning](https://semver.org/) 管理公開 Release。
 
+## [未發布]
+
+### 持續驗證（ADR-029）
+
+- 恢復 GitHub Actions workflow。M38 停止追蹤 `.github/` 時把它一併從遠端移除，
+  持續驗證自此停用；2026-07-29 實查遠端只剩 GitHub 自動的 `Dependency Graph`。
+- 只公開 `workflows/verify.yml`；PR 與 Issue Template 維持 owner-local。
+- 把發佈閘門與持續驗證分開：`model_license_verification_fresh` 的 24 小時時效
+  改為僅發佈時強制，CI 改以 `--allow-stale-license-check` 執行，並新增一步
+  **重新連 Hugging Face Hub 實查上游授權**（寫入暫存路徑，不動已提交的 hash 鏈）。
+- 豁免不竄改回報值：過期時仍如實回報 `false`，只是不列入 `failed_checks`；
+  輸出新增 `waived_checks` 與 `failed_checks`，未知的豁免名稱直接拒絕。
+
 ## [1.2.2] - 2026-07-29
 
 ### 結果呈現（ADR-027）

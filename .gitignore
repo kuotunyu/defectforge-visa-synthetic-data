@@ -80,6 +80,13 @@ build/
 !/.claude/skills/defectforge/
 !/.claude/skills/df-guard/
 
+# Same pattern for .github/: only the CI workflow is public (ADR-029); the PR and
+# issue templates are owner-only.
+/.github/*
+!/.github/workflows/
+/.github/workflows/*
+!/.github/workflows/verify.yml
+
 # --- Tooling / OS ---
 .vscode/
 .idea/

@@ -1082,3 +1082,62 @@ README 也沒有任何說明。
 ### 未採用的選項
 - **全部 13 個公開**：清理與長期維護成本高，且過期內容比不公開更扣分
 - **只在文件描述、不放檔案**：任何人都能宣稱自己有 13 個 skill，缺少可驗證的實體
+
+---
+
+<a id="adr-029"></a>
+## ADR-029 — 恢復 CI workflow，並把 24 小時授權時效改為僅發佈時強制
+
+**狀態：Accepted**（2026-07-29）｜**部分取代**：M38 對 `.github/` 的一律不追蹤
+
+### 背景
+M35 建立 GitHub Actions（Windows runner、完整 Git 歷史、唯讀 token、鎖定 action SHA、
+frozen lock），在每次 `main` push／PR 重跑 Ruff、pytest 與 publication audit。
+M38 為精簡公開版面把整個 `.github/` 停止追蹤，**workflow 因此從遠端消失**。
+
+2026-07-29 實查遠端 `actions/workflows`：`total_count = 1`，且那唯一一個是 GitHub
+自動的 `Dependency Graph`。也就是說 M35 之後的所有 push 都沒有跑過任何驗證，
+而 PLAN M35 仍寫著「每次 main push／PR 自動重跑相同 gate」。
+
+直接把 workflow 加回來還有第二個問題：`verify_publish.py` 的
+`model_license_verification_fresh` 要求 `reports/model_license_verification.json`
+在 **24 小時內**（ADR-024）。這個規則的目的是「**發佈當下**證明上游授權剛查過」，
+但套用到 CI 會讓每次 push 都因**報告年齡**（與被測 commit 無關）而變紅。
+
+### 決策
+
+**1. 只公開 workflow，不公開 template。**
+`.github/workflows/verify.yml` 重新追蹤；`PULL_REQUEST_TEMPLATE.md` 與
+`ISSUE_TEMPLATE/` 維持 owner-local（它們是個人協作習慣，公開沒有意義）。
+`.gitignore` 沿用 ADR-028 的模式：`/.github/*` 排除，再負向放行
+`!/.github/workflows/verify.yml`。
+
+**2. 把「發佈閘門」與「持續驗證」分開，而不是放寬閘門。**
+
+| | 發佈 | CI |
+|---|---|---|
+| 指令 | `verify_publish.py` | `verify_publish.py --allow-stale-license-check` |
+| `model_license_verification_fresh` | **強制** | 回報但不 gating |
+| 上游授權是否真的還有效 | 由 24 小時內的報告證明 | **CI 每次重新連 Hub 實查**（獨立步驟） |
+
+CI 的實查步驟用 `--output` 寫到 `runner.temp`，**不覆寫已提交的報告**，
+因此 `license_chain → model_license_verification` 的 hash 綁定不受影響。
+這比原本更強：原本 CI 只驗報告年齡，現在是真的重新查一次上游。
+
+**3. 豁免必須誠實。**
+`build_audit(waived_checks=...)` 不竄改 `checks` 的值——
+`model_license_verification_fresh` 過期時仍如實回報 `false`，只是不列入 `failed_checks`。
+輸出新增 `waived_checks` 與 `failed_checks` 兩個欄位，CI 模式會在 stdout 印出
+`NOT a release gate: waived ...`。未知的豁免名稱直接 `raise`，避免打錯字變成靜默放行。
+
+### 後果
+- 持續驗證恢復；`.github/workflows/verify.yml` 進入 `REQUIRED_PATHS`，
+  日後被移除會讓發佈稽核 fail closed
+- CI 不再因報告年齡變紅，但仍會因上游授權真的變更／變 gated 而變紅
+- 發佈流程不變：release 前一定要跑無 flag 的完整閘門
+- 單元測試涵蓋「豁免不竄改回報值」與「未知豁免名稱被拒絕」
+
+### 待觀察
+`verify.yml` 從 M35 建立後就沒有實際在遠端執行過。**本次 push 後必須確認 CI 真的跑起來
+且為綠**；若 runner 上有本機沒有的失敗（例如 CRLF、路徑大小寫、缺 owner-local 測試檔），
+要在下一個 commit 修掉而不是關掉 CI。

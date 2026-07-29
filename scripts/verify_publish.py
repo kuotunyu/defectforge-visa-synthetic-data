@@ -80,14 +80,19 @@ REQUIRED_PATHS = (
     "assets/github-social-preview.png",
     ".claude/skills/defectforge/SKILL.md",
     ".claude/skills/df-guard/SKILL.md",
+    ".github/workflows/verify.yml",
     *FINAL_FIGURES,
 )
-# Two agent skills are published on purpose (ADR-028): the orchestrator and the
-# anti-leakage guard. They are carved out of the blanket ".claude/" owner-local rule
-# below, and REQUIRED_PATHS above keeps them from silently disappearing again.
-PUBLIC_SKILL_PREFIXES = (
+# Carve-outs from the blanket ".claude/" and ".github/" owner-local rules below.
+# A trailing slash means "prefix"; anything else is an exact path.
+#   - two agent skills are published on purpose (ADR-028)
+#   - the CI workflow is public so continuous verification is visible and runnable
+#     by anyone forking the repository (ADR-029)
+# REQUIRED_PATHS above keeps all three from silently disappearing again.
+OWNER_LOCAL_EXCEPTIONS = (
     ".claude/skills/defectforge/",
     ".claude/skills/df-guard/",
+    ".github/workflows/verify.yml",
 )
 OWNER_LOCAL_PATHS = (
     ".claude/",
@@ -229,10 +234,16 @@ def audit_required_paths(repo: Path) -> dict[str, Any]:
     untracked_required = [
         value for value in REQUIRED_PATHS if (repo / value).exists() and not is_tracked(value)
     ]
+    def is_exception(item: str) -> bool:
+        return any(
+            item.startswith(value) if value.endswith("/") else item == value
+            for value in OWNER_LOCAL_EXCEPTIONS
+        )
+
     owner_local_tracked = sorted(
         item
         for item in tracked
-        if not any(item.startswith(prefix) for prefix in PUBLIC_SKILL_PREFIXES)
+        if not is_exception(item)
         and any(
             item.startswith(value) if value.endswith("/") else item == value
             for value in OWNER_LOCAL_PATHS
@@ -705,7 +716,13 @@ def audit_release_acceptance(repo: Path) -> dict[str, Any]:
     }
 
 
-def build_audit(repo: Path) -> dict[str, Any]:
+def build_audit(repo: Path, *, waived_checks: Sequence[str] = ()) -> dict[str, Any]:
+    """Audit the repository. `waived_checks` are still reported honestly, just not gating.
+
+    The only intended waiver is `model_license_verification_fresh` in continuous
+    integration: report age says nothing about the commit under test, and CI re-checks
+    the live upstream licences in its own step instead. A release must never waive it.
+    """
     repo = repo.resolve(strict=True)
     require((repo / ".git").exists(), f"Not a Git repository: {repo}")
     tree = scan_tracked_tree(repo, tracked_paths(repo))
@@ -748,11 +765,17 @@ def build_audit(repo: Path) -> dict[str, Any]:
         ),
         "release_acceptance_complete": all(acceptance.values()),
     }
+    waived = tuple(name for name in waived_checks if name in checks)
+    unknown = sorted(set(waived_checks) - set(checks))
+    require(not unknown, f"Unknown waived check(s): {unknown}")
+    failed = sorted(name for name, ok in checks.items() if not ok and name not in waived)
     return {
         "schema_version": 1,
-        "status": "passed" if all(checks.values()) else "incomplete",
+        "status": "passed" if not failed else "incomplete",
         "publishes_or_uploads": False,
         "checks": checks,
+        "waived_checks": sorted(waived),
+        "failed_checks": failed,
         "required": required,
         "tree": tree,
         "git": identities,
@@ -787,17 +810,30 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Return success for a checkpoint audit even when final M24 artefacts are pending",
     )
+    parser.add_argument(
+        "--allow-stale-license-check",
+        action="store_true",
+        help=(
+            "Continuous integration only: still report model_license_verification_fresh, "
+            "but do not gate on it. CI re-verifies the live upstream licences separately. "
+            "Never use this for a release."
+        ),
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    audit = build_audit(args.repo)
+    waived = ("model_license_verification_fresh",) if args.allow_stale_license_check else ()
+    audit = build_audit(args.repo, waived_checks=waived)
     atomic_write_json(args.output, audit)
     if audit["status"] != "passed":
         print(json.dumps(audit["checks"], indent=2, sort_keys=True))
+        print(f"Failed checks: {', '.join(audit['failed_checks'])}")
         print(f"M24 remains incomplete; checkpoint report: {args.output}")
         return 0 if args.allow_incomplete else 1
+    if audit["waived_checks"]:
+        print(f"NOT a release gate: waived {', '.join(audit['waived_checks'])}")
     print(f"Publication audit passed: {args.output}")
     return 0
 
