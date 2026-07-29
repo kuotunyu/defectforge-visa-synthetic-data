@@ -137,6 +137,27 @@ def test_required_path_audit_rejects_owner_local_files_in_git(tmp_path: Path) ->
     assert audit["owner_local_tracked"] == ["CLAUDE.md"]
 
 
+def test_published_skills_are_exempt_but_other_skills_are_not(tmp_path: Path) -> None:
+    """ADR-028 publishes exactly two skills; the rest stay owner-local."""
+    _git(tmp_path, "init")
+    published = [
+        ".claude/skills/defectforge/SKILL.md",
+        ".claude/skills/df-guard/SKILL.md",
+        ".claude/skills/df-guard/agents/openai.yaml",
+    ]
+    private = ".claude/skills/df-eval/SKILL.md"
+    for relative in [*published, private]:
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("skill\n", encoding="utf-8")
+        _git(tmp_path, "add", relative)
+
+    audit = audit_required_paths(tmp_path)
+
+    assert audit["owner_local_tracked"] == [private]
+    assert not any(item in audit["owner_local_tracked"] for item in published)
+
+
 def test_final_media_audit_rejects_single_frame_gif(tmp_path: Path) -> None:
     for relative in FINAL_FIGURES:
         path = tmp_path / relative

@@ -78,7 +78,16 @@ REQUIRED_PATHS = (
     "hf_cards/model/README.md",
     "assets/demo.gif",
     "assets/github-social-preview.png",
+    ".claude/skills/defectforge/SKILL.md",
+    ".claude/skills/df-guard/SKILL.md",
     *FINAL_FIGURES,
+)
+# Two agent skills are published on purpose (ADR-028): the orchestrator and the
+# anti-leakage guard. They are carved out of the blanket ".claude/" owner-local rule
+# below, and REQUIRED_PATHS above keeps them from silently disappearing again.
+PUBLIC_SKILL_PREFIXES = (
+    ".claude/skills/defectforge/",
+    ".claude/skills/df-guard/",
 )
 OWNER_LOCAL_PATHS = (
     ".claude/",
@@ -223,7 +232,8 @@ def audit_required_paths(repo: Path) -> dict[str, Any]:
     owner_local_tracked = sorted(
         item
         for item in tracked
-        if any(
+        if not any(item.startswith(prefix) for prefix in PUBLIC_SKILL_PREFIXES)
+        and any(
             item.startswith(value) if value.endswith("/") else item == value
             for value in OWNER_LOCAL_PATHS
         )

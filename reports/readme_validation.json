@@ -21,7 +21,7 @@
     "segmentation_zero_dice_max_pixel_auroc": 0.9014626386042132,
     "segmentation_zero_dice_runs": 6
   },
-  "readme_sha256": "d8309e8d23748060bc1bee748eb27c7ec9890fb7e8e39f6babe9b2954c3c0f31",
+  "readme_sha256": "4ec455a49918df2926c10dff118913acd4cc6a8999d1de4294a1d8a5247c2806",
   "schema_version": 1,
   "segmentation_sha256": "fbe4f97379e2597713c1c7255bfd6b5df7ac49c948b396469f598d34b03615aa",
   "status": "passed"

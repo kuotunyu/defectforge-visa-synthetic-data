@@ -57,6 +57,23 @@ highshot TEST ⊂ fewshot TEST                            True
 Segmentation，以及 SHA256-bound evidence。Open-source 元件對照與工程詮釋見
 [方法論文件](docs/methodology.md)。
 
+### Agent 工作流
+
+課程的 Chapter 5 把 Cosmos AnomalyGen 管線拆成一組可被自然語言驅動的 skill
+（`anomalygen`、`finetune`、`prep-testcase`、`sdg-inference`、`sdg-refine`、`eval`…）。
+本專案以 Claude Code 的專案級 skill 復刻同一層結構，每個階段各一個、各自帶前置條件、
+可判定成敗的驗證與 fail-closed 護欄。
+
+其中兩個公開在本 Repository：
+
+| Skill | 職責 |
+|---|---|
+| [`defectforge`](.claude/skills/defectforge/SKILL.md) | Orchestrator：脈絡恢復 → 階段路由 → 里程碑收尾；對應課程的 `anomalygen` |
+| [`df-guard`](.claude/skills/df-guard/SKILL.md) | 防洩漏護欄：frozen manifest checksum、test blocklist 比對、資源與身分邊界，任一失敗即阻擋該階段 |
+
+其餘 11 個階段 skill 與 owner-only 的工作記憶保留在本機。取捨理由見
+[ADR-028](docs/decisions.md#adr-028)。
+
 ## 實驗設計
 
 主實驗包含五組控制組；第 1–4 組使用完全相同的真實資料，Synthetic Data 僅能額外加入，
@@ -259,6 +276,7 @@ Configuration／CLI 契約見 [Interfaces](docs/interfaces.md)，預先註冊的
 | `docs/` | 方法論、Experiment Protocol、CLI 契約與 ADR |
 | `reports/`、`results/` | SHA256-bound Evidence、Figure 與凍結結果 |
 | `notebooks/` | Colab Notebook |
+| `.claude/skills/` | 公開的兩個 Agent Skill：Orchestrator 與防洩漏 Guard |
 
 ## 授權與引用
 

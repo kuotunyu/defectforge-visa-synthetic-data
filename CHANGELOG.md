@@ -2,14 +2,24 @@
 
 本專案採用 [Semantic Versioning](https://semver.org/) 管理公開 Release。
 
-## [未發布]
+## [1.2.2] - 2026-07-29
+
+### 結果呈現（ADR-027）
 
 - README 新增預註冊 3-seed 複跑的 mean ± std；先前只呈現 seed 42 的單次結果。
 - README 新增 Dice（threshold 0.5）與 AUPRO（threshold-free）的併列比較。
   兩者對同一批 Segmentation run 給出**相反**方向；預註冊主指標與負面結論不變。
 - 限制章節補上兩項既有但未揭露的缺口：Segmentation 完全沒有 seed 複跑，
   以及合成組的真實瑕疵曝光量遠低於 Real-only。
-- 未重跑任何訓練，`results/*.csv` 位元不變。決策見 ADR-027。
+- 未重跑任何訓練，`results/*.csv` 位元不變。
+
+### Agent 工作流（ADR-028）
+
+- 公開 `defectforge`（Orchestrator）與 `df-guard`（防洩漏護欄）兩個 Agent Skill，
+  README 新增對應段落；其餘 11 個階段 Skill 維持 owner-local。
+- 公開前清除硬編絕對路徑、指向 owner-local 檔案的失效連結與過期敘述。
+- `.claude/` 的追蹤邊界由 `.git/info/exclude` 移入版控的 `.gitignore`，
+  並在 Publication Audit 中同時強制「兩個 Skill 必須存在」與「其餘必須不被追蹤」。
 
 ## [1.2.1] - 2026-07-29
 

@@ -1025,3 +1025,60 @@ synthetic run 的 domain collapse，先換大模型或重新生成會同時改�
   Segmentation 的 3-seed 複跑。
 - `verify_readme.py` 的 block 數由 3 增為 5，`reports/readme_validation.json`
   的 `block_sha256` 隨之擴充；`verify_publish.py` 的既有綁定不需改動。
+
+---
+
+<a id="adr-028"></a>
+## ADR-028 — 公開 orchestrator 與 guard 兩個 agent skill，其餘 11 個維持 owner-local
+
+**狀態：Accepted**（2026-07-29）｜**部分取代**：M38 對 `.claude/` 的一律不追蹤
+
+### 背景
+本專案的設計目標之一是復刻課程 Chapter 5 的 agentic flow：把 SDG 管線拆成
+13 個可被自然語言驅動、各自帶驗證與護欄的 skill。M38 為了精簡公開版面，
+把整個 `.claude/` 停止追蹤，這一層在公開 repository 上因此完全消失，
+README 也沒有任何說明。
+
+但全部 13 個公開也不成立。實際稽核發現：
+
+- `defectforge/SKILL.md` 有多處過期內容（`M0–M15` 的勾選範圍、
+  「尚未建立的 skill」、`df-release` 從未實作、`Test-Path D:\sdg-data\...` 硬編路徑），
+  且連結指向多份 owner-local 文件，公開後會是 404
+- `df-guard/SKILL.md` 寫著「Keep the repository remote-free until the user creates
+  the GitHub repository」——repository 早已公開；另有一處提及 `school email`，
+  是歷史洩漏事件的殘留指涉
+- 11 個階段 skill 含大量 `D:\sdg-data\01-defectforge` 的本機指令，
+  且會隨 CLI 演進持續過期
+
+### 決策
+**公開兩個、其餘維持 owner-local。**
+
+| Skill | 公開 | 理由 |
+|---|---|---|
+| `defectforge` | ✅ | orchestrator，證明「脈絡恢復 → 階段路由 → 里程碑收尾」的結構真實存在 |
+| `df-guard` | ✅ | 防洩漏護欄，是本專案可信度的執行層，內容為可驗證的具體斷言 |
+| 其餘 11 個 `df-*` | ❌ | 含本機絕對路徑、與 CLI 高度耦合、維護成本高於展示價值 |
+
+公開前必須完成的清理（本 ADR 已一併執行）：
+1. 移除所有硬編絕對路徑，改由 `configs/paths.yaml` 解析（ADR-005）
+2. 指向 owner-local 檔案的 markdown 連結改為程式碼樣式純文字，避免 GitHub 404
+3. 修正過期敘述：里程碑範圍、`df-release` 未實作、`df-guard` 已建立、repository 已公開
+4. 移除 `school email` 字眼，改為一般性的 personal email addresses
+
+### 邊界如何強制
+- `.gitignore`（**版控內**）以 `/.claude/*` 排除全部，再負向放行兩個 skill 目錄。
+  原本這條規則放在 `.git/info/exclude`（本機專屬、不進版控），已移出並加註：
+  **父目錄一旦被排除，`.gitignore` 的負向規則就救不回來**，因此不得再放回 blanket `/.claude/`
+- `scripts/verify_publish.py` 新增 `PUBLIC_SKILL_PREFIXES`，把兩個 skill 從
+  `OWNER_LOCAL_PATHS` 的 `.claude/` 前綴中豁免；同時把兩份 `SKILL.md` 加入
+  `REQUIRED_PATHS`，避免日後又被悄悄移除
+- 單元測試同時驗證「兩個公開 skill 不被判為 owner-local」與「其他 `df-*` 仍被判為 owner-local」
+
+### 後果
+- 公開 repository 首次呈現 agentic flow 這一層，README 新增對應段落
+- 維護面積只有 2/13；其餘 skill 演進不影響公開版面
+- 若日後要再公開更多 skill，必須先做同一套清理，並追加 ADR，不得直接放行
+
+### 未採用的選項
+- **全部 13 個公開**：清理與長期維護成本高，且過期內容比不公開更扣分
+- **只在文件描述、不放檔案**：任何人都能宣稱自己有 13 個 skill，缺少可驗證的實體

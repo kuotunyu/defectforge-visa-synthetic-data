@@ -1,0 +1,4 @@
+interface:
+  display_name: "DefectForge Guard"
+  short_description: "Verify frozen splits and prevent test leakage"
+  default_prompt: "Run the DefectForge integrity and test-data leakage preflight before the next stage."

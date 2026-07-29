@@ -69,6 +69,17 @@ venv/
 dist/
 build/
 
+# --- Owner-local agent working memory ---
+# Everything under .claude/ stays on the owner's machine EXCEPT the two skills
+# published on purpose (see docs/decisions.md ADR-028): the orchestrator and the
+# anti-leakage guard. scripts/verify_publish.py enforces the same boundary and
+# will fail closed if any other owner-local path becomes tracked.
+/.claude/*
+!/.claude/skills/
+/.claude/skills/*
+!/.claude/skills/defectforge/
+!/.claude/skills/df-guard/
+
 # --- Tooling / OS ---
 .vscode/
 .idea/
