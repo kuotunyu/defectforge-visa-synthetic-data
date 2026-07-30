@@ -1,0 +1,33 @@
+{
+  "confirmatory_run_authorized_by_gate": false,
+  "control_anomalous": false,
+  "control_object": "capsules",
+  "gate_status": "stopped",
+  "metric": "macro_f1",
+  "objects": {
+    "capsules": {
+      "delta": 0.007415432767545416,
+      "metric_discriminates": true,
+      "scores": {
+        "db_current": 0.6814734561213435,
+        "db_inband": 0.6888888888888889,
+        "real_only": 0.8133333333333332
+      }
+    },
+    "pcb1": {
+      "delta": 0.0,
+      "metric_discriminates": false,
+      "scores": {
+        "db_current": 0.6944444444444444,
+        "db_inband": 0.6944444444444444,
+        "real_only": 0.6944444444444444
+      }
+    }
+  },
+  "preregistered_in": "ADR-038",
+  "primary_object": "pcb1",
+  "schema_version": 1,
+  "source": "results/v4/pilot_classification.json",
+  "status": "passed",
+  "verdict": "uninformative_primary_object"
+}
