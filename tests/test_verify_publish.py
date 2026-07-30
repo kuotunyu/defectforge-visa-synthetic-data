@@ -421,13 +421,14 @@ def _tagged_repo(tmp_path: Path, *, readme: str, tag: str | None) -> Path:
     repo.mkdir()
     (repo / "README.md").write_text(readme, encoding="utf-8")
     subprocess.run(["git", "-C", str(repo), "init", "-q"], check=True)
-    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True)
-    subprocess.run(
-        ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x"],
-        check=True,
-    )
+    # Set the identity on the repository itself: an annotated tag needs a committer too,
+    # and CI runners have no global identity configured.
+    _git(repo, "config", "user.name", EXPECTED_NAME)
+    _git(repo, "config", "user.email", EXPECTED_EMAIL)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-qm", "x")
     if tag is not None:
-        subprocess.run(["git", "-C", str(repo), "tag", "-a", tag, "-m", tag], check=True)
+        _git(repo, "tag", "-a", tag, "-m", tag)
     return repo
 
 
