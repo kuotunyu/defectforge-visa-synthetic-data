@@ -249,17 +249,23 @@ AUPRO 上升；因此在兩物件 macro 層級，兩個指標的 3-seed 平均�
 換句話說，補了 seed 之後，負面結論**變得更強**而不是更弱。完整判定過程見
 [分割複跑判定報告](reports/segmentation_replication.md)。
 
-零 Dice 本身的原因不是模型失效，而是**機率天花板**。重跑 seed 42 全部 16 個 run 的推論後
-量測到：所有零 Dice 的 run，其在整個 test set 上的最高預測機率都低於 threshold 0.5，
-因此不可能存在任何正像素——空 Mask 是**算術上必然**。這些 run 的 pixel AUROC 分布很廣，
-代表 Dice 是否退化與模型的排序能力無關。逐 run 量測值見
+零 Dice 的主因不是模型失效，而是**機率天花板**。重跑**全部 48 個 run** 的推論後量測到：
+絕大多數零 Dice 的 run 在整個 test set 上的最高預測機率都低於 threshold 0.5，
+因此不可能存在任何正像素——空 Mask 是**算術上必然**。逐 run 量測值見
 [零 Dice 診斷報告](reports/zero_dice_diagnosis.md)，由
 `scripts/diagnose_zero_dice_segmentation.py` 產生；該腳本會**先重算已發佈指標並要求相符**，
 才輸出診斷。
 
-**這份診斷只涵蓋 seed 42 的 16 個 run。** 複跑後零 Dice 的 run 總數增加（見下方 verified
-區塊），seed 43／44 的零 Dice run **尚未**做同樣的機率天花板量測，因此上述機制在那些 run
-上是**尚未驗證的推論**，不是已量測的事實。
+**但擴大到 48 個 run 之後，這個機制不再能解釋全部。** 有一個 run 確實產生了正像素，
+只是完全沒落在真實瑕疵上，Dice 因此仍為 0——那與信心校準無關，是空間定位失敗。
+[ADR-030](docs/decisions.md#adr-030) 依 seed 42 的 16 個 run 寫下「零 Dice 完全由機率天花板
+造成」，這句話在更大的樣本上**只成立於絕大多數而非全部**，修正記於
+[ADR-034](docs/decisions.md#adr-034)。確切的分類與計數見上述診斷報告，
+數字由腳本產生、不在此複述。
+
+這個更正也暴露了工具本身的缺陷：原腳本把結論寫成固定字串、只把數值填進去，
+從未驗證該主張是否成立，因此在單 seed 資料上「碰巧正確」。現在摘要改由資料推導，
+並加了以本次反例為輸入的回歸測試。
 
 本專案**不因此改換主指標，也不調校 threshold**：在 test 上挑一個讓 Dice 好看的 threshold
 等同於用 test 做模型選擇。預註冊的主結論仍以 Dice 與 Macro-F1 為準，AUPRO、threshold
@@ -313,8 +319,9 @@ non-commercial research／evaluation。
   seed 42，因此 Classification 的組間細部排序仍不應被過度解讀。
 - 3 個 seed 對 10 張瑕疵影像而言仍是很小的樣本。標準差在 `capsules` 上相當大
   （見上方 mean ± std 表），所以本專案只主張方向，不主張精確幅度。
-- **零 Dice 的機率天花板診斷只做在 seed 42 的 16 個 run 上。** seed 43／44 新增的零 Dice
-  run 沒有重跑推論，因此不宣稱同一機制已在那些 run 上獲得驗證。
+- 零 Dice 的診斷已涵蓋全部 48 個 run，但**機率天花板不是唯一成因**：其中一個 run 有正像素
+  卻完全打偏。因此「Dice 是否為 0 與模型的空間定位能力無關」這個較強的說法**不成立**
+  （[ADR-034](docs/decisions.md#adr-034)）。
 - 合成組的正樣本曝光高度偏向 Synthetic Data：`results/classification.csv` 的
   `sampled_real_bad` / `sampled_synthetic_bad` 顯示，加入 500 張合成瑕疵後，
   真實瑕疵在同一份 sampling schedule 中的曝光量遠低於 Real-only。

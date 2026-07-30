@@ -40,7 +40,7 @@
     "segmentation_zero_dice_max_pixel_auroc": 0.9066352973187357,
     "segmentation_zero_dice_runs": 23
   },
-  "readme_sha256": "7772f1084ebcfa8d6efff2db489274874f7d16eb8cc4ceb56bd6ef7caaaa9d44",
+  "readme_sha256": "d0eccfe4d5078fdab80cda55c29a1cb2ea098e4f1fd0ea333f2a00a6fc94bad5",
   "reproduction_sha256": "1a56f1381668fa1b3f756a21ecef94fe20e538587856335fe760211e7395d3f0",
   "schema_version": 1,
   "segmentation_sha256": "16ab7e5efd3fd1146bfd5d13c47fde5b3dad6fae0672a4e66a743683a20c70a9",

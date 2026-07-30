@@ -276,6 +276,13 @@ def diagnose_run(
     }
 
 
+def _seed_of(run: Mapping[str, Any]) -> str:
+    """Read the seed back out of the run name, which is the only place it is recorded."""
+    name = str(run["run_name"])
+    _, _, tail = name.rpartition("_seed")
+    return tail or "—"
+
+
 def render_markdown(payload: Mapping[str, Any]) -> str:
     lines = [
         "# 零 Dice 分割 run 診斷",
@@ -292,8 +299,11 @@ def render_markdown(payload: Mapping[str, Any]) -> str:
         "",
         "## 全部 run",
         "",
-        "| 物件 | 組別 | Dice | pixel AUROC | 最高預測機率 | ≥ threshold 的像素 | 真實瑕疵曝光佔比 |",
-        "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
+        (
+            "| 物件 | 組別 | Seed | Dice | pixel AUROC | 最高預測機率 "
+            "| ≥ threshold 的像素 | 真實瑕疵曝光佔比 |"
+        ),
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for run in payload["runs"]:
         probability = run["probability"]
@@ -301,35 +311,79 @@ def render_markdown(payload: Mapping[str, Any]) -> str:
         share_text = "—" if share is None else f"{share * 100:.1f}%"
         lines.append(
             f"| {run['object']} | {run['canonical_group']} "
+            f"| {_seed_of(run)} "
             f"| {run['published_metrics']['dice']:.4f} "
             f"| {run['published_metrics']['pixel_auroc']:.4f} "
             f"| {probability['max_probability']:.4f} "
             f"| {probability['pixels_at_or_above_threshold']:,} "
             f"| {share_text} |"
         )
+    # The claim below must be derived, never asserted. A single-seed table happened to be
+    # entirely ceiling-limited; a wider table need not be, and the report has to say so.
+    zero_runs = [
+        run for run in payload["runs"] if run["published_metrics"]["dice"] == 0.0
+    ]
+    ceiling_limited = [
+        run
+        for run in zero_runs
+        if run["probability"]["pixels_at_or_above_threshold"] == 0
+    ]
+    missed_target = [run for run in zero_runs if run not in ceiling_limited]
     ceiling = max(
-        run["probability"]["max_probability"]
-        for run in payload["runs"]
-        if run["published_metrics"]["dice"] == 0.0
+        (run["probability"]["max_probability"] for run in ceiling_limited),
+        default=0.0,
     )
     floor = min(
-        run["probability"]["max_probability"]
-        for run in payload["runs"]
-        if run["published_metrics"]["dice"] > 0.0
+        (
+            run["probability"]["max_probability"]
+            for run in payload["runs"]
+            if run["published_metrics"]["dice"] > 0.0
+        ),
+        default=0.0,
+    )
+    fully_explained = not missed_target
+    heading = (
+        "## 最高預測機率完全決定 Dice 是否退化"
+        if fully_explained
+        else "## 零 Dice 有兩種成因，機率天花板只解釋其中一種"
     )
     lines += [
         "",
-        "## 最高預測機率完全決定 Dice 是否退化",
+        heading,
         "",
         (
-            f"- 全部 {payload['zero_dice_runs']} 個零 Dice run 的最高預測機率都"
-            f"**低於** threshold（最大 `{ceiling:.4f}`）"
+            f"- {len(ceiling_limited)} / {len(zero_runs)} 個零 Dice run 連一個正像素都沒有："
+            f"最高預測機率**低於** threshold（其中最高的是 `{ceiling:.4f}`），"
+            "空 Mask 是算術上必然"
         ),
+    ]
+    if missed_target:
+        lines.append(
+            f"- 另外 {len(missed_target)} 個 run **有**正像素，但**完全沒有落在真實瑕疵上**，"
+            "因此 Dice 仍為 0。這類與機率天花板無關："
+        )
+        for run in missed_target:
+            probability = run["probability"]
+            lines.append(
+                f"  - `{run['object']} / {run['canonical_group']}`（seed {_seed_of(run)}）："
+                f"最高機率 `{probability['max_probability']:.4f}`、"
+                f"{probability['pixels_at_or_above_threshold']:,} 個正像素、"
+                f"pixel AUROC `{run['published_metrics']['pixel_auroc']:.4f}`"
+            )
+    lines += [
         f"- 全部非零 Dice run 的最高預測機率都**高於** threshold（最小 `{floor:.4f}`）",
         "",
         (
-            "也就是說：在這批 run 上，Dice 是否為 0 完全由**機率天花板**決定，"
-            "與模型排序能力（pixel AUROC）無關。"
+            (
+                "也就是說：在這批 run 上，Dice 是否為 0 完全由**機率天花板**決定，"
+                "與模型排序能力（pixel AUROC）無關。"
+            )
+            if fully_explained
+            else (
+                "也就是說：**機率天花板是主要但非唯一成因**。絕大多數零 Dice run 確實是"
+                "整張圖沒有任何像素越過 threshold，但上列 run 證明「有正像素卻完全打偏」"
+                "同樣會產生零 Dice。因此不能宣稱零 Dice 一律與模型的空間定位能力無關。"
+            )
         ),
         "",
         "## 零 Dice run 的判定",
@@ -340,7 +394,7 @@ def render_markdown(payload: Mapping[str, Any]) -> str:
             continue
         probability = run["probability"]
         lines += [
-            f"### {run['object']} / {run['canonical_group']}",
+            f"### {run['object']} / {run['canonical_group']} / seed {_seed_of(run)}",
             "",
             f"- 判定：`{run['verdict']}`",
             (

@@ -56,7 +56,7 @@
     }
   },
   "schema_version": 1,
-  "segmentation_results_sha256": "fbe4f97379e2597713c1c7255bfd6b5df7ac49c948b396469f598d34b03615aa",
+  "segmentation_results_sha256": "16ab7e5efd3fd1146bfd5d13c47fde5b3dad6fae0672a4e66a743683a20c70a9",
   "selection_is_post_evaluation_demo_only": true,
   "status": "passed"
 }

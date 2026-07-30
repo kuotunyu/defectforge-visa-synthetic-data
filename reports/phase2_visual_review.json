@@ -8,16 +8,16 @@
     "sample_masks_align_with_visible_defects": true
   },
   "method": "manual full-frame visual inspection",
-  "note": "Opened all seven final PNGs at full resolution and inspected all four deterministic GIF frames plus the live-upload Gradio result. Labels are legible and layouts are unclipped. The demo's 0.5-threshold masks are honestly empty on all four fixed frames; probability heatmaps and classifier outputs remain visible, and no samples were reselected.",
-  "reviewed_at": "2026-07-28T06:32:52.803844+00:00",
+  "note": "M40 3-seed 複跑後重新檢視全部 7 張正式圖與 demo.gif。segmentation_table.png 已重繪並補上 seed 42 anchor 標示（原標題未標 seed，放在 3-seed 表格旁會誤導）；其餘六張為 seed 42 錨點資料，數值與重建後的 segmentation.csv 一致。sample grid 的紅色 mask 疊圖仍對齊瑕疵位置。demo.gif 的 binary mask 在預註冊 threshold 0.5 下 coverage 0.00%，與 README 已揭露的限制一致。",
+  "reviewed_at": "2026-07-30T03:51:21.732910+00:00",
   "reviewed_sha256": {
-    "assets/demo.gif": "1b77f4ebcef820d2634d10563374d24b8d214186682981b2faf8314b4c3b3cef",
+    "assets/demo.gif": "5ef349467c54144db04d2dd99f03b10c952ca1faa7122ef13092388b8c852ae1",
     "reports/figures/main_comparison_table.png": "00b4d20f480b3ed23b37bb3357e6d060070ecbef82615f7c0049b6270b6c4fe0",
     "reports/figures/quality_vs_downstream.png": "9d0f85d1b58e8e0b55d4ef6960a2cad3c57feadd4d6df1c837e7719262552770",
     "reports/figures/real_scaling_curve.png": "3595771937ceef070f3e1b5a8dedbfa9b47a1a5601130524bd1e55f573c69ee6",
     "reports/figures/sample_grid_capsules.png": "45e314591a92841fb866e772c304919b03df954d2ff2eb49e4feeb22b12f1732",
     "reports/figures/sample_grid_pcb1.png": "8d88001f17b456c4c30574d645ff456474cefe581a7208c1cd4f65f08a5114e5",
-    "reports/figures/segmentation_table.png": "b3382cc8c9c1ceea50875d7ffe1bcfedec0e8d8cde71fd4468eeb9d529dcb314",
+    "reports/figures/segmentation_table.png": "05d9b6994114ac7cfc9d36ee14729fc21e6fedbe8c94131ddea1f78db7d2ffc3",
     "reports/figures/synthetic_volume_curve.png": "f33cde9e17e11e980a221f25577fe0be2f6459c21c9c73118c0877171e252efb"
   },
   "schema_version": 1,
