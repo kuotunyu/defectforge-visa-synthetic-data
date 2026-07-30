@@ -1470,3 +1470,100 @@ pixel AUROC `0.8959`，判定 `positive_pixels_never_overlap_ground_truth`。
 **教訓**：任何「全部 X 都滿足 Y」的敘述都必須由程式檢查後產生，不得預先寫成字串。
 這與 [CLAUDE.md](../CLAUDE.md) 既有的「數字只能由腳本產生」是同一條原則的延伸——
 **結論本身也算數字**。
+
+---
+
+## ADR-035 — v3 歸因 pilot 的**預註冊**：合成的殘餘落差來自放置還是外觀？
+
+**狀態：Pre-registered**（2026-07-30）｜**執行前必須先 commit 本 ADR**
+
+### 為什麼不是「繼續 M27」
+
+[ADR-026](#adr-026) 的 gate 在執行前寫死，M26 pilot **三條全部未過**
+（pcb1 AUROC `-0.0361`、capsules Macro-F1 `-0.1562`、AUROC `-0.0509`、
+兩物件 mean Macro-F1 `-0.0781`），`confirmatory_run_authorized_by_gate=false`。
+ADR-026 明文：**不得用 test 或追加 candidate 救結果；若要新假說，必須另開新的、
+先提交的實驗版本**。因此 M27 維持 `stopped`，本 ADR 是那個「新的實驗版本」。
+
+### 本次要問的問題
+
+v2 證明曝光假說**部分正確**：`domain_balanced` 讓 pcb1 完全恢復，capsules 也從 v1 的
+崩潰救回大半，但仍明顯低於 real-only。v2 沒有被設計來分辨殘餘落差的機制。
+
+**同時發現一個汙染**：現有的三個來源消融 `src_copypaste` / `src_procedural` /
+`src_diffusion` 全部是用 v1 壞掉的 sampler 跑的——`sampled_real_bad=14`、
+`sampled_synthetic_bad=769`，與 `filtered_syn` 完全相同。因此「哪個合成來源比較好」
+**從未在修正後的取樣下被問過**，現有排序不可採信。
+
+### 設計：用既有資料做二因子分解
+
+| Candidate | 瑕疵像素來源 | 放置與縫合 |
+|---|---|---|
+| `real_only` | 真實 | 真實 |
+| `db_copypaste` | **真實**（貼上真實瑕疵 crop） | 合成 |
+| `db_diffusion` | 生成 | 合成 |
+| `db_procedural` | 生成（零真實瑕疵像素） | 合成 |
+| `db_filtered` | 混合 | 合成 |
+
+除 `real_only` 外全部使用 `domain_balanced`、`real_bad_share = 0.75`。
+`0.75` **不是重新調參**：它是 v2 自己的預註冊排序選出的值，在 v3 以凍結常數進入。
+其餘（ConvNeXt-Tiny、seed 42、100 steps、optimizer、transform、frozen real-only
+validation）全部沿用，5 candidates × 2 objects = **10 個 development run**。
+
+### 執行前就固定的判定規則（看到結果後不得更改）
+
+以**每物件的 validation Macro-F1** 計算兩個懲罰量：
+
+- **放置懲罰** `P = real_only − db_copypaste`
+- **外觀懲罰** `A = db_copypaste − db_diffusion`
+
+判定：
+
+- 若 **兩個物件上都** `P > A` → 判定**放置／縫合為主因**
+- 若 **兩個物件上都** `A > P` → 判定**外觀為主因**
+- 其餘情況（含任一物件相等）→ 判定**依物件而異，無單一主因**，兩個數值都照實報告
+
+「相等」以 `math.isclose(rel_tol=1e-9, abs_tol=1e-12)` 認定。這是**浮點表示的護欄，
+不是科學門檻**：`0.8−0.6` 與 `0.6−0.4` 是同一個數卻不會 bit-equal，若用嚴格 `==`
+比較，平手分支永遠走不到，等於讓 1e-17 的表示誤差決定判定方向。
+
+**必須寫進報告的界限**：copy-paste 的瑕疵像素是真實的，但它的羽化／Poisson 縫合是合成的，
+因此 `P` 實際上綁著「放置 + 縫合」兩件事，不是純粹的放置效應。這是**兩個 bundle 的歸因**，
+不是三個乾淨因子的分解，不得在文件中被寫成後者。
+
+### Confirmatory gate（與 ADR-026 逐字相同，不因 v2 失敗而放寬）
+
+- 每物件 Macro-F1 不得比 real-only 低超過 `0.01`
+- 每物件 AUROC 不得比 real-only 低超過 `0.02`
+- 兩物件 mean Macro-F1 至少提升 `0.01`
+
+任一條失敗即記錄 `stopped`。**歸因結論成立不等於 gate 通過**——即使我們查出主因，
+只要 gate 未過就一樣不得讀 test、不得跑 3 seeds。
+
+### 內建的有效性檢查
+
+`real_only` 的設定與 v2 完全相同（`class_balanced`、`real_bad_share=0.50`、seed 42、
+100 steps）。因此它的 validation 指標**必須重現 v2 pilot 的數值**。若不相符，代表環境
+或資料發生漂移，**立即停止並回報**，不得繼續解讀其餘 candidate。
+
+### 不得發生的事
+
+- **不讀 frozen test**。development integrity guard 仍要求 test list 為空、
+  validation 全為真實 train-side holdout
+- 不重新生成任何合成資料、不改超參、不改 100-step 預算、不改 filter 門檻
+- 不因結果不好而追加 candidate 或改 `real_bad_share`
+- 不修改 [ADR-026](#adr-026) 的 gate 數值
+- v1 的 `class_balanced` 位元行為維持不變
+
+### 成本
+
+10 個 development run，各約 30–45 秒、峰值約 3.2 GiB，本機 RTX 4090 即可，
+**不需 Colab、不花錢**。
+
+### 實作註記
+
+- **不需要修改任何程式碼**：`run_v2_classifier_pilot.py` 的 candidate／gate 邏輯本來就
+  泛用，v3 只是換一份 config。因此 [interfaces.md](interfaces.md) 的 CLI 契約不變
+- runner 產生的 run name 仍帶 `m26_` 前綴（寫死在共用的 `_run_name`）。
+  **刻意不改**：改它會動到 v2 的 resume 比對邏輯，破壞既有證據的可重現性。
+  v3 的 run 以輸出目錄 `cls_v3_pilot` 區隔

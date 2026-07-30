@@ -1,0 +1,52 @@
+schema_version: 1
+status: preregistered
+purpose: >
+  Validation-only attribution pilot. Under the corrected domain_balanced sampler, split
+  the residual synthetic penalty into a placement/blending component and an appearance
+  component. Decision rules are fixed in ADR-035 before execution.
+
+base_config: configs/classifier.yaml
+objects: [pcb1, capsules]
+seed: 42
+total_steps: 100
+
+# real_bad_share is not re-tuned here. 0.75 is the value the v2 pilot's own preregistered
+# ranking selected (ADR-026), so it enters v3 as a frozen constant rather than a free
+# parameter. real_only keeps v2's exact treatment so its numbers must reproduce.
+candidates:
+  - name: real_only
+    group: real_only
+    sampler_strategy: class_balanced
+    real_bad_share: 0.50
+  - name: db_copypaste
+    group: src_copypaste
+    sampler_strategy: domain_balanced
+    real_bad_share: 0.75
+  - name: db_procedural
+    group: src_procedural
+    sampler_strategy: domain_balanced
+    real_bad_share: 0.75
+  - name: db_diffusion
+    group: src_diffusion
+    sampler_strategy: domain_balanced
+    real_bad_share: 0.75
+  - name: db_filtered
+    group: filtered_syn
+    sampler_strategy: domain_balanced
+    real_bad_share: 0.75
+
+selection:
+  candidates: [db_copypaste, db_procedural, db_diffusion, db_filtered]
+  primary_metric: macro_f1
+  secondary_metric: auroc
+
+# Identical thresholds to ADR-026. They are not loosened because v2 failed against them.
+gate:
+  per_object_macro_f1_tolerance: 0.01
+  per_object_auroc_tolerance: 0.02
+  mean_macro_f1_min_gain: 0.01
+  require_both_objects_noninferior: true
+
+output:
+  run_subdirectory: cls_v3_pilot
+  result: results/v3/pilot_classification.json
