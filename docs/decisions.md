@@ -1351,3 +1351,73 @@ mean±std、一半沒有，而且會招致「看到結果才選複跑對象」�
 `physical_runs == 16` / `logical_rows == 18` 硬編值，以及 `verify_readme.py` 的
 「18 列且 seed 必須是 42」驗證，**都必須同步放寬到 3 seeds**。
 現在不改，因為改了會讓目前的證據鏈立刻失效。
+
+---
+
+## ADR-033 — 分割 3-seed 複跑的判定結果：兩條規則都執行，AUPRO 的提升未通過複跑
+
+**狀態：Accepted**（2026-07-30）｜承接 [ADR-032](#adr-032) 的預註冊，**規則未作任何修改**
+
+### 執行事實
+
+| 項目 | 值 |
+|---|---|
+| 新增 run | 每物件 24 個（8 組 × 3 seeds），兩物件共 48 個實跑 |
+| Runtime | Colab L4 22.0 GiB |
+| 耗時 | pcb1 125.0 分、capsules 115.8 分；平均 312.6／289.4 秒每 run |
+| Compute units | 執行前 363.70 → 執行後 356.94，**共 6.76 CU** |
+| `results/segmentation.csv` | 由 M20 聚合器從 raw `training_report.json` 重建，**54 列**（48 實跑 ＋ 6 列逐 seed `all_mixed` alias） |
+
+Drive 上沒有既有 `runs/` 可跳過，因此 seed 42 也被重跑，而非 ADR-032 預期的 16 個新 run。
+
+### 判定結果（規則見 ADR-032，此處只記錄輸出）
+
+**規則 1 — Dice／AUPRO 方向矛盾：判定為真實現象。**
+`pcb1` 在 3 個 seed 中有 2 個（42、44）符號相反，達到預註冊門檻；`capsules` 只有 1 個。
+
+**規則 2 — `capsules/std_aug` 崩潰：判定為系統性。**
+Dice 在 seed 42 與 44 為 `0.0000`，達到 ≥2 個的門檻。因此 [ADR-031](#adr-031) 的主張
+**維持不變，不予撤回**。
+
+判定由 `scripts/decide_segmentation_replication.py` 產生，過程見
+`reports/segmentation_replication.md`。
+
+### 複跑推翻的一件事：seed 42 的 AUPRO 提升
+
+[ADR-027](#adr-027) 依 seed 42 記載「`filtered_syn` 相對 `real_only` 的兩物件平均 AUPRO
+為正、與 Dice 方向相反」。補上 seed 43、44 之後，**這個正向差異沒有重現**：
+
+| 兩物件 macro Δ（`filtered_syn − real_only`） | seed 42 | 3-seed mean ± std |
+|---|---:|---:|
+| Dice | `-0.2264` | `-0.3296 ± 0.0903` |
+| AUPRO | `+0.1046` | `-0.1224 ± 0.1976` |
+
+`capsules` 在 seed 43、44 上 Dice 與 AUPRO **同時**大幅退步。因此在 macro 層級，兩個指標
+的 3-seed 平均**方向一致、都是負的**；預註冊規則判定為真實的方向矛盾只存在於 `pcb1`。
+
+**這使負面結論變強而非變弱。** 本 ADR 明確記載這一點，以免日後只引用 ADR-027 的
+seed-42 敘述而得到過度樂觀的印象。ADR-027 依「只追加不改寫」的規則保留原文。
+
+### 意外取得的重現性證據
+
+seed 42 的 16 個實跑在不同機器、不同時間重跑後，**每個 `model.safetensors` 的 SHA256
+與已發佈值逐一相同**，四項指標最大絕對差皆為 `0.00000000`。比對基準
+`reports/segmentation_seed42_baseline.csv` 是複跑**之前**就已 commit 的表格，
+由 `scripts/verify_seed42_reproduction.py` 驗證，不是事後挑選的數字。
+
+### 隨判定一起放寬的硬編值（ADR-032「資料回來之後才做」的項目）
+
+| 位置 | 由 | 改為 |
+|---|---|---|
+| `aggregate_segmentation.py` | 18 列／16 實跑、seed 42 硬編 | `LOGICAL_GROUPS × OBJECTS × SEEDS`，新增 `--seed` |
+| `verify_publish.py` | `physical_runs == 16`、`logical_rows == 18` | `48` / `54`，並要求 `seeds == [42, 43, 44]` |
+| `verify_readme.py` | 「18 列且 seed 必須是 42」 | 每組每物件必須恰有 3 個 seed；主表改以錨點取列 |
+| `build_phase2_figures.py` | 隱含單列 | 明確取 seed 42，圖標題加註錨點 |
+| `demo_gradio.py` | 要求全表 seed 42 | 改為在 54 列中取 seed 42 子集；出貨 checkpoint 不變 |
+
+### 仍然沒做的事
+
+- seed 43／44 新增的零 Dice run **沒有**重跑推論，因此
+  [ADR-030](#adr-030) 的機率天花板機制在那些 run 上是尚未驗證的推論。
+  README 的限制段落已明載
+- Classification 仍只有兩組達到 3 seed，不在本次範圍

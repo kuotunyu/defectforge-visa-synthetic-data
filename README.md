@@ -132,8 +132,8 @@ Classification 與 Segmentation 的獨立 validator。所有 Figure 也從相同
 <!-- END VERIFIED CLASSIFICATION_SEED_VARIANCE -->
 
 已篩選 Synthetic 組的 seed 間標準差比 Real-only 大一個數量級以上。這個變異度本身就說明：
-在這個資料規模下，單一 seed 的細部差異不足以支撐結論。其餘組別只有 seed 42，因此不在表內；
-Segmentation 目前完全沒有 seed 複跑，這一點列在下方「限制與誠實揭露」。
+在這個資料規模下，單一 seed 的細部差異不足以支撐結論。其餘 Classification 組別只有
+seed 42，因此不在表內。Segmentation 的 3-seed 複跑見下一節。
 
 ### 瑕疵區域分割（Segmentation）
 
@@ -162,9 +162,53 @@ Segmentation 目前完全沒有 seed 複跑，這一點列在下方「限制與�
 
 ![九個 Segmentation 邏輯組別](reports/figures/segmentation_table.png)
 
+#### 預註冊 3-seed 複跑的 mean ± std
+
+[ADR-032](docs/decisions.md#adr-032) 在**執行前**決定把**全部 8 個 formal group**都補到
+3 個 seed（42／43／44），而不是只補其中兩組——這樣就沒有任何一組缺誤差棒，也不會出現
+「看到結果才挑複跑對象」的疑慮。上表為 seed 42 錨點，下表是同一批組別的 seed 變異：
+
+<!-- BEGIN VERIFIED SEGMENTATION_SEED_VARIANCE -->
+| 物件 | 訓練組別 | Seeds | Dice（mean ± std） | AUPRO（mean ± std） |
+| --- | --- | --- | --- | --- |
+| pcb1 | Real-only（10 張） | 3 | 0.3300 ± 0.0489 | 0.5834 ± 0.0168 |
+| pcb1 | + Standard Augmentation | 3 | 0.4103 ± 0.0789 | 0.6067 ± 0.0308 |
+| pcb1 | + 未篩選 Synthetic Data | 3 | 0.0830 ± 0.1438 | 0.5783 ± 0.0508 |
+| pcb1 | + 已篩選 Synthetic Data | 3 | 0.0438 ± 0.0381 | 0.6600 ± 0.0993 |
+| pcb1 | Full-real（60 張） | 3 | 0.6754 ± 0.0193 | 0.7022 ± 0.1439 |
+| pcb1 | 僅 Procedural | 3 | 0.1543 ± 0.1190 | 0.5790 ± 0.0462 |
+| pcb1 | 僅 Copy-paste | 3 | 0.0000 ± 0.0000 | 0.4906 ± 0.0550 |
+| pcb1 | 僅 Diffusion | 3 | 0.0000 ± 0.0000 | 0.4711 ± 0.0829 |
+| pcb1 | All-mixed（與已篩選 Synthetic Data 共用） | 3 | 0.0438 ± 0.0381 | 0.6600 ± 0.0993 |
+| capsules | Real-only（10 張） | 3 | 0.5253 ± 0.0693 | 0.7965 ± 0.0520 |
+| capsules | + Standard Augmentation | 3 | 0.1404 ± 0.2432 | 0.6509 ± 0.1413 |
+| capsules | + 未篩選 Synthetic Data | 3 | 0.0000 ± 0.0000 | 0.2405 ± 0.1169 |
+| capsules | + 已篩選 Synthetic Data | 3 | 0.1523 ± 0.2639 | 0.4751 ± 0.3834 |
+| capsules | Full-real（60 張） | 3 | 0.6722 ± 0.0389 | 0.9417 ± 0.0252 |
+| capsules | 僅 Procedural | 3 | 0.0000 ± 0.0000 | 0.2685 ± 0.1015 |
+| capsules | 僅 Copy-paste | 3 | 0.3895 ± 0.3383 | 0.9124 ± 0.0463 |
+| capsules | 僅 Diffusion | 3 | 0.0000 ± 0.0000 | 0.2569 ± 0.0358 |
+| capsules | All-mixed（與已篩選 Synthetic Data 共用） | 3 | 0.1523 ± 0.2639 | 0.4751 ± 0.3834 |
+<!-- END VERIFIED SEGMENTATION_SEED_VARIANCE -->
+
+#### 跨機器重現
+
+複跑時 Drive 上沒有先前的 `runs/` 樹可跳過，於是 seed 42 在**另一台 Colab 機器、
+另一個時間**被完整重跑了一次。這個意外是免費的重現性證據，因此加以驗證而非丟棄：
+
+<!-- BEGIN VERIFIED SEGMENTATION_REPRODUCTION -->
+- 重新執行 seed 42 的實跑 run：**16** 個（2 個物件 × 8 組）。
+- `model.safetensors` SHA256 與已發佈值相同者：**16 / 16**。判定：**逐 bit 相同**。
+- 四項指標的最大絕對差：dice `0.00000000`、miou `0.00000000`、pixel_auroc `0.00000000`、aupro `0.00000000`。
+- 基準是複跑前已發佈的表格 `reports/segmentation_seed42_baseline.csv`；比對由 `scripts/verify_seed42_reproduction.py` 執行，逐 run 結果見[重現檢查報告](reports/seed42_reproduction.md)。
+<!-- END VERIFIED SEGMENTATION_REPRODUCTION -->
+
+比對的基準是複跑**之前**就已 commit 的表格，不是事後挑選的數字。
+
 #### Dice 與 AUPRO 的方向不一致
 
-Dice 依賴固定 threshold 0.5，AUPRO 不依賴 threshold。兩者對同一批 run 給出相反的方向：
+Dice 依賴固定 threshold 0.5，AUPRO 不依賴 threshold。在 seed 42 上，兩者對同一批 run
+給出相反的方向：
 
 <!-- BEGIN VERIFIED SEGMENTATION_THRESHOLD -->
 | 物件 | 訓練組別 | Dice（threshold 0.5） | AUPRO（不依賴 threshold） | Dice Δ vs Real-only | AUPRO Δ vs Real-only |
@@ -181,13 +225,41 @@ Dice 依賴固定 threshold 0.5，AUPRO 不依賴 threshold。兩者對同一批
 | capsules | Full-real（60 張） | 0.6331 | 0.9591 | +0.0373 | +0.1103 |
 <!-- END VERIFIED SEGMENTATION_THRESHOLD -->
 
-原因不是模型失效，而是**機率天花板**。重跑全部 run 的推論後量測到：所有零 Dice 的 run，
-其在整個 test set 上的最高預測機率都低於 threshold 0.5，因此不可能存在任何正像素——
-空 Mask 是**算術上必然**。這些 run 的 pixel AUROC 分布很廣，代表 Dice 是否退化
-與模型的排序能力無關。逐 run 量測值見
+##### 複跑後的判定：AUPRO 的提升沒有重現
+
+複跑改變了這個結論的一半。ADR-032 的兩條規則在執行前就寫死，判定結果如下：
+
+<!-- BEGIN VERIFIED SEGMENTATION_REPLICATION -->
+| 物件 | Dice／AUPRO 符號相反的 seed | Dice Δ（mean ± std） | AUPRO Δ（mean ± std） | 達預註冊門檻 |
+| --- | --- | --- | --- | --- |
+| pcb1 | 42, 44 | -0.2862 ± 0.0250 | +0.0766 ± 0.0878 | 是 |
+| capsules | 42 | -0.3730 ± 0.2055 | -0.3215 ± 0.3357 | 否 |
+
+- 規則 1（方向矛盾）判定：**真實現象**。門檻是「至少一個物件上、3 個 seed 中 ≥2 個符號相反」，達標物件：pcb1。
+- 規則 2（`capsules/std_aug` 崩潰）判定：**系統性**。Dice 為零的 seed：42、44。因此 ADR-031 的主張維持不變。
+- 兩條規則都在 [ADR-032](docs/decisions.md#adr-032) 於**複跑執行前**寫死，看到結果後未作任何修改。
+<!-- END VERIFIED SEGMENTATION_REPLICATION -->
+
+必須明講的是：**seed 42 上「AUPRO 顯示合成資料有幫助」這件事沒有通過複跑。**
+`capsules` 在 seed 43 與 44 上 Dice 與 AUPRO **同時**大幅退步，只有 seed 42 出現
+AUPRO 上升；因此在兩物件 macro 層級，兩個指標的 3-seed 平均其實**方向一致、都是負的**
+（確切數值見下方「限制與誠實揭露」的 verified 區塊）。預註冊規則判定為真實的方向矛盾
+只存在於 `pcb1` 這一個物件上。
+
+換句話說，補了 seed 之後，負面結論**變得更強**而不是更弱。完整判定過程見
+[分割複跑判定報告](reports/segmentation_replication.md)。
+
+零 Dice 本身的原因不是模型失效，而是**機率天花板**。重跑 seed 42 全部 16 個 run 的推論後
+量測到：所有零 Dice 的 run，其在整個 test set 上的最高預測機率都低於 threshold 0.5，
+因此不可能存在任何正像素——空 Mask 是**算術上必然**。這些 run 的 pixel AUROC 分布很廣，
+代表 Dice 是否退化與模型的排序能力無關。逐 run 量測值見
 [零 Dice 診斷報告](reports/zero_dice_diagnosis.md)，由
 `scripts/diagnose_zero_dice_segmentation.py` 產生；該腳本會**先重算已發佈指標並要求相符**，
 才輸出診斷。
+
+**這份診斷只涵蓋 seed 42 的 16 個 run。** 複跑後零 Dice 的 run 總數增加（見下方 verified
+區塊），seed 43／44 的零 Dice run **尚未**做同樣的機率天花板量測，因此上述機制在那些 run
+上是**尚未驗證的推論**，不是已量測的事實。
 
 本專案**不因此改換主指標，也不調校 threshold**：在 test 上挑一個讓 Dice 好看的 threshold
 等同於用 test 做模型選擇。預註冊的主結論仍以 Dice 與 Macro-F1 為準，AUPRO、threshold
@@ -226,17 +298,23 @@ non-commercial research／evaluation。
 
 <!-- BEGIN VERIFIED RESULT_OUTCOME -->
 - Classification：已篩選 Synthetic Data 相對 Real-only 的平均 Macro-F1 差異為 `-0.2286`。
-- Segmentation：已篩選 Synthetic Data 相對 Real-only 的平均 Dice 差異為 `-0.2264`。
+- Segmentation：已篩選 Synthetic Data 相對 Real-only 的平均 Dice 差異為 `-0.2264`（seed 42 錨點）。
 - Classification 負面結果：**是——已篩選 Synthetic Data 未提升平均 Macro-F1。**
 - Segmentation 負面結果：**是——已篩選 Synthetic Data 未提升平均 Dice。**
-- Segmentation（threshold-free）：同一組 run 的平均 AUPRO 差異為 `+0.1046`，與 Dice **方向相反**。
-- 16 個實跑的 Segmentation run 中有 6 個在固定 threshold 0.5 下 Dice = 0（整張預測為背景），其中 3 個的 pixel AUROC 仍達 0.80 以上（最高 `0.9015`）。
+- Segmentation（threshold-free）：seed 42 的平均 AUPRO 差異為 `+0.1046`，與 Dice **方向相反**。
+- **複跑後這個 AUPRO 提升沒有重現。**3 個 seed（42, 43, 44）的兩物件平均：Dice `-0.3296 ± 0.0903`、AUPRO `-0.1224 ± 0.1976`，兩者方向一致。seed 42 單獨呈現的 AUPRO 正向差異是該 seed 的特例。
+- 依 ADR-032 **執行前寫死**的規則判定：Dice／AUPRO 方向矛盾為**真實現象**（達標物件：pcb1）；`capsules/std_aug` 的 Dice 崩潰為**系統性**。
+- 48 個實跑的 Segmentation run 中有 23 個在固定 threshold 0.5 下 Dice = 0（整張預測為背景），其中 12 個的 pixel AUROC 仍達 0.80 以上（最高 `0.9066`）。
 - 主結論仍以預註冊的 Macro-F1 與 Dice 為準；AUPRO 與 threshold 敏感度是**併列揭露**，不是事後換指標。
 <!-- END VERIFIED RESULT_OUTCOME -->
 
-- **Segmentation 完全沒有 seed 複跑**（全部 seed 42）。Classification 只有 Real-only 與
-  已篩選 Synthetic 兩組達到預註冊的 3 seed。因此 Dice 與 AUPRO 的方向矛盾**無法**
-  用現有證據判定孰是孰非；要解決必須補跑 Segmentation 的 3-seed 複跑。
+- Segmentation 的 8 個 formal group 已全部補到 3 個 seed（[ADR-032](docs/decisions.md#adr-032)）。
+  **Classification 仍只有 Real-only 與已篩選 Synthetic 兩組達到 3 seed**，其餘組別只有
+  seed 42，因此 Classification 的組間細部排序仍不應被過度解讀。
+- 3 個 seed 對 10 張瑕疵影像而言仍是很小的樣本。標準差在 `capsules` 上相當大
+  （見上方 mean ± std 表），所以本專案只主張方向，不主張精確幅度。
+- **零 Dice 的機率天花板診斷只做在 seed 42 的 16 個 run 上。** seed 43／44 新增的零 Dice
+  run 沒有重跑推論，因此不宣稱同一機制已在那些 run 上獲得驗證。
 - 合成組的正樣本曝光高度偏向 Synthetic Data：`results/classification.csv` 的
   `sampled_real_bad` / `sampled_synthetic_bad` 顯示，加入 500 張合成瑕疵後，
   真實瑕疵在同一份 sampling schedule 中的曝光量遠低於 Real-only。

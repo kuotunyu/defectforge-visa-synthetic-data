@@ -195,24 +195,33 @@ def test_segmenter_selection_ignores_logical_alias(tmp_path: Path) -> None:
     rows = []
     for group in groups:
         for object_name in ("pcb1", "capsules"):
-            canonical = "filtered_syn" if group == "all_mixed" else group
-            physical = group != "all_mixed"
-            run_group = canonical
-            rows.append(
-                {
-                    "run_name": f"m18_{run_group}_{object_name}_seed42",
-                    "run_signature": f"signature-{run_group}-{object_name}",
-                    "logical_group": group,
-                    "canonical_group": canonical,
-                    "physical_run": str(physical).lower(),
-                    "object": object_name,
-                    "seed": "42",
-                    "dice": "0.95" if group == "all_mixed" else (
-                        "0.8" if group == "std_aug" and object_name == "pcb1" else "0.5"
-                    ),
-                    "aupro": "0.7",
-                }
-            )
+            # ADR-032 replicated every group across three seeds; the demo must still bind
+            # to the seed-42 anchor, so give the other seeds a strictly better Dice.
+            for seed in (42, 43, 44):
+                canonical = "filtered_syn" if group == "all_mixed" else group
+                physical = group != "all_mixed"
+                run_group = canonical
+                if seed != 42:
+                    dice = "0.99"
+                elif group == "all_mixed":
+                    dice = "0.95"
+                elif group == "std_aug" and object_name == "pcb1":
+                    dice = "0.8"
+                else:
+                    dice = "0.5"
+                rows.append(
+                    {
+                        "run_name": f"m18_{run_group}_{object_name}_seed{seed}",
+                        "run_signature": f"signature-{run_group}-{object_name}-{seed}",
+                        "logical_group": group,
+                        "canonical_group": canonical,
+                        "physical_run": str(physical).lower(),
+                        "object": object_name,
+                        "seed": str(seed),
+                        "dice": dice,
+                        "aupro": "0.7",
+                    }
+                )
     results = tmp_path / "segmentation.csv"
     _write_csv(results, rows)
     run_name = "m18_std_aug_pcb1_seed42"
@@ -224,7 +233,7 @@ def test_segmenter_selection_ignores_logical_alias(tmp_path: Path) -> None:
             "object": "pcb1",
             "seed": 42,
             "run_name": run_name,
-            "run_signature": "signature-std_aug-pcb1",
+            "run_signature": "signature-std_aug-pcb1-42",
             "canonical_group": "std_aug",
             "metrics": {"dice": 0.8, "aupro": 0.7},
         },

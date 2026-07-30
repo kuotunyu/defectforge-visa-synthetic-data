@@ -424,6 +424,7 @@ scripts/validate_segmenter_runs.py
   --run-root PATH
   --object {pcb1,capsules}
   [--reload]
+  [--seed INT]              # 可重複；預設只有 42，既有單 seed 證據不受影響
   --output PATH
 ```
 package 產一份 `defectforge_m18_source.zip` 與每物件一份
@@ -439,7 +440,8 @@ canonical group，並下載 `m18_seg_results_<object>.zip`。獨立 validator �
 ```text
 --paths configs/paths.yaml
 --config configs/segmenter.yaml
---results-root results/colab/segmentation
+--results-root results/colab/segmentation/3seed
+[--seed INT]              # 可重複；預設 42 43 44（ADR-032），且必須含錨點 42
 --output results/segmentation.csv
 --report reports/segmentation_results.md
 --validation-out reports/segmentation_validation.json
@@ -447,16 +449,20 @@ canonical group，並下載 `m18_seg_results_<object>.zip`。獨立 validator �
 
 `--results-root` 先必須含兩個未改名、未手動解壓的
 `m18_seg_results_{pcb1,capsules}.zip`。聚合器會在寫任何 M20 產物前，防 Zip Slip、
-symlink、Windows ADS、大小／成員數異常與 CRC 錯誤，要求每包恰有 43 個白名單檔案，
-核對 notebook validator 與八組 timings，再原子匯入到 `{object}/runs/`。重跑時以
+symlink、Windows ADS、大小／成員數異常與 CRC 錯誤，要求每包恰有
+`3 + 5 × 8 × len(seeds)` 個白名單檔案（3 seeds＝123 個），核對 notebook validator 的
+seed 清單與逐 run timings，再原子匯入到 `{object}/runs/`。重跑時以
 `import_manifest.json` 綁定原 ZIP SHA256；ZIP 改變就 fail closed。其後仍由
 `validate_segmenter_runs.py` 從 raw manifests／reports／SafeTensors 重新驗證，
 不採信 notebook 產生的 per-object CSV。
-先對兩物件各自的八個 raw run 呼叫獨立 M18 validator，再只從
+先對兩物件各自的 raw run 呼叫獨立 M18 validator，再只從
 `training_report.json` + `data_manifest.json` 重建 long-format CSV 與 Markdown；
-Notebook 畫面和每個 Colab runtime 自己 append 的暫存 CSV 都不當數據源。輸出包含
-16 列 `physical_run=true` 與兩列 `all_mixed` 邏輯 alias（共 18 列），並保存 16 個
-raw report SHA256。
+Notebook 畫面和每個 Colab runtime 自己 append 的暫存 CSV 都不當數據源。
+**每個 (group, object, seed) 一列**：48 列 `physical_run=true` 加上逐 seed 的
+`all_mixed` 邏輯 alias 6 列（共 54 列），並保存 48 個 raw report SHA256。
+Markdown 報表同時給 seed 42 錨點表與 mean ± std 表。
+
+> 舊的單 seed 結果包留在 `results/colab/segmentation/`，不刪除、也不再被聚合器讀取。
 
 ### M21 `scripts/build_phase2_figures.py`
 ```text
@@ -516,13 +522,43 @@ validation 保存兩份 CSV、selection、GIF、test image 與輸出 array SHA25
 |---|---|
 | `scripts/verify_filter_report.py` | 從 `metadata.jsonl` 重算漏斗表，與 `reports/filter_report.md` 逐格比對 |
 | `scripts/verify_generation_quality.py` | 核對 M14 CSV／Markdown／validation、sanity gate、圖與 feature-cache SHA256 |
-| `scripts/verify_readme.py` | 從 `results/*.csv` 重算 README 每張表的數字並比對 |
+| `scripts/verify_readme.py` | 從 `results/*.csv` 與 `--reproduction reports/seed42_reproduction.json` 重算 README 每個 verified 區塊並比對；分割表以 seed 42 為錨點，另出 mean ± std、跨機器重現與 ADR-032 判定三個區塊 |
 | `scripts/verify_splits.py` | 重跑 [ADR-007](decisions.md#adr-007) 的四項斷言 |
 | `scripts/verify_publish.py` | 唯讀稽核：里程碑、README、raw-hash evidence、正式圖/GIF、24 小時內上游授權、HF dry-run、必備檔、公開版面邊界（2 個 skill + CI workflow 必須存在，其餘 owner-local 必須不被追蹤）、token／個人路徑、檔案大小、Git 身分與 co-author trailer。CI 版加 `--allow-stale-license-check`（[ADR-029](decisions.md#adr-029)），時效如實回報但不 gating；**Release 一律不加 flag** |
 | `scripts/build_release_acceptance.py` | M24 一頁驗收報告：除自身檔案外任一 local gate 未過即拒寫；只記通過項、修正項、殘留風險，不發佈 |
 | `scripts/record_phase2_visual_review.py` | M21/M22 人工目視 evidence：所有正式 PNG/GIF 可解碼且實際逐張開啟後，需明確 confirmation 與觀察 note，保存目前檔案 SHA256 |
 | `scripts/package_hf_release.py` | M24 本機封裝：預設只讀 inventory；`--build` 才原子建立 D 槽 HF dataset／model bundles，不連網 |
 | `scripts/upload_hf.py` | **預設 `--dry-run`，上傳要顯式加 `--confirm`** |
+
+### 複跑判定與重現性腳本
+
+#### `scripts/decide_segmentation_replication.py`
+```
+--segmentation results/segmentation.csv
+--output PATH              # 預設 reports/segmentation_replication.json
+--report PATH              # 預設 reports/segmentation_replication.md
+```
+只執行 [ADR-032](decisions.md#adr-032) 在**複跑開始前**寫死的兩條規則，看到結果後不得修改：
+
+1. **Dice／AUPRO 方向矛盾**：逐 seed 計算 `filtered_syn − real_only` 的兩個差值；
+   若**至少一個物件**上符號相反出現在 3 個 seed 中的 ≥2 個 → `real_phenomenon`，
+   否則 `single_seed_artefact`。差值為 0 視為平手，**不**算符號相反
+2. **`capsules/std_aug` 崩潰**：Dice 在 ≥2 個 seed 為 `0.0000` → `systematic`；
+   僅 1 個為 0 → `seed_noise`，並在報告中明載 ADR-031 的主張撤回
+
+CSV 的 seed 集合與 `SEEDS` 不符即 fail closed，避免用不完整的表下判定。
+
+#### `scripts/verify_seed42_reproduction.py`
+```
+--baseline reports/segmentation_seed42_baseline.csv
+--segmentation results/segmentation.csv
+--output PATH              # 預設 reports/seed42_reproduction.json
+--report PATH              # 預設 reports/seed42_reproduction.md
+```
+複跑時 Drive 上沒有既有 `runs/` 可跳過，seed 42 因此在另一台機器被完整重跑。本腳本把
+目前表的 seed-42 實跑列與**複跑前已 commit** 的 `segmentation_seed42_baseline.csv`
+逐 run 比對 `model_sha256`、`run_signature` 與四項指標，輸出 `bit_identical` 與各指標
+最大絕對差。**不相符時如實輸出差異，不視為錯誤、也不改寫任一邊。**
 
 ### 診斷用腳本
 

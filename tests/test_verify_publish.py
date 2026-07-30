@@ -313,8 +313,9 @@ def test_evidence_audit_binds_reports_to_current_artifacts(tmp_path: Path) -> No
     )
     reports["reports/segmentation_validation.json"].update(
         {
-            "physical_runs": 16,
-            "logical_rows": 18,
+            "physical_runs": 48,
+            "logical_rows": 54,
+            "seeds": [42, 43, 44],
             "source": "raw_training_report_json",
             "segmentation_csv_sha256": sha256_file(tmp_path / "results/segmentation.csv"),
             "report_sha256": sha256_file(tmp_path / "reports/segmentation_results.md"),

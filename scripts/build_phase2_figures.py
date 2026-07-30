@@ -22,6 +22,11 @@ import matplotlib.pyplot as plt
 
 OBJECTS = ("pcb1", "capsules")
 OBJECT_COLORS = {"pcb1": "#0b7285", "capsules": "#e8590c"}
+# ADR-032 replicated segmentation across three seeds. The preregistered figures stay
+# anchored to seed 42; the spread is reported in the README, not redrawn here. Kept as a
+# literal so this module needs no project imports.
+SEGMENTATION_SEEDS = (42, 43, 44)
+ANCHOR_SEED = 42
 MAIN_GROUPS = (
     "real_only",
     "std_aug",
@@ -102,7 +107,9 @@ def segmentation_value(
         [
             item
             for item in rows
-            if item["object"] == object_name and item["logical_group"] == group_name
+            if item["object"] == object_name
+            and item["logical_group"] == group_name
+            and int(item["seed"]) == ANCHOR_SEED
         ],
         f"Missing M20 row {object_name}/{group_name}",
     )
@@ -150,18 +157,19 @@ def validate_figure_inputs(
         "Classification result CSV must contain 38 unique formal rows",
     )
     expected_segmentation = {
-        (group_name, object_name)
+        (group_name, object_name, seed)
         for group_name in SEGMENTATION_GROUPS
         for object_name in OBJECTS
+        for seed in SEGMENTATION_SEEDS
     }
     segmentation_keys = [
-        (row["logical_group"], row["object"]) for row in segmentation_rows
+        (row["logical_group"], row["object"], int(row["seed"])) for row in segmentation_rows
     ]
     require(
-        len(segmentation_keys) == 18
-        and len(set(segmentation_keys)) == 18
+        len(segmentation_keys) == len(expected_segmentation)
+        and len(set(segmentation_keys)) == len(expected_segmentation)
         and set(segmentation_keys) == expected_segmentation,
-        "Segmentation result CSV must contain 18 exact logical rows",
+        f"Segmentation result CSV must contain {len(expected_segmentation)} exact logical rows",
     )
     required_macro_f1_groups = tuple(
         dict.fromkeys((*MAIN_GROUPS, "real_20", "syn_125", "syn_250"))
@@ -450,7 +458,10 @@ def plot_segmentation_table(
         ),
         row_labels=SEGMENTATION_GROUPS,
         cells=cells,
-        title="Nine logical segmentation groups (all_mixed cites filtered_syn)",
+        title=(
+            f"Nine logical segmentation groups, seed {ANCHOR_SEED} anchor "
+            "(all_mixed cites filtered_syn)"
+        ),
         path=path,
         width=11.0,
     )

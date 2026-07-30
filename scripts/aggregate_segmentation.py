@@ -28,6 +28,11 @@ from src.common.integrity import write_text_lf
 from src.common.paths import load_paths
 
 LOGICAL_GROUPS = (*FORMAL_GROUPS, "all_mixed")
+# ADR-032 pre-registered a three-seed replication of all eight formal groups. Seed 42 is
+# the pre-registered anchor; 43 and 44 give every group error bars, so no group could be
+# chosen for replication after its result was known.
+SEEDS = (42, 43, 44)
+ANCHOR_SEED = 42
 CSV_COLUMNS = (
     "logical_group",
     "canonical_group",
@@ -79,14 +84,22 @@ def load_mapping(path: Path) -> dict[str, Any]:
     return value
 
 
-def _expected_archive_files(object_name: str) -> set[str]:
+def _run_names(object_name: str, seeds: Sequence[int]) -> tuple[str, ...]:
+    return tuple(
+        f"m18_{group_name}_{object_name}_seed{seed}"
+        for seed in seeds
+        for group_name in FORMAL_GROUPS
+    )
+
+
+def _expected_archive_files(object_name: str, seeds: Sequence[int] = SEEDS) -> set[str]:
     expected = {
         f"m18_{object_name}_validation.json",
         f"segmentation_{object_name}.csv",
         "timings.json",
     }
-    for group_name in FORMAL_GROUPS:
-        run = f"runs/m18_{group_name}_{object_name}_seed42"
+    for run_name in _run_names(object_name, seeds):
+        run = f"runs/{run_name}"
         expected.update(
             {
                 f"{run}/training_report.json",
@@ -115,8 +128,9 @@ def _inspect_result_archive(
     archive_path: Path,
     *,
     object_name: str,
+    seeds: Sequence[int] = SEEDS,
 ) -> tuple[list[zipfile.ZipInfo], int]:
-    expected = _expected_archive_files(object_name)
+    expected = _expected_archive_files(object_name, seeds)
     try:
         with zipfile.ZipFile(archive_path) as archive:
             members = archive.infolist()
@@ -156,11 +170,21 @@ def _inspect_result_archive(
         ) from error
 
 
-def _verify_returned_summary(root: Path, *, object_name: str) -> None:
+def _verify_returned_summary(
+    root: Path,
+    *,
+    object_name: str,
+    seeds: Sequence[int] = SEEDS,
+) -> None:
+    run_names = _run_names(object_name, seeds)
     validation = load_mapping(root / f"m18_{object_name}_validation.json")
     require(validation.get("status") == "passed", "Returned Colab validator did not pass")
     require(validation.get("object") == object_name, "Returned Colab object changed")
-    require(validation.get("runs") == len(FORMAL_GROUPS), "Returned Colab run count changed")
+    require(validation.get("runs") == len(run_names), "Returned Colab run count changed")
+    require(
+        [int(seed) for seed in validation.get("seeds", [])] == list(seeds),
+        "Returned Colab seed list changed",
+    )
     require(validation.get("alias_reruns") == 0, "all_mixed was physically rerun")
     require(
         validation.get("all_mixed_alias_of") == "filtered_syn",
@@ -168,16 +192,21 @@ def _verify_returned_summary(root: Path, *, object_name: str) -> None:
     )
     require(validation.get("fresh_model_reload") is True, "Colab skipped fresh model reload")
     timings = load_mapping(root / "timings.json")
-    require(set(timings) == set(FORMAL_GROUPS), "Returned timings do not cover eight groups")
-    for group_name, value in timings.items():
+    require(set(timings) == set(run_names), "Returned timings do not cover every seeded run")
+    for run_name, value in timings.items():
         seconds = float(value)
         require(
             math.isfinite(seconds) and seconds > 0.0,
-            f"Invalid returned timing: {group_name}",
+            f"Invalid returned timing: {run_name}",
         )
 
 
-def import_result_archive(results_root: Path, *, object_name: str) -> Path:
+def import_result_archive(
+    results_root: Path,
+    *,
+    object_name: str,
+    seeds: Sequence[int] = SEEDS,
+) -> Path:
     """Atomically and idempotently import one exact Colab result ZIP."""
     archive_path = results_root / f"m18_seg_results_{object_name}.zip"
     require(archive_path.is_file(), f"Missing M18 result ZIP: {archive_path}")
@@ -185,6 +214,7 @@ def import_result_archive(results_root: Path, *, object_name: str) -> Path:
     members, uncompressed_bytes = _inspect_result_archive(
         archive_path,
         object_name=object_name,
+        seeds=seeds,
     )
     destination = results_root / object_name
     import_manifest_name = "import_manifest.json"
@@ -192,7 +222,7 @@ def import_result_archive(results_root: Path, *, object_name: str) -> Path:
         manifest = load_mapping(destination / import_manifest_name)
         require(manifest.get("archive_sha256") == archive_sha256, "Imported ZIP changed")
         require(manifest.get("object") == object_name, "Imported object changed")
-        _verify_returned_summary(destination, object_name=object_name)
+        _verify_returned_summary(destination, object_name=object_name, seeds=seeds)
         return destination
 
     results_root.mkdir(parents=True, exist_ok=True)
@@ -208,12 +238,13 @@ def import_result_archive(results_root: Path, *, object_name: str) -> Path:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 with archive.open(info) as source, target.open("xb") as output:
                     shutil.copyfileobj(source, output, length=1024 * 1024)
-        _verify_returned_summary(temporary, object_name=object_name)
+        _verify_returned_summary(temporary, object_name=object_name, seeds=seeds)
         (temporary / import_manifest_name).write_text(
             json.dumps(
                 {
-                    "schema_version": 1,
+                    "schema_version": 2,
                     "object": object_name,
+                    "seeds": list(seeds),
                     "archive_file": archive_path.name,
                     "archive_sha256": archive_sha256,
                     "members": len(members),
@@ -276,25 +307,34 @@ def _physical_row(run_dir: Path, group_name: str, object_name: str) -> dict[str,
     }
 
 
-def logical_rows(run_root: Path, object_name: str) -> list[dict[str, Any]]:
-    rows = [
-        _physical_row(
-            run_root / f"m18_{group_name}_{object_name}_seed42",
-            group_name,
-            object_name,
+def logical_rows(
+    run_root: Path,
+    object_name: str,
+    seeds: Sequence[int] = SEEDS,
+) -> list[dict[str, Any]]:
+    """Build one row per (group, seed), plus one `all_mixed` alias row per seed."""
+    rows: list[dict[str, Any]] = []
+    for seed in seeds:
+        seeded = [
+            _physical_row(
+                run_root / f"m18_{group_name}_{object_name}_seed{seed}",
+                group_name,
+                object_name,
+            )
+            for group_name in FORMAL_GROUPS
+        ]
+        for row in seeded:
+            require(int(row["seed"]) == int(seed), f"Report seed changed: {row['run_name']}")
+        filtered = next(row for row in seeded if row["logical_group"] == "filtered_syn")
+        alias = dict(filtered)
+        alias.update(
+            {
+                "logical_group": "all_mixed",
+                "physical_run": "false",
+                "alias_of": "filtered_syn",
+            }
         )
-        for group_name in FORMAL_GROUPS
-    ]
-    filtered = next(row for row in rows if row["logical_group"] == "filtered_syn")
-    alias = dict(filtered)
-    alias.update(
-        {
-            "logical_group": "all_mixed",
-            "physical_run": "false",
-            "alias_of": "filtered_syn",
-        }
-    )
-    rows.append(alias)
+        rows.extend([*seeded, alias])
     return rows
 
 
@@ -313,7 +353,31 @@ def _format(value: Any) -> str:
     return f"{float(value):.4f}"
 
 
-def build_report(rows: Sequence[Mapping[str, Any]]) -> str:
+def _mean_std(values: Sequence[float]) -> str:
+    require(bool(values), "Cannot summarise an empty metric series")
+    if len(values) == 1:
+        return f"{float(values[0]):.4f}"
+    return f"{float(np.mean(values)):.4f} ± {float(np.std(values, ddof=1)):.4f}"
+
+
+def _select(
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    object_name: str,
+    group_name: str,
+) -> list[Mapping[str, Any]]:
+    selected = [
+        row
+        for row in rows
+        if row["object"] == object_name and row["logical_group"] == group_name
+    ]
+    seeds = [int(row["seed"]) for row in selected]
+    require(len(set(seeds)) == len(seeds), f"Duplicate seed: {object_name}/{group_name}")
+    return sorted(selected, key=lambda row: int(row["seed"]))
+
+
+def build_report(rows: Sequence[Mapping[str, Any]], seeds: Sequence[int] = SEEDS) -> str:
+    objects = sorted({str(row["object"]) for row in rows})
     lines = [
         "# M20 segmentation results",
         "",
@@ -322,46 +386,96 @@ def build_report(rows: Sequence[Mapping[str, Any]]) -> str:
             "Notebook output text and the per-runtime CSV files were not used."
         ),
         "",
+        (
+            f"Seeds: {', '.join(str(seed) for seed in seeds)}. Seed {ANCHOR_SEED} is the "
+            "pre-registered anchor; ADR-032 added the remaining seeds to all eight formal "
+            "groups so that no group lacks error bars."
+        ),
+        "",
     ]
-    for object_name in sorted({str(row["object"]) for row in rows}):
+    for object_name in objects:
         lines.extend(
             [
                 f"## {object_name}",
+                "",
+                f"### Seed {ANCHOR_SEED} (pre-registered anchor)",
                 "",
                 "| Group | Physical run | Dice | mIoU | pixel AUROC | AUPRO |",
                 "|---|---|---:|---:|---:|---:|",
             ]
         )
-        for row in rows:
-            if row["object"] != object_name:
-                continue
+        for group_name in LOGICAL_GROUPS:
+            row = next(
+                item
+                for item in _select(rows, object_name=object_name, group_name=group_name)
+                if int(item["seed"]) == ANCHOR_SEED
+            )
             physical = "yes" if row["physical_run"] == "true" else "no; cites filtered_syn"
             lines.append(
-                f"| {row['logical_group']} | {physical} | {_format(row['dice'])} | "
+                f"| {group_name} | {physical} | {_format(row['dice'])} | "
                 f"{_format(row['miou'])} | {_format(row['pixel_auroc'])} | "
                 f"{_format(row['aupro'])} |"
             )
+        lines.extend(
+            [
+                "",
+                f"### Mean ± std across {len(seeds)} seeds",
+                "",
+                "| Group | Seeds | Dice | mIoU | pixel AUROC | AUPRO |",
+                "|---|---:|---:|---:|---:|---:|",
+            ]
+        )
+        for group_name in LOGICAL_GROUPS:
+            selected = _select(rows, object_name=object_name, group_name=group_name)
+            require(
+                len(selected) == len(seeds),
+                f"Expected {len(seeds)} seeds: {object_name}/{group_name}",
+            )
+            cells = [
+                _mean_std([float(row[metric]) for row in selected]) for metric in METRICS
+            ]
+            lines.append(f"| {group_name} | {len(selected)} | " + " | ".join(cells) + " |")
         lines.append("")
 
     lines.extend(
         [
             "## Two-object macro mean",
             "",
+            (
+                "Each cell first averages the seeds within an object, then averages the two "
+                "objects; the spread is the std of the per-seed macro means."
+            ),
+            "",
             "| Group | Dice | mIoU | pixel AUROC | AUPRO |",
             "|---|---:|---:|---:|---:|",
         ]
     )
     for group_name in LOGICAL_GROUPS:
-        group_rows = [row for row in rows if row["logical_group"] == group_name]
-        require(len(group_rows) == 2, f"Macro mean needs two objects: {group_name}")
-        means = {
-            metric: float(np.mean([float(row[metric]) for row in group_rows]))
-            for metric in METRICS
-        }
-        lines.append(
-            f"| {group_name} | {_format(means['dice'])} | {_format(means['miou'])} | "
-            f"{_format(means['pixel_auroc'])} | {_format(means['aupro'])} |"
-        )
+        cells = []
+        for metric in METRICS:
+            per_seed_macro = [
+                float(
+                    np.mean(
+                        [
+                            float(row[metric])
+                            for object_name in objects
+                            for row in _select(
+                                rows,
+                                object_name=object_name,
+                                group_name=group_name,
+                            )
+                            if int(row["seed"]) == seed
+                        ]
+                    )
+                )
+                for seed in seeds
+            ]
+            require(
+                len(per_seed_macro) == len(seeds),
+                f"Macro mean needs every seed: {group_name}",
+            )
+            cells.append(_mean_std(per_seed_macro))
+        lines.append(f"| {group_name} | " + " | ".join(cells) + " |")
     lines.extend(
         [
             "",
@@ -393,7 +507,17 @@ def main() -> int:
     parser.add_argument(
         "--results-root",
         type=Path,
-        default=Path("results/colab/segmentation"),
+        default=Path("results/colab/segmentation/3seed"),
+    )
+    parser.add_argument(
+        "--seed",
+        dest="seeds",
+        type=int,
+        action="append",
+        help=(
+            "Repeatable. Defaults to the ADR-032 replication set "
+            f"({', '.join(str(seed) for seed in SEEDS)})."
+        ),
     )
     parser.add_argument("--output", type=Path, default=Path("results/segmentation.csv"))
     parser.add_argument("--report", type=Path, default=Path("reports/segmentation_results.md"))
@@ -407,11 +531,17 @@ def main() -> int:
     config = yaml.safe_load(args.config.read_text(encoding="utf-8"))
     require(isinstance(config, dict), "Invalid segmenter config")
     results_root = args.results_root.resolve(strict=True)
+    seeds = tuple(dict.fromkeys(args.seeds)) if args.seeds else SEEDS
+    require(ANCHOR_SEED in seeds, f"The pre-registered anchor seed {ANCHOR_SEED} is required")
     rows: list[dict[str, Any]] = []
     validations: dict[str, Any] = {}
     raw_report_hashes: dict[str, str] = {}
     for object_name in paths.objects:
-        object_root = import_result_archive(results_root, object_name=object_name)
+        object_root = import_result_archive(
+            results_root,
+            object_name=object_name,
+            seeds=seeds,
+        )
         run_root = object_root / "runs"
         validations[object_name] = validate(
             paths=paths,
@@ -419,26 +549,30 @@ def main() -> int:
             run_root=run_root.resolve(strict=True),
             object_name=object_name,
             reload_model=False,
+            seeds=seeds,
         )
-        rows.extend(logical_rows(run_root, object_name))
-        for group_name in FORMAL_GROUPS:
-            report_path = (
-                run_root
-                / f"m18_{group_name}_{object_name}_seed42"
-                / "training_report.json"
-            )
-            raw_report_hashes[f"{object_name}/{group_name}"] = sha256_file(report_path)
+        rows.extend(logical_rows(run_root, object_name, seeds))
+        for run_name in _run_names(object_name, seeds):
+            report_path = run_root / run_name / "training_report.json"
+            raw_report_hashes[f"{object_name}/{run_name}"] = sha256_file(report_path)
 
-    require(len(rows) == 18, "M20 must contain 18 logical rows")
-    require(sum(row["physical_run"] == "true" for row in rows) == 16, "Physical run count changed")
+    expected_physical = len(FORMAL_GROUPS) * len(paths.objects) * len(seeds)
+    expected_logical = len(LOGICAL_GROUPS) * len(paths.objects) * len(seeds)
+    require(len(rows) == expected_logical, f"M20 must contain {expected_logical} logical rows")
+    require(
+        sum(row["physical_run"] == "true" for row in rows) == expected_physical,
+        "Physical run count changed",
+    )
     atomic_write_csv(args.output, rows)
-    report_text = build_report(rows)
+    report_text = build_report(rows, seeds)
     write_text_lf(args.report, report_text)
     validation_payload = {
         "status": "passed",
-        "schema_version": 1,
-        "physical_runs": 16,
-        "logical_rows": 18,
+        "schema_version": 2,
+        "seeds": list(seeds),
+        "anchor_seed": ANCHOR_SEED,
+        "physical_runs": expected_physical,
+        "logical_rows": expected_logical,
         "all_mixed_alias_of": "filtered_syn",
         "source": "raw_training_report_json",
         "raw_report_sha256": raw_report_hashes,

@@ -198,13 +198,15 @@ def select_best_checkpoint(
             "aupro",
         }
         require(required <= set(header), "Segmentation result schema is incomplete")
-        require(len(rows) == 18, "Segmentation selection requires all 18 logical rows")
-        object_rows = [row for row in rows if row["object"] == object_name]
-        require(len(object_rows) == 9, "Segmentation object inventory is incomplete")
-        require(
-            all(int(row["seed"]) == 42 for row in object_rows),
-            "Segmentation selection requires seed 42",
-        )
+        # ADR-032 replicated every formal group across three seeds. The demo still binds to
+        # the preregistered seed-42 anchor so the shipped checkpoint stays the published one.
+        require(len(rows) == 54, "Segmentation selection requires all 54 logical rows")
+        object_rows = [
+            row
+            for row in rows
+            if row["object"] == object_name and int(row["seed"]) == 42
+        ]
+        require(len(object_rows) == 9, "Segmentation seed-42 inventory is incomplete")
         candidates = [row for row in object_rows if row["physical_run"] == "true"]
         require(len(candidates) == 8, "Segmentation physical-run inventory is incomplete")
         primary_metric, secondary_metric = "dice", "aupro"

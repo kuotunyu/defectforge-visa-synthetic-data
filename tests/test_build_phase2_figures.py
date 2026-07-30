@@ -54,8 +54,13 @@ def test_classification_value_requires_unique_seed42_row() -> None:
         )
 
 
-def test_segmentation_value_reads_logical_alias_row() -> None:
-    rows = [{"object": "capsules", "logical_group": "all_mixed", "dice": "0.75"}]
+def test_segmentation_value_reads_logical_alias_row_at_the_anchor_seed() -> None:
+    # ADR-032 added seeds 43 and 44; the preregistered figures stay on the anchor seed.
+    rows = [
+        {"object": "capsules", "logical_group": "all_mixed", "seed": "42", "dice": "0.75"},
+        {"object": "capsules", "logical_group": "all_mixed", "seed": "43", "dice": "0.11"},
+        {"object": "capsules", "logical_group": "all_mixed", "seed": "44", "dice": "0.22"},
+    ]
     assert segmentation_value(
         rows,
         object_name="capsules",

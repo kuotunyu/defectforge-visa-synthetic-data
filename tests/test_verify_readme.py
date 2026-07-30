@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import json
 from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from scripts.aggregate_segmentation import LOGICAL_GROUPS
+from scripts.aggregate_segmentation import SEEDS as SEGMENTATION_SEEDS
 from scripts.build_phase2_figures import OBJECTS
 from scripts.run_classifier_matrix import matrix_plan
 from scripts.verify_readme import (
@@ -17,6 +19,7 @@ from scripts.verify_readme import (
     main,
     render_blocks,
     replace_block,
+    sha256_file,
     validate_classification_rows,
     validate_segmentation_rows,
     verify_readme,
@@ -69,22 +72,39 @@ def _segmentation_rows() -> list[dict[str, str]]:
     rows = []
     for group_name in LOGICAL_GROUPS:
         for object_name in OBJECTS:
-            score = 0.50 if group_name == "real_only" else 0.51
-            rows.append(
-                {
-                    "logical_group": group_name,
-                    "canonical_group": (
-                        "filtered_syn" if group_name == "all_mixed" else group_name
-                    ),
-                    "object": object_name,
-                    "seed": "42",
-                    "dice": str(score),
-                    "miou": "0.40",
-                    "pixel_auroc": "0.80",
-                    "aupro": "0.45",
-                }
-            )
+            for offset, seed in enumerate(SEGMENTATION_SEEDS):
+                score = 0.50 if group_name == "real_only" else 0.51
+                rows.append(
+                    {
+                        "logical_group": group_name,
+                        "canonical_group": (
+                            "filtered_syn" if group_name == "all_mixed" else group_name
+                        ),
+                        "object": object_name,
+                        "seed": str(seed),
+                        "dice": f"{score + offset / 100:.4f}",
+                        "miou": "0.40",
+                        "pixel_auroc": "0.80",
+                        "aupro": f"{0.45 + offset / 100:.4f}",
+                    }
+                )
     return rows
+
+
+def _reproduction_payload() -> dict[str, object]:
+    return {
+        "status": "passed",
+        "anchor_seed": 42,
+        "compared_physical_runs": 16,
+        "model_sha256_matches": 16,
+        "bit_identical": True,
+        "max_abs_metric_delta": {
+            "dice": 0.0,
+            "miou": 0.0,
+            "pixel_auroc": 0.0,
+            "aupro": 0.0,
+        },
+    }
 
 
 def _readme_with_blocks(blocks: Mapping[str, str]) -> str:
@@ -109,7 +129,7 @@ def test_rendered_readme_preserves_negative_result() -> None:
     segmentation_rows = _segmentation_rows()
     validate_classification_rows(CLASSIFICATION_FIELDS, classification_rows)
     validate_segmentation_rows(SEGMENTATION_FIELDS, segmentation_rows)
-    blocks, outcome = render_blocks(classification_rows, segmentation_rows)
+    blocks, outcome = render_blocks(classification_rows, segmentation_rows, _reproduction_payload())
     readme = _readme_with_blocks(blocks)
     verify_readme(readme, blocks)
     assert outcome["classification_negative"] is True
@@ -124,7 +144,7 @@ def test_seed_variance_block_only_lists_replicated_groups() -> None:
     replicated = {key for key, count in counts.items() if count >= MIN_REPLICATED_SEEDS}
     assert replicated, "the protocol requires at least one replicated classification group"
 
-    blocks, _ = render_blocks(_classification_rows(), _segmentation_rows())
+    blocks, _ = render_blocks(_classification_rows(), _segmentation_rows(), _reproduction_payload())
     table = blocks["CLASSIFICATION_SEED_VARIANCE"]
     body = [
         line
@@ -149,7 +169,7 @@ def test_outcome_discloses_threshold_sensitivity_without_replacing_dice() -> Non
         elif group == "diffusion_only":
             row["dice"], row["pixel_auroc"] = "0.0", "0.55"
 
-    blocks, outcome = render_blocks(_classification_rows(), segmentation_rows)
+    blocks, outcome = render_blocks(_classification_rows(), segmentation_rows, _reproduction_payload())
 
     # The pre-registered Dice conclusion must survive untouched.
     assert outcome["segmentation_negative"] is True
@@ -158,15 +178,20 @@ def test_outcome_discloses_threshold_sensitivity_without_replacing_dice() -> Non
     assert outcome["segmentation_aupro_delta"] > 0.0
     assert outcome["segmentation_metric_directions_agree"] is False
     assert "併列揭露" in blocks["RESULT_OUTCOME"]
-    # all_mixed is an alias of filtered_syn and must not inflate the run count.
-    assert outcome["segmentation_physical_runs"] == len(segmentation_rows) - len(OBJECTS)
-    assert outcome["segmentation_zero_dice_runs"] == 2 * len(OBJECTS)
-    assert outcome["segmentation_zero_dice_informative_runs"] == len(OBJECTS)
+    # all_mixed is an alias of filtered_syn and must not inflate the run count, once per seed.
+    aliases = len(OBJECTS) * len(SEGMENTATION_SEEDS)
+    assert outcome["segmentation_physical_runs"] == len(segmentation_rows) - aliases
+    assert outcome["segmentation_zero_dice_runs"] == 2 * aliases
+    assert outcome["segmentation_zero_dice_informative_runs"] == aliases
     assert outcome["segmentation_zero_dice_max_pixel_auroc"] == pytest.approx(0.95)
+    # Every seed carries the same fixture values, so the pre-registered rule must fire.
+    assert outcome["segmentation_direction_conflict_verdict"] == "real_phenomenon"
+    assert sorted(outcome["segmentation_direction_conflict_objects"]) == sorted(OBJECTS)
+    assert outcome["segmentation_seed_mean_directions_agree"] is False
 
 
 def test_verify_readme_rejects_stale_numeric_block() -> None:
-    blocks, _ = render_blocks(_classification_rows(), _segmentation_rows())
+    blocks, _ = render_blocks(_classification_rows(), _segmentation_rows(), _reproduction_payload())
     readme = _readme_with_blocks(blocks).replace("0.6000", "0.9999", 1)
     with pytest.raises(ReadmeVerificationError, match="stale"):
         verify_readme(readme, blocks)
@@ -216,6 +241,12 @@ def test_write_mode_validates_candidate_before_changing_readme(tmp_path: Path) -
         )
     readme.write_text(original, encoding="utf-8")
     validation = tmp_path / "readme_validation.json"
+    reproduction = tmp_path / "seed42_reproduction.json"
+    payload = {
+        **_reproduction_payload(),
+        "current_sha256": sha256_file(segmentation),
+    }
+    reproduction.write_text(json.dumps(payload), encoding="utf-8")
 
     with pytest.raises(ReadmeVerificationError, match="limitations"):
         main(
@@ -226,6 +257,8 @@ def test_write_mode_validates_candidate_before_changing_readme(tmp_path: Path) -
                 str(classification),
                 "--segmentation",
                 str(segmentation),
+                "--reproduction",
+                str(reproduction),
                 "--validation-out",
                 str(validation),
                 "--write",

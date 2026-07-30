@@ -19,8 +19,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.aggregate_segmentation import LOGICAL_GROUPS  # isort: skip
+from scripts.aggregate_segmentation import ANCHOR_SEED, LOGICAL_GROUPS, SEEDS  # isort: skip
 from scripts.build_phase2_figures import MAIN_GROUPS, OBJECTS  # isort: skip
+from scripts.decide_segmentation_replication import decide  # isort: skip
 from scripts.run_classifier_matrix import matrix_plan  # isort: skip
 from src.common.integrity import write_text_lf  # isort: skip
 
@@ -28,7 +29,10 @@ BLOCK_NAMES = (
     "CLASSIFICATION_MAIN",
     "CLASSIFICATION_SEED_VARIANCE",
     "SEGMENTATION_MAIN",
+    "SEGMENTATION_SEED_VARIANCE",
+    "SEGMENTATION_REPRODUCTION",
     "SEGMENTATION_THRESHOLD",
+    "SEGMENTATION_REPLICATION",
     "RESULT_OUTCOME",
 )
 # docs/experiment_protocol.md requires Real-only and the best Filtered group to be
@@ -137,17 +141,19 @@ def validate_segmentation_rows(
 ) -> None:
     required = {"logical_group", "canonical_group", "object", "seed", *SEGMENTATION_METRICS}
     require(required <= set(fieldnames), "segmentation.csv schema is incomplete")
+    # ADR-032 replicated all eight formal groups across three seeds, so every logical group
+    # must now appear once per object per seed.
     expected = {
-        (group_name, object_name)
+        (group_name, object_name, seed)
         for group_name in LOGICAL_GROUPS
         for object_name in OBJECTS
+        for seed in SEEDS
     }
-    observed: set[tuple[str, str]] = set()
+    observed: set[tuple[str, str, int]] = set()
     for row in rows:
-        key = (row["logical_group"], row["object"])
+        key = (row["logical_group"], row["object"], int(row["seed"]))
         require(key not in observed, f"Duplicate segmentation result: {key}")
         observed.add(key)
-        require(int(row["seed"]) == 42, f"Unexpected segmentation seed: {key}")
         if row["logical_group"] == "all_mixed":
             require(
                 row["canonical_group"] == "filtered_syn",
@@ -155,7 +161,10 @@ def validate_segmentation_rows(
             )
         for metric in SEGMENTATION_METRICS:
             _finite_unit_interval(row, metric, label=f"segmentation/{key}")
-    require(observed == expected, "segmentation.csv does not match the 18 logical M20 rows")
+    require(
+        observed == expected,
+        f"segmentation.csv does not match the {len(expected)} logical M20 rows",
+    )
 
 
 def _one(
@@ -264,6 +273,7 @@ def threshold_block(rows: Sequence[Mapping[str, str]]) -> str:
             key="logical_group",
             value="real_only",
             object_name=object_name,
+            seed=ANCHOR_SEED,
         )
         base_dice = float(baseline["dice"])
         base_aupro = float(baseline["aupro"])
@@ -273,6 +283,7 @@ def threshold_block(rows: Sequence[Mapping[str, str]]) -> str:
                 key="logical_group",
                 value=group_name,
                 object_name=object_name,
+                seed=ANCHOR_SEED,
             )
             dice = float(row["dice"])
             aupro = float(row["aupro"])
@@ -305,6 +316,7 @@ def threshold_block(rows: Sequence[Mapping[str, str]]) -> str:
 
 
 def segmentation_block(rows: Sequence[Mapping[str, str]]) -> str:
+    """Keep the pre-registered anchor seed as the main table, as ADR-032 requires."""
     output: list[list[str]] = []
     for object_name in OBJECTS:
         for group_name in LOGICAL_GROUPS:
@@ -313,6 +325,7 @@ def segmentation_block(rows: Sequence[Mapping[str, str]]) -> str:
                 key="logical_group",
                 value=group_name,
                 object_name=object_name,
+                seed=ANCHOR_SEED,
             )
             output.append(
                 [
@@ -327,6 +340,138 @@ def segmentation_block(rows: Sequence[Mapping[str, str]]) -> str:
     return _markdown_table(
         ("物件", "訓練組別", "Dice", "mIoU", "Pixel AUROC", "AUPRO"),
         output,
+    )
+
+
+def segmentation_seed_variance_block(rows: Sequence[Mapping[str, str]]) -> str:
+    """Report mean +/- std over the ADR-032 replication for every logical group."""
+    output: list[list[str]] = []
+    for object_name in OBJECTS:
+        for group_name in LOGICAL_GROUPS:
+            items = [
+                row
+                for row in rows
+                if row["logical_group"] == group_name and row["object"] == object_name
+            ]
+            seeds = [int(item["seed"]) for item in items]
+            require(
+                sorted(seeds) == sorted(SEEDS),
+                f"Segmentation seeds are incomplete: {object_name}/{group_name}",
+            )
+            require(
+                len(items) >= MIN_REPLICATED_SEEDS,
+                f"Segmentation group below the replication policy: {object_name}/{group_name}",
+            )
+            cells = [
+                (
+                    f"{statistics.fmean(float(item[metric]) for item in items):.4f} ± "
+                    f"{statistics.stdev([float(item[metric]) for item in items]):.4f}"
+                )
+                for metric in ("dice", "aupro")
+            ]
+            output.append([object_name, GROUP_LABELS[group_name], str(len(items)), *cells])
+    return _markdown_table(
+        ("物件", "訓練組別", "Seeds", "Dice（mean ± std）", "AUPRO（mean ± std）"),
+        output,
+    )
+
+
+def segmentation_reproduction_block(payload: Mapping[str, Any]) -> str:
+    """Render the cross-machine seed-42 reproduction from its own verified report."""
+    compared = int(payload["compared_physical_runs"])
+    matches = int(payload["model_sha256_matches"])
+    anchor_seed = int(payload["anchor_seed"])
+    deltas = payload["max_abs_metric_delta"]
+    require(
+        set(deltas) >= set(SEGMENTATION_METRICS),
+        "Reproduction report is missing a compared metric",
+    )
+    verdict = (
+        "**逐 bit 相同**"
+        if payload["bit_identical"]
+        else "**不完全相同——差異已保留在報告中**"
+    )
+    metric_cells = "、".join(
+        f"{metric} `{float(deltas[metric]):.8f}`" for metric in SEGMENTATION_METRICS
+    )
+    return "\n".join(
+        [
+            (
+                f"- 重新執行 seed {anchor_seed} 的實跑 run：**{compared}** 個"
+                f"（{len(OBJECTS)} 個物件 × {compared // len(OBJECTS)} 組）。"
+            ),
+            (
+                f"- `model.safetensors` SHA256 與已發佈值相同者：**{matches} / {compared}**。"
+                f"判定：{verdict}。"
+            ),
+            f"- 四項指標的最大絕對差：{metric_cells}。",
+            (
+                "- 基準是複跑前已發佈的表格 `reports/segmentation_seed42_baseline.csv`；"
+                "比對由 `scripts/verify_seed42_reproduction.py` 執行，"
+                "逐 run 結果見[重現檢查報告](reports/seed42_reproduction.md)。"
+            ),
+        ]
+    )
+
+
+def segmentation_replication_block(rows: Sequence[Mapping[str, str]]) -> str:
+    """Render the ADR-032 verdicts from the same implementation that decides them."""
+    payload = decide(rows)
+    conflict = payload["direction_conflict"]
+    collapse = payload["augmentation_collapse"]
+    conflict_verdict = (
+        "**真實現象**"
+        if conflict["verdict"] == "real_phenomenon"
+        else "**單 seed 假象**"
+    )
+    collapse_verdict = (
+        "**系統性**" if collapse["verdict"] == "systematic" else "**seed 雜訊**"
+    )
+    triggering = "、".join(conflict["triggering_objects"]) or "無"
+    zero_seeds = "、".join(str(seed) for seed in collapse["zero_dice_seeds"]) or "無"
+    conflict_rows = [
+        [
+            object_name,
+            ", ".join(str(seed) for seed in item["conflicting_seeds"]) or "—",
+            f"{item['dice_delta_mean']:+.4f} ± {item['dice_delta_std']:.4f}",
+            f"{item['aupro_delta_mean']:+.4f} ± {item['aupro_delta_std']:.4f}",
+            "是" if item["meets_rule"] else "否",
+        ]
+        for object_name, item in conflict["objects"].items()
+    ]
+    table = _markdown_table(
+        (
+            "物件",
+            "Dice／AUPRO 符號相反的 seed",
+            "Dice Δ（mean ± std）",
+            "AUPRO Δ（mean ± std）",
+            "達預註冊門檻",
+        ),
+        conflict_rows,
+    )
+    return "\n".join(
+        [
+            table,
+            "",
+            (
+                f"- 規則 1（方向矛盾）判定：{conflict_verdict}。"
+                f"門檻是「至少一個物件上、{len(SEEDS)} 個 seed 中 ≥2 個符號相反」，"
+                f"達標物件：{triggering}。"
+            ),
+            (
+                f"- 規則 2（`capsules/std_aug` 崩潰）判定：{collapse_verdict}。"
+                f"Dice 為零的 seed：{zero_seeds}。"
+                + (
+                    "因此 ADR-031 的主張撤回。"
+                    if collapse["adr_031_withdrawn"]
+                    else "因此 ADR-031 的主張維持不變。"
+                )
+            ),
+            (
+                "- 兩條規則都在 [ADR-032](docs/decisions.md#adr-032) 於**複跑執行前**寫死，"
+                "看到結果後未作任何修改。"
+            ),
+        ]
     )
 
 
@@ -353,6 +498,23 @@ def _mean_metric(
     return sum(values) / len(values)
 
 
+def _macro_delta(rows: Sequence[Mapping[str, str]], metric: str, seed: int) -> float:
+    """Two-object macro mean of `filtered_syn - real_only` at one seed."""
+    return _mean_metric(
+        rows,
+        key="logical_group",
+        group_name="filtered_syn",
+        metric=metric,
+        seed=seed,
+    ) - _mean_metric(
+        rows,
+        key="logical_group",
+        group_name="real_only",
+        metric=metric,
+        seed=seed,
+    )
+
+
 def outcome_payload(
     classification_rows: Sequence[Mapping[str, str]],
     segmentation_rows: Sequence[Mapping[str, str]],
@@ -370,34 +532,19 @@ def outcome_payload(
         metric="macro_f1",
         seed=42,
     )
-    segmentation_delta = _mean_metric(
-        segmentation_rows,
-        key="logical_group",
-        group_name="filtered_syn",
-        metric="dice",
-    ) - _mean_metric(
-        segmentation_rows,
-        key="logical_group",
-        group_name="real_only",
-        metric="dice",
-    )
-    aupro_delta = _mean_metric(
-        segmentation_rows,
-        key="logical_group",
-        group_name="filtered_syn",
-        metric="aupro",
-    ) - _mean_metric(
-        segmentation_rows,
-        key="logical_group",
-        group_name="real_only",
-        metric="aupro",
-    )
+    segmentation_delta = _macro_delta(segmentation_rows, "dice", ANCHOR_SEED)
+    aupro_delta = _macro_delta(segmentation_rows, "aupro", ANCHOR_SEED)
+    dice_by_seed = [_macro_delta(segmentation_rows, "dice", seed) for seed in SEEDS]
+    aupro_by_seed = [_macro_delta(segmentation_rows, "aupro", seed) for seed in SEEDS]
+    dice_seed_mean = statistics.fmean(dice_by_seed)
+    aupro_seed_mean = statistics.fmean(aupro_by_seed)
     # all_mixed is an alias of filtered_syn, so it must not be counted as a second run.
     physical = [row for row in segmentation_rows if row["logical_group"] != "all_mixed"]
     zero_dice = [row for row in physical if float(row["dice"]) == 0.0]
     informative = [
         row for row in zero_dice if float(row["pixel_auroc"]) >= INFORMATIVE_PIXEL_AUROC
     ]
+    replication = decide(segmentation_rows)
     return {
         "classification_macro_f1_delta": classification_delta,
         "segmentation_dice_delta": segmentation_delta,
@@ -407,6 +554,21 @@ def outcome_payload(
         "segmentation_aupro_negative": aupro_delta <= 0.0,
         "segmentation_metric_directions_agree": (segmentation_delta <= 0.0)
         == (aupro_delta <= 0.0),
+        "segmentation_anchor_seed": ANCHOR_SEED,
+        "segmentation_seeds": list(SEEDS),
+        "segmentation_dice_delta_seed_mean": dice_seed_mean,
+        "segmentation_dice_delta_seed_std": statistics.stdev(dice_by_seed),
+        "segmentation_aupro_delta_seed_mean": aupro_seed_mean,
+        "segmentation_aupro_delta_seed_std": statistics.stdev(aupro_by_seed),
+        "segmentation_seed_mean_directions_agree": (dice_seed_mean <= 0.0)
+        == (aupro_seed_mean <= 0.0),
+        "segmentation_direction_conflict_verdict": replication["direction_conflict"]["verdict"],
+        "segmentation_direction_conflict_objects": replication["direction_conflict"][
+            "triggering_objects"
+        ],
+        "segmentation_std_aug_collapse_verdict": replication["augmentation_collapse"][
+            "verdict"
+        ],
         "segmentation_physical_runs": len(physical),
         "segmentation_zero_dice_runs": len(zero_dice),
         "segmentation_zero_dice_informative_runs": len(informative),
@@ -434,10 +596,32 @@ def outcome_block(payload: Mapping[str, Any]) -> str:
     zero_dice_runs = int(payload["segmentation_zero_dice_runs"])
     informative_runs = int(payload["segmentation_zero_dice_informative_runs"])
     max_zero_dice_auroc = float(payload["segmentation_zero_dice_max_pixel_auroc"])
+    anchor_seed = int(payload["segmentation_anchor_seed"])
+    seeds = payload["segmentation_seeds"]
+    dice_seed_mean = float(payload["segmentation_dice_delta_seed_mean"])
+    dice_seed_std = float(payload["segmentation_dice_delta_seed_std"])
+    aupro_seed_mean = float(payload["segmentation_aupro_delta_seed_mean"])
+    aupro_seed_std = float(payload["segmentation_aupro_delta_seed_std"])
     directions = (
         "方向一致"
         if payload["segmentation_metric_directions_agree"]
         else "**方向相反**"
+    )
+    seed_mean_directions = (
+        "方向一致"
+        if payload["segmentation_seed_mean_directions_agree"]
+        else "**方向相反**"
+    )
+    conflict_objects = "、".join(payload["segmentation_direction_conflict_objects"]) or "無"
+    conflict_verdict = (
+        "真實現象"
+        if payload["segmentation_direction_conflict_verdict"] == "real_phenomenon"
+        else "單 seed 假象"
+    )
+    collapse_verdict = (
+        "系統性"
+        if payload["segmentation_std_aug_collapse_verdict"] == "systematic"
+        else "seed 雜訊"
     )
     return "\n".join(
         [
@@ -447,13 +631,25 @@ def outcome_block(payload: Mapping[str, Any]) -> str:
             ),
             (
                 f"- Segmentation：已篩選 Synthetic Data 相對 Real-only 的平均 Dice "
-                f"差異為 `{segmentation_delta:+.4f}`。"
+                f"差異為 `{segmentation_delta:+.4f}`（seed {anchor_seed} 錨點）。"
             ),
             f"- Classification 負面結果：**{classification_statement}**",
             f"- Segmentation 負面結果：**{segmentation_statement}**",
             (
-                f"- Segmentation（threshold-free）：同一組 run 的平均 AUPRO 差異為 "
+                f"- Segmentation（threshold-free）：seed {anchor_seed} 的平均 AUPRO 差異為 "
                 f"`{aupro_delta:+.4f}`，與 Dice {directions}。"
+            ),
+            (
+                f"- **複跑後這個 AUPRO 提升沒有重現。**{len(seeds)} 個 seed"
+                f"（{', '.join(str(seed) for seed in seeds)}）的兩物件平均："
+                f"Dice `{dice_seed_mean:+.4f} ± {dice_seed_std:.4f}`、"
+                f"AUPRO `{aupro_seed_mean:+.4f} ± {aupro_seed_std:.4f}`，兩者{seed_mean_directions}。"
+                f"seed {anchor_seed} 單獨呈現的 AUPRO 正向差異是該 seed 的特例。"
+            ),
+            (
+                f"- 依 ADR-032 **執行前寫死**的規則判定：Dice／AUPRO 方向矛盾為"
+                f"**{conflict_verdict}**（達標物件：{conflict_objects}）；"
+                f"`capsules/std_aug` 的 Dice 崩潰為**{collapse_verdict}**。"
             ),
             (
                 f"- {physical_runs} 個實跑的 Segmentation run 中有 {zero_dice_runs} 個在固定 "
@@ -472,13 +668,17 @@ def outcome_block(payload: Mapping[str, Any]) -> str:
 def render_blocks(
     classification_rows: Sequence[Mapping[str, str]],
     segmentation_rows: Sequence[Mapping[str, str]],
+    reproduction: Mapping[str, Any],
 ) -> tuple[dict[str, str], dict[str, Any]]:
     outcome = outcome_payload(classification_rows, segmentation_rows)
     return {
         "CLASSIFICATION_MAIN": classification_block(classification_rows),
         "CLASSIFICATION_SEED_VARIANCE": seed_variance_block(classification_rows),
         "SEGMENTATION_MAIN": segmentation_block(segmentation_rows),
+        "SEGMENTATION_SEED_VARIANCE": segmentation_seed_variance_block(segmentation_rows),
+        "SEGMENTATION_REPRODUCTION": segmentation_reproduction_block(reproduction),
         "SEGMENTATION_THRESHOLD": threshold_block(segmentation_rows),
+        "SEGMENTATION_REPLICATION": segmentation_replication_block(segmentation_rows),
         "RESULT_OUTCOME": outcome_block(outcome),
     }, outcome
 
@@ -539,6 +739,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path("results/segmentation.csv"),
     )
     parser.add_argument(
+        "--reproduction",
+        type=Path,
+        default=Path("reports/seed42_reproduction.json"),
+        help="Output of scripts/verify_seed42_reproduction.py",
+    )
+    parser.add_argument(
         "--validation-out",
         type=Path,
         default=Path("reports/readme_validation.json"),
@@ -557,7 +763,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     segmentation_fields, segmentation_rows = read_csv(args.segmentation)
     validate_classification_rows(classification_fields, classification_rows)
     validate_segmentation_rows(segmentation_fields, segmentation_rows)
-    blocks, outcome = render_blocks(classification_rows, segmentation_rows)
+    require(args.reproduction.is_file(), f"Missing reproduction report: {args.reproduction}")
+    reproduction = json.loads(args.reproduction.read_text(encoding="utf-8"))
+    require(
+        reproduction.get("status") == "passed",
+        "Seed-42 reproduction report did not pass",
+    )
+    require(
+        reproduction.get("current_sha256") == sha256_file(args.segmentation),
+        "Seed-42 reproduction report was built from a different segmentation.csv",
+    )
+    blocks, outcome = render_blocks(classification_rows, segmentation_rows, reproduction)
 
     require(args.readme.is_file(), f"Missing README: {args.readme}")
     readme = args.readme.read_text(encoding="utf-8")
@@ -574,6 +790,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "readme_sha256": sha256_file(args.readme),
         "classification_sha256": sha256_file(args.classification),
         "segmentation_sha256": sha256_file(args.segmentation),
+        "reproduction_sha256": sha256_file(args.reproduction),
         "block_sha256": {name: canonical_sha256(value) for name, value in blocks.items()},
         "outcome": outcome,
         "negative_results_preserved": True,

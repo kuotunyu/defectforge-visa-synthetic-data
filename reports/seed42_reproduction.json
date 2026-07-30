@@ -1,0 +1,228 @@
+{
+  "anchor_seed": 42,
+  "baseline_csv": "reports/segmentation_seed42_baseline.csv",
+  "baseline_sha256": "9ab007dd39e12a16d2236bb1ce20c4bada24185e3476b4b1eee4343f20a372d4",
+  "bit_identical": true,
+  "compared_physical_runs": 16,
+  "current_csv": "results/segmentation.csv",
+  "current_sha256": "16ab7e5efd3fd1146bfd5d13c47fde5b3dad6fae0672a4e66a743683a20c70a9",
+  "max_abs_metric_delta": {
+    "aupro": 0.0,
+    "dice": 0.0,
+    "miou": 0.0,
+    "pixel_auroc": 0.0
+  },
+  "model_sha256_matches": 16,
+  "runs": [
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "copypaste_only",
+      "model_sha256_matches": true,
+      "object": "capsules",
+      "run_name": "m18_copypaste_only_capsules_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "copypaste_only",
+      "model_sha256_matches": true,
+      "object": "pcb1",
+      "run_name": "m18_copypaste_only_pcb1_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "diffusion_only",
+      "model_sha256_matches": true,
+      "object": "capsules",
+      "run_name": "m18_diffusion_only_capsules_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "diffusion_only",
+      "model_sha256_matches": true,
+      "object": "pcb1",
+      "run_name": "m18_diffusion_only_pcb1_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "filtered_syn",
+      "model_sha256_matches": true,
+      "object": "capsules",
+      "run_name": "m18_filtered_syn_capsules_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "filtered_syn",
+      "model_sha256_matches": true,
+      "object": "pcb1",
+      "run_name": "m18_filtered_syn_pcb1_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "full_real",
+      "model_sha256_matches": true,
+      "object": "capsules",
+      "run_name": "m18_full_real_capsules_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "full_real",
+      "model_sha256_matches": true,
+      "object": "pcb1",
+      "run_name": "m18_full_real_pcb1_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "procedural_only",
+      "model_sha256_matches": true,
+      "object": "capsules",
+      "run_name": "m18_procedural_only_capsules_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "procedural_only",
+      "model_sha256_matches": true,
+      "object": "pcb1",
+      "run_name": "m18_procedural_only_pcb1_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "real_only",
+      "model_sha256_matches": true,
+      "object": "capsules",
+      "run_name": "m18_real_only_capsules_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "real_only",
+      "model_sha256_matches": true,
+      "object": "pcb1",
+      "run_name": "m18_real_only_pcb1_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "std_aug",
+      "model_sha256_matches": true,
+      "object": "capsules",
+      "run_name": "m18_std_aug_capsules_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "std_aug",
+      "model_sha256_matches": true,
+      "object": "pcb1",
+      "run_name": "m18_std_aug_pcb1_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "unfiltered_syn",
+      "model_sha256_matches": true,
+      "object": "capsules",
+      "run_name": "m18_unfiltered_syn_capsules_seed42",
+      "run_signature_matches": true
+    },
+    {
+      "deltas": {
+        "aupro": 0.0,
+        "dice": 0.0,
+        "miou": 0.0,
+        "pixel_auroc": 0.0
+      },
+      "logical_group": "unfiltered_syn",
+      "model_sha256_matches": true,
+      "object": "pcb1",
+      "run_name": "m18_unfiltered_syn_pcb1_seed42",
+      "run_signature_matches": true
+    }
+  ],
+  "schema_version": 1,
+  "status": "passed"
+}

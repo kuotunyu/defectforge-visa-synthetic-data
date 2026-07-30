@@ -1,0 +1,111 @@
+{
+  "augmentation_collapse": {
+    "adr_031_withdrawn": false,
+    "group": "std_aug",
+    "object": "capsules",
+    "per_seed": [
+      {
+        "dice": 0.0,
+        "pixel_auroc": 0.8660863291859695,
+        "seed": 42
+      },
+      {
+        "dice": 0.42117040930498817,
+        "pixel_auroc": 0.9845660578778473,
+        "seed": 43
+      },
+      {
+        "dice": 0.0,
+        "pixel_auroc": 0.8447145923250892,
+        "seed": 44
+      }
+    ],
+    "rule": "Dice == 0 in >= 2 of 3 seeds",
+    "verdict": "systematic",
+    "zero_dice_seeds": [
+      42,
+      44
+    ]
+  },
+  "direction_conflict": {
+    "baseline": "real_only",
+    "objects": {
+      "capsules": {
+        "aupro_delta_mean": -0.32147197359397356,
+        "aupro_delta_std": 0.33568172658541157,
+        "conflicting_seeds": [
+          42
+        ],
+        "dice_delta_mean": -0.3729939246662431,
+        "dice_delta_std": 0.20551556569045445,
+        "meets_rule": false,
+        "per_seed": [
+          {
+            "aupro_delta": 0.06494985649226648,
+            "dice_delta": -0.13873825096204312,
+            "opposite_signs": true,
+            "seed": 42
+          },
+          {
+            "aupro_delta": -0.4883988918336432,
+            "dice_delta": -0.4572605801014945,
+            "opposite_signs": false,
+            "seed": 43
+          },
+          {
+            "aupro_delta": -0.5409668854405439,
+            "dice_delta": -0.5229829429351918,
+            "opposite_signs": false,
+            "seed": 44
+          }
+        ]
+      },
+      "pcb1": {
+        "aupro_delta_mean": 0.07660127521149869,
+        "aupro_delta_std": 0.08781354028954144,
+        "conflicting_seeds": [
+          42,
+          44
+        ],
+        "dice_delta_mean": -0.2861865702148268,
+        "dice_delta_std": 0.025002560734994114,
+        "meets_rule": true,
+        "per_seed": [
+          {
+            "aupro_delta": 0.1442888998159002,
+            "dice_delta": -0.31404418587899136,
+            "opposite_signs": true,
+            "seed": 42
+          },
+          {
+            "aupro_delta": -0.022626074504512372,
+            "dice_delta": -0.2788222867705308,
+            "opposite_signs": false,
+            "seed": 43
+          },
+          {
+            "aupro_delta": 0.10814100032310825,
+            "dice_delta": -0.2656932379949583,
+            "opposite_signs": true,
+            "seed": 44
+          }
+        ]
+      }
+    },
+    "rule": "opposite signs in >= 2 of 3 seeds on at least one object",
+    "treatment": "filtered_syn",
+    "triggering_objects": [
+      "pcb1"
+    ],
+    "verdict": "real_phenomenon"
+  },
+  "preregistered_in": "ADR-032",
+  "schema_version": 1,
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "source": "results/segmentation.csv",
+  "status": "passed"
+}

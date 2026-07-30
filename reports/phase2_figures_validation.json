@@ -11,7 +11,7 @@
     },
     "segmentation_table": {
       "path": "reports\\figures\\segmentation_table.png",
-      "sha256": "b3382cc8c9c1ceea50875d7ffe1bcfedec0e8d8cde71fd4468eeb9d529dcb314"
+      "sha256": "05d9b6994114ac7cfc9d36ee14729fc21e6fedbe8c94131ddea1f78db7d2ffc3"
     },
     "synthetic_volume_curve": {
       "path": "reports\\figures\\synthetic_volume_curve.png",
@@ -51,7 +51,7 @@
     }
   },
   "schema_version": 1,
-  "segmentation_sha256": "fbe4f97379e2597713c1c7255bfd6b5df7ac49c948b396469f598d34b03615aa",
+  "segmentation_sha256": "16ab7e5efd3fd1146bfd5d13c47fde5b3dad6fae0672a4e66a743683a20c70a9",
   "status": "passed",
   "visual_inspection_required": true
 }

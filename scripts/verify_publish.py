@@ -84,6 +84,13 @@ REQUIRED_PATHS = (
     "scripts/diagnose_augmentation_mask_loss.py",
     "reports/augmentation_mask_loss.json",
     "reports/augmentation_mask_loss.md",
+    "scripts/decide_segmentation_replication.py",
+    "reports/segmentation_replication.json",
+    "reports/segmentation_replication.md",
+    "scripts/verify_seed42_reproduction.py",
+    "reports/segmentation_seed42_baseline.csv",
+    "reports/seed42_reproduction.json",
+    "reports/seed42_reproduction.md",
     ".claude/skills/defectforge/SKILL.md",
     ".claude/skills/df-guard/SKILL.md",
     ".github/workflows/verify.yml",
@@ -483,10 +490,11 @@ def audit_evidence(repo: Path) -> dict[str, Any]:
     segmentation = payloads.get("reports/segmentation_validation.json", {})
     policy(
         "reports/segmentation_validation.json",
-        segmentation.get("physical_runs") == 16
-        and segmentation.get("logical_rows") == 18
+        segmentation.get("physical_runs") == 48
+        and segmentation.get("logical_rows") == 54
+        and segmentation.get("seeds") == [42, 43, 44]
         and segmentation.get("source") == "raw_training_report_json",
-        "expected 16 physical runs, 18 logical rows, and raw-report aggregation",
+        "expected 48 physical runs across seeds 42/43/44, 54 logical rows, and raw-report aggregation",
     )
     phase2_figures = payloads.get("reports/phase2_figures_validation.json", {})
     policy(
