@@ -133,6 +133,7 @@ OWNER_LOCAL_PATHS = (
     "PLAN.md",
     "PRODUCT.md",
     "instructions_for_me.md",
+    "interview.md",
     "docs/autonomy_policy.md",
     "docs/publish_spec.md",
     "docs/skills_roadmap.md",
