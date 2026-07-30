@@ -142,7 +142,17 @@ def render_config(
     arms: Mapping[str, Any],
     object_names: Sequence[str],
     base_config: Path,
+    *,
+    seed: int = 42,
+    run_subdirectory: str = "cls_v4_pilot",
+    result: str = "results/v4/pilot_classification.json",
 ) -> dict[str, Any]:
+    """`seed` changes training randomness only.
+
+    Arm membership comes from SELECTION_SEED, which is fixed, so every seed trains on the
+    identical pair of synthetic subsets. That is what makes a multi-seed replication of this
+    design a replication rather than a fresh draw.
+    """
     return {
         "schema_version": 1,
         "status": "preregistered",
@@ -153,7 +163,7 @@ def render_config(
         ),
         "base_config": base_config.as_posix(),
         "objects": list(object_names),
-        "seed": 42,
+        "seed": seed,
         "total_steps": 100,
         "generated_by": "scripts/build_v4_pilot_config.py",
         "selection_seed": SELECTION_SEED,
@@ -187,8 +197,8 @@ def render_config(
             "require_both_objects_noninferior": True,
         },
         "output": {
-            "run_subdirectory": "cls_v4_pilot",
-            "result": "results/v4/pilot_classification.json",
+            "run_subdirectory": run_subdirectory,
+            "result": result,
         },
     }
 
@@ -216,6 +226,9 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("configs/classifier_v4_pilot.yaml"),
     )
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--run-subdirectory", default="cls_v4_pilot")
+    parser.add_argument("--result", default="results/v4/pilot_classification.json")
     return parser
 
 
@@ -233,7 +246,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     base = yaml.safe_load(args.base_config.read_text(encoding="utf-8"))
     require(isinstance(base, dict), f"Invalid base config: {args.base_config}")
     _write_yaml(args.base_out, render_base_config(base, arms))
-    _write_yaml(args.output, render_config(arms, object_names, args.base_out))
+    _write_yaml(
+        args.output,
+        render_config(
+            arms,
+            object_names,
+            args.base_out,
+            seed=args.seed,
+            run_subdirectory=args.run_subdirectory,
+            result=args.result,
+        ),
+    )
     print(
         json.dumps(
             {
