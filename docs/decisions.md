@@ -1712,3 +1712,75 @@ capsules `123.0` 對 `106.0`。**這組數字明確標記為描述性、不構�
   （capsules 用 `mode: saturation`、`close_kernel: 9`）
 
 兩者都需要各自的預註冊才能執行。**本 ADR 不對它們下結論。**
+
+---
+
+## ADR-038 — v4 的**預註冊**：把放置面積限回真實分布，能不能改善下游？
+
+**狀態：Pre-registered**（2026-07-30）｜**執行前必須先 commit 本 ADR**
+
+### 為什麼是這個實驗
+
+[ADR-037](#adr-037) 量到 pcb1 的合成放置面積有 57.3% 落在真實 p5–p95 之外，
+而 capsules 是 100% 在內。這給了一個**可以不重新生成就檢驗**的機會：
+直接從既有 `filtered` 池子裡只取面積在區間內的樣本，與現況對照。
+
+**明確不做**：不收緊 `placement.yaml` 的 `scale` 上限、不重新生成任何合成資料、
+不重跑 M12–M20。那會作廢已發佈的 v1.2.2，屬於使用者的決定，不在本 ADR 範圍。
+
+### 設計（實測值，非估計）
+
+| Candidate | 合成來源 | 每物件張數 |
+|---|---|---:|
+| `real_only` | 無 | — |
+| `db_current` | `filtered` 全池 | **218** |
+| `db_inband` | `filtered` 中面積落在真實 p5–p95 者 | **218** |
+
+218 是**受限物件 pcb1 的區間內樣本上限**。兩臂張數相同，因此差異不可能來自合成量。
+選樣是 seed 42 的 shuffle 後取前 218，避免排序前綴集中在單一 defect_type。
+配置由 `scripts/build_v4_pilot_config.py` 從凍結產物**決定性產生**，
+不手寫 sample id。6 個 development run，本機，不需 Colab、不花錢。
+
+### 必須預先揭露的兩個界限
+
+1. **面積篩選會連帶改變 generator 組成**（實測，pcb1 copypaste/procedural/sd2）：
+   `db_current` 是 `27/97/94`，`db_inband` 是 `46/86/86`。因此正向結果只能歸因給
+   「區間內子集」這個 **bundle**，**不得**單獨歸因給面積。與 [ADR-035](#adr-035) 的
+   `P` 同一種誠實界限
+2. **兩臂樣本有重疊**（實測）：pcb1 交集 `71/218`（32.6%）、
+   capsules 交集 `129/218`（59.2%）。重疊愈高，可觀察到的差異愈小
+
+### capsules 是預先指定的對照組
+
+capsules 的 filtered 樣本有 99.8% 本來就在區間內，兩臂的面積分布幾乎相同。
+因此**預先聲明**：capsules 不應該出現明顯差異。若 capsules 反而出現大幅差異，
+代表差異來自選樣隨機性而非面積，**該次結果不得用來支持面積假說**。
+
+### 執行前就固定的判定規則（看到結果後不得更改）
+
+以每物件 validation Macro-F1 計算 `D = db_inband − db_current`：
+
+- 若 **pcb1 的 `D ≥ +0.01`** → 判定「面積限回真實分布在偏離物件上有幫助」
+- 若 **pcb1 的 `D ≤ −0.01`** → 判定「有害」
+- 其餘 → 判定「無效果」
+
+`capsules` 只作為對照：若其 `|D| ≥ 0.05`，在報告中標記
+**對照組異常，本次結論可信度下降**，且不得因此改寫 pcb1 的判定。
+
+沿用 [ADR-034](#adr-034)／[ADR-036](#adr-036) 的教訓：若某物件上三個 candidate 的
+Macro-F1 完全相同，該物件標記為**無鑑別力**，其結果不得當作證據。
+
+### Confirmatory gate
+
+沿用 [ADR-026](#adr-026) 的三個門檻**逐字不變**（per-object Macro-F1 `0.01`、
+AUROC `0.02`、mean gain `+0.01`），由 runner 對 `real_only` 自動計算。
+**判定規則成立不等於 gate 通過**；gate 未過就一律不得讀 frozen test、不得跑 3 seeds。
+
+### 不得發生的事
+
+- 不讀 frozen test（development integrity guard 仍強制 test list 為空）
+- 不改超參、不改 100-step 預算、不改 `real_bad_share`（沿用 v2 選出的 `0.75`）
+- 不因結果不好而追加 candidate 或改變 218 這個張數
+- 不修改 ADR-026 的 gate 數值
+- 不動 `configs/classifier.yaml`；v4 的兩個 group 寫在**另外產生**的
+  `configs/classifier_v4_base.yaml`，既有 group 位元不變

@@ -1,0 +1,41 @@
+schema_version: 1
+status: preregistered
+purpose: Validation-only pilot. Both arms draw the same number of filtered synthetic
+  samples; only the placement-area distribution differs. Decision rules are fixed
+  in ADR-038 before execution.
+base_config: configs/classifier_v4_base.yaml
+objects:
+- pcb1
+- capsules
+seed: 42
+total_steps: 100
+generated_by: scripts/build_v4_pilot_config.py
+selection_seed: 42
+samples_per_object: 218
+candidates:
+- name: real_only
+  group: real_only
+  sampler_strategy: class_balanced
+  real_bad_share: 0.5
+- name: db_current
+  group: v4_current
+  sampler_strategy: domain_balanced
+  real_bad_share: 0.75
+- name: db_inband
+  group: v4_inband
+  sampler_strategy: domain_balanced
+  real_bad_share: 0.75
+selection:
+  candidates:
+  - db_current
+  - db_inband
+  primary_metric: macro_f1
+  secondary_metric: auroc
+gate:
+  per_object_macro_f1_tolerance: 0.01
+  per_object_auroc_tolerance: 0.02
+  mean_macro_f1_min_gain: 0.01
+  require_both_objects_noninferior: true
+output:
+  run_subdirectory: cls_v4_pilot
+  result: results/v4/pilot_classification.json
