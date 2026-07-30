@@ -289,6 +289,55 @@ Domain balancing 救回 pcb1 與部分 capsules，但預先註冊的跨物件 ga
 **exploratory validation result**，不取代 v1 結果；詳見
 [v2 Pilot Report](reports/v2_pilot_report.md)。
 
+## v3–v5：三個機制候選，四次 gate 全數未過
+
+v2 之後又跑了三個 pilot，每一個都**先把判定規則 commit 進 git、才開始執行**，
+commit 時間戳即為「規則早於結果」的證據。四次 gate **全部未通過**，
+因此 **frozen test 從未被讀取**（每份結果的 `test_data_loaded` 皆為 `false`）。
+
+| Pilot | 檢驗的機制 | 判定 | 預註冊 |
+|---|---|---|---|
+| v2 | 合成樣本淹沒真實瑕疵的**曝光**失衡 | gate 未過；部分正確 | [ADR-026](docs/decisions.md#adr-026) |
+| v3 | 落差來自**外觀**還是放置 | 依物件而異；主要物件無鑑別力 | [ADR-035](docs/decisions.md#adr-035) |
+| v4 | 把放置**面積**限回真實分布 | **未能檢驗**（主判準無鑑別力） | [ADR-038](docs/decisions.md#adr-038) |
+| v5 | 同 v4，但複跑到 3 seeds | **無效果**（有效的陰性結果） | [ADR-040](docs/decisions.md#adr-040) |
+
+到此，合成資料在 Classification 上失效的三個候選機制——**曝光、外觀、面積**——都已被排除。
+逐次判定見 [v3](reports/v3_source_attribution.md)、[v4](reports/v4_placement_band.md)、
+[v5](reports/v5_seed_replication.md)。
+
+三件過程中查出、原本沒被發現的事：
+
+- **既有的合成來源排序是取樣汙染的產物**。三個來源消融全都在 v1 壞掉的 sampler 下跑，
+  真實瑕疵曝光被壓到與 `filtered_syn` 相同；修正取樣後排序**反轉**
+  （[ADR-036](docs/decisions.md#adr-036)）
+- **`pcb1` 的合成放置面積嚴重超出真實分布**，連最小的放置都比真實瑕疵的中位數大。
+  這是既有結果中未被發現的缺陷（[ADR-037](docs/decisions.md#adr-037)）——
+  但 v5 證明**修正面積並不足以救回合成資料**
+- **單 seed 的方向不可信**。v5 的 seed 42 與另外兩個 seed **符號相反**；
+  若沿用單 seed 做法會得到完全相反的結論，與分割的
+  [ADR-033](docs/decisions.md#adr-033) 發現一致
+
+過程中也修正了兩個我們自己的方法學錯誤：一份診斷把結論預先寫成字串而從未驗證
+（[ADR-034](docs/decisions.md#adr-034)），以及一次預註冊把主判準訂在**已知無鑑別力**的
+指標組合上（[ADR-039](docs/decisions.md#adr-039)）。兩者都已改成由程式導出並加上回歸測試。
+
+## 揭露的洩漏面：程序化合成用了真實 mask 的統計量
+
+「僅 Procedural」組**沒有看過任何一個真實瑕疵像素**，但它的 mask 面積與長寬比被約束在
+10 張 few-shot 訓練 mask 的 5–95 百分位內。這些**聚合形狀統計量**就是整個洩漏面，
+在 [ADR-011](docs/decisions.md#adr-011) 主動揭露，並提供 `--no-real-stats` 版本供對照：
+
+<!-- BEGIN VERIFIED CLASSIFICATION_LEAKAGE_SURFACE -->
+| 物件 | Macro-F1（用統計量） | Macro-F1（不用） | Δ | AUROC（用統計量） | AUROC（不用） | Δ |
+| --- | --- | --- | --- | --- | --- | --- |
+| pcb1 | 0.5417 | 0.5994 | -0.0577 | 0.7272 | 0.8091 | -0.0820 |
+| capsules | 0.4723 | 0.4848 | -0.0125 | 0.5000 | 0.5119 | -0.0119 |
+<!-- END VERIFIED CLASSIFICATION_LEAKAGE_SURFACE -->
+
+**用了統計量的版本反而比較差。** 也就是說，這個被揭露的洩漏面不只沒有帶來好處，
+還是負作用。分割版的對照組**決定不補**，理由記於 [ADR-042](docs/decisions.md#adr-042)。
+
 ## 公開互動 Demo
 
 ![DefectForge 決定性 Demo](assets/demo.gif)

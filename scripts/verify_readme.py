@@ -28,6 +28,7 @@ from src.common.integrity import write_text_lf  # isort: skip
 BLOCK_NAMES = (
     "CLASSIFICATION_MAIN",
     "CLASSIFICATION_SEED_VARIANCE",
+    "CLASSIFICATION_LEAKAGE_SURFACE",
     "SEGMENTATION_MAIN",
     "SEGMENTATION_SEED_VARIANCE",
     "SEGMENTATION_REPRODUCTION",
@@ -260,6 +261,54 @@ def seed_variance_block(rows: Sequence[Mapping[str, str]]) -> str:
         )
     return _markdown_table(
         ("物件", "訓練組別", "Seeds", "Macro-F1（mean ± std）", "AUROC（mean ± std）"),
+        output,
+    )
+
+
+def leakage_surface_block(rows: Sequence[Mapping[str, str]]) -> str:
+    """Contrast procedural synthesis with and without the disclosed real-mask statistics.
+
+    ADR-011 disclosed that procedural masks are constrained to the area and aspect-ratio
+    percentiles of the ten few-shot training masks, and promised the `--no-real-stats`
+    control be reported beside it. This renders that promise for classification.
+    """
+    output: list[list[str]] = []
+    for object_name in OBJECTS:
+        with_stats = _one(
+            rows,
+            key="canonical_group",
+            value="src_procedural",
+            object_name=object_name,
+            seed=42,
+        )
+        without_stats = _one(
+            rows,
+            key="canonical_group",
+            value="procedural_norealstats",
+            object_name=object_name,
+            seed=42,
+        )
+        output.append(
+            [
+                object_name,
+                f"{float(with_stats['macro_f1']):.4f}",
+                f"{float(without_stats['macro_f1']):.4f}",
+                f"{float(with_stats['macro_f1']) - float(without_stats['macro_f1']):+.4f}",
+                f"{float(with_stats['auroc']):.4f}",
+                f"{float(without_stats['auroc']):.4f}",
+                f"{float(with_stats['auroc']) - float(without_stats['auroc']):+.4f}",
+            ]
+        )
+    return _markdown_table(
+        (
+            "物件",
+            "Macro-F1（用統計量）",
+            "Macro-F1（不用）",
+            "Δ",
+            "AUROC（用統計量）",
+            "AUROC（不用）",
+            "Δ",
+        ),
         output,
     )
 
@@ -674,6 +723,7 @@ def render_blocks(
     return {
         "CLASSIFICATION_MAIN": classification_block(classification_rows),
         "CLASSIFICATION_SEED_VARIANCE": seed_variance_block(classification_rows),
+        "CLASSIFICATION_LEAKAGE_SURFACE": leakage_surface_block(classification_rows),
         "SEGMENTATION_MAIN": segmentation_block(segmentation_rows),
         "SEGMENTATION_SEED_VARIANCE": segmentation_seed_variance_block(segmentation_rows),
         "SEGMENTATION_REPRODUCTION": segmentation_reproduction_block(reproduction),

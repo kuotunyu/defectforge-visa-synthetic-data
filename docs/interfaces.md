@@ -619,3 +619,68 @@ CLI 只用於覆寫。每支腳本執行時把「合併後的最終 config」存
 | `generate_sd2.yaml` / `generate_sdxl.yaml` | generate_diffusion |
 | `filters.yaml` | run_filters |
 | `classifier.yaml` / `segmenter.yaml` | 下游訓練 |
+
+### v 系列 pilot 與放置診斷（ADR-035 → ADR-042）
+
+這些腳本都**只讀 development 結果**，不讀 frozen test，也不重新生成任何合成資料。
+
+#### `scripts/decide_v3_source_attribution.py`
+```
+--pilot results/v3/pilot_classification.json
+--output reports/v3_source_attribution.json
+--report reports/v3_source_attribution.md
+```
+執行 [ADR-035](decisions.md#adr-035) 的歸因規則：
+`P = real_only − db_copypaste`（放置＋縫合）、`A = db_copypaste − db_diffusion`（外觀）。
+兩物件同側才判定主因，否則判 `object_dependent`。
+偵測「某物件三個 candidate 完全相同」並標記為無鑑別力（ADR-036）。
+
+#### `scripts/diagnose_placement_geometry.py`
+```
+--paths configs/paths.yaml
+--object STR               # 可重複；預設兩個物件
+--output reports/placement_geometry.json
+--report reports/placement_geometry.md
+```
+量測 M9 放置與真實瑕疵的差距：面積分布對比真實 p5–p95、實際套用的 affine scale／rotation、
+以及 mask **外**環狀帶的像素統計（不是 mask 底下——真實 mask 底下已有瑕疵，
+量那裡等於比較兩種不同的東西）。**先對所有來源檔比對 test blocklist，命中即 fail closed。**
+報告中的結論全部由量測導出（ADR-034）。
+
+#### `scripts/build_v4_pilot_config.py`
+```
+--paths configs/paths.yaml
+--geometry reports/placement_geometry.json
+--base-config configs/classifier.yaml
+--base-out configs/classifier_v4_base.yaml
+--output configs/classifier_v4_pilot.yaml
+[--seed INT]               # 預設 42；只改訓練期隨機性，不改 arm 成員
+[--run-subdirectory STR]   # 預設 cls_v4_pilot
+[--result STR]             # 預設 results/v4/pilot_classification.json
+```
+決定性產生兩臂的 sample id 清單並寫進 base config 的 `sample_ids_by_object`，
+因此 pilot runner **不需要新增任何 CLI**。arm 成員由固定的 `SELECTION_SEED = 42` 決定，
+`--seed` 只改訓練隨機性——這使多 seed 成為**複跑**而非重新抽樣。
+
+#### `scripts/decide_v4_placement_band.py`
+```
+--pilot results/v4/pilot_classification.json
+--output reports/v4_placement_band.json
+--report reports/v4_placement_band.md
+```
+執行 [ADR-038](decisions.md#adr-038)：`D = db_inband − db_current`，主要物件 `pcb1`、
+指標 Macro-F1、門檻 `±0.01`；`capsules` 為對照，`|D| ≥ 0.05` 標記異常。
+若主要物件無鑑別力，判定為 `uninformative_primary_object` 而**不是**「無效果」。
+
+#### `scripts/decide_v5_seed_replication.py`
+```
+--seed42 results/v4/pilot_classification.json
+--seed43 results/v5/pilot_classification_seed43.json
+--seed44 results/v5/pilot_classification_seed44.json
+--output reports/v5_seed_replication.json
+--report reports/v5_seed_replication.md
+```
+執行 [ADR-040](decisions.md#adr-040)：主指標 **AUROC**（Macro-F1 在 `pcb1` 已知無鑑別力），
+**判定只計入 seed 43／44**——seed 42 的數值已在 ADR-039 被引用，因此照常報告但不進判定式。
+門檻 `±0.02` 沿用 ADR-026 的 per-object AUROC 容差原值。
+每個 pilot 結果都會被斷言 `test_data_loaded == false`，否則 fail closed。

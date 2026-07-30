@@ -4,6 +4,51 @@
 
 ## [未發布]
 
+### 分割 3-seed 複跑與跨機器重現（ADR-032／033）
+
+- 8 個 formal group × 2 物件 × 3 seeds 全部完成；`results/segmentation.csv` 由 M20 聚合器
+  從 raw `training_report.json` 重建為 54 列（48 實跑 ＋ 6 列逐 seed alias）。
+- 兩條預註冊規則判定完畢：Dice／AUPRO 方向矛盾為**真實現象**（`pcb1` 2/3 seeds）；
+  `capsules/std_aug` 崩潰為**系統性**，ADR-031 維持。
+- **推翻一個已發表的結論**：seed 42 的 AUPRO 提升**沒有重現**。兩物件 macro AUPRO Δ
+  從 seed 42 的 `+0.1046` 變成 3-seed 的 `-0.1224 ± 0.1976`，負面結論因此**變強**。
+- **跨機器 bit-identical 重現**：seed 42 的 16 個模型 SHA256 與已發佈值逐一相同，
+  四項指標最大絕對差 `0.00000000`。新增 `scripts/verify_seed42_reproduction.py` 與
+  複跑前就已 commit 的基準表 `reports/segmentation_seed42_baseline.csv`。
+
+### 零 Dice 診斷擴大並修正一個過強推論（ADR-034）
+
+- 診斷從 16 個 run 擴大到全部 48 個。22/23 個零 Dice 確實是機率天花板，
+  但**有 1 個是「有正像素卻完全打偏」**——因此「零 Dice 一律與空間定位能力無關」不成立。
+- **修正工具缺陷**：原腳本把結論寫成固定字串、只填數值，**從未驗證主張是否成立**，
+  在單 seed 資料上碰巧正確。改為由資料推導，並新增以本次反例為輸入的回歸測試。
+
+### v3–v5：三個機制候選，四次 gate 全數未過（ADR-035 → ADR-041）
+
+- **v3 歸因 pilot**（ADR-035／036）：查出既有的合成來源排序是**取樣汙染**的產物——
+  三個來源消融全在 v1 壞掉的 sampler 下跑，修正後排序**反轉**，舊排序作廢。
+- **v4 面積 pilot**（ADR-038／039）：判定 `uninformative`——主判準訂在**已知無鑑別力**的
+  指標組合上，**實驗沒有檢驗到自己的假說**。護欄正確觸發，但設計本身有缺陷。
+- **v5 三 seed 複跑**（ADR-040／041）：換成有鑑別力的指標後得到**有效的陰性結果**
+  `no_effect`。判定**只計入未被看過的 seed 43／44**，seed 42 照常報告但不進判定式。
+- 四次 gate 全部 `stopped`，**frozen test 從未被讀取**。曝光、外觀、面積三個機制候選都已排除。
+
+### M9 放置階段直接量測（ADR-037）
+
+- 新增 `scripts/diagnose_placement_geometry.py`：查出 **`pcb1` 的合成放置面積是真實瑕疵的
+  6.16 倍**，連最小的放置都比真實中位數大——既有結果中未被發現的缺陷。
+- 但 `capsules` 的面積 **100%** 落在真實區間內，因此放置幾何**不是共通解釋**。
+- **修正自己的量測錯誤**：第一版拿真實 mask 底下（已有瑕疵）比放置 mask 底下（乾淨背景），
+  改為兩邊都量 mask 外的環狀帶，並加測試斷言環狀帶不得包含 mask 本身。
+
+### 揭露的洩漏面終於進入 README（ADR-011／042）
+
+- ADR-011 承諾並列「用統計量」與「不用統計量」兩版結果，分類版做了但 **README 從未提及**。
+- 新增 `CLASSIFICATION_LEAKAGE_SURFACE` verified block：**不用統計量反而比較好**
+  （pcb1 Macro-F1 `-0.0577`、AUROC `-0.0820`）。被揭露的洩漏面是**負作用**。
+- 分割版對照組**決定不補**，理由與成本分析記於 ADR-042，缺口仍留在誠實清單上。
+
+
 ### `capsules/std_aug` 崩潰的診斷（ADR-031）
 
 - 新增 `scripts/diagnose_augmentation_mask_loss.py`。

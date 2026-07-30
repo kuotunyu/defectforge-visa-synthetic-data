@@ -1,5 +1,6 @@
 {
   "block_sha256": {
+    "CLASSIFICATION_LEAKAGE_SURFACE": "46dc0df5845d59391a0320d889719d5d2624f0cefdfa8783afc54a1b72eb90d2",
     "CLASSIFICATION_MAIN": "ead86a7d207f7bae42fbe7fbd6d0763e381729fc403e33e704a3492d9fd2d258",
     "CLASSIFICATION_SEED_VARIANCE": "974c8597fb90b466b91d1b6b1d59bdeffd41e877d8f5a164a3f4000187dd6917",
     "RESULT_OUTCOME": "ca0622fce5862062e34c3534dd4ae1c2cd271c68c70b3e5a1c5446fd986e304e",
@@ -40,7 +41,7 @@
     "segmentation_zero_dice_max_pixel_auroc": 0.9066352973187357,
     "segmentation_zero_dice_runs": 23
   },
-  "readme_sha256": "d0eccfe4d5078fdab80cda55c29a1cb2ea098e4f1fd0ea333f2a00a6fc94bad5",
+  "readme_sha256": "324f2deb42c02e29c3b72af4ba5a3b69cd106ab1791b34aaea5d10a336d34a46",
   "reproduction_sha256": "1a56f1381668fa1b3f756a21ecef94fe20e538587856335fe760211e7395d3f0",
   "schema_version": 1,
   "segmentation_sha256": "16ab7e5efd3fd1146bfd5d13c47fde5b3dad6fae0672a4e66a743683a20c70a9",
