@@ -2,7 +2,7 @@
 
 本專案採用 [Semantic Versioning](https://semver.org/) 管理公開 Release。
 
-## [未發布]
+## [1.3.0] - 2026-07-30
 
 ### 分割 3-seed 複跑與跨機器重現（ADR-032／033）
 

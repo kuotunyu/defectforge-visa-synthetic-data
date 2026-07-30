@@ -3,8 +3,9 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-08796c.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/kuotunyu/defectforge-visa-synthetic-data?color=08796c)](https://github.com/kuotunyu/defectforge-visa-synthetic-data/releases/latest)
 
-> **狀態：v1.2.1 已完成並公開。**
+> **狀態：v1.3.0 已完成並公開。**
 > 下游結果表與最終結論皆由通過獨立驗證的 CSV 自動產生，不手動填寫數字。
+> 這行的版本號由 `scripts/verify_publish.py` 對最新 tag 比對，不一致即擋下發佈。
 > 驗證入口請見 `scripts/verify_readme.py` 與 `scripts/verify_publish.py`。
 
 公開成果：
@@ -14,9 +15,23 @@
 [Release](https://github.com/kuotunyu/defectforge-visa-synthetic-data/releases)
 
 在每個物件只有 **10 張真實瑕疵圖**的條件下，本專案以 Open Model、Open Data
-重建 NVIDIA GTC 2026 Cosmos AnomalyGen 方法論。主實驗結果顯示：已篩選
-Synthetic Data **沒有**優於 Real-only；本專案完整保留這個負面結果，並用 v2 pilot
-檢驗 Sampling 是否造成退步。
+重建 NVIDIA GTC 2026 Cosmos AnomalyGen 方法論。
+
+### 30 秒摘要
+
+**主結論：在這個資料規模下，合成資料沒有改善下游任務——而這個陰性結論經過了四次獨立檢驗。**
+
+- Classification 與 Segmentation 上，已篩選 Synthetic Data 都**沒有**優於 Real-only
+- 為了排除「是不是我們用錯方法」，跑了**四個預註冊 pilot**，分別檢驗**曝光失衡、
+  瑕疵外觀、放置面積**三個機制。四次的 gate **全部未通過**，
+  因此 **frozen test 從未被讀取**
+- 分割補到 **3 個 seed** 後，**推翻了自己先前發表的一個正面訊號**
+  （seed 42 的 AUPRO 提升沒有重現），負面結論因此變**強**
+- 同一批模型在另一台機器重跑後 **SHA256 逐一相同**，可重現性有 bit-level 證據
+
+過程中也記錄了**兩次我們自己的方法學錯誤**與其修正，以及一個**主動揭露的洩漏面
+最後被量測證明是負作用**。完整的未完成項目列在
+[限制與誠實揭露](#限制與誠實揭露)。
 
 ---
 

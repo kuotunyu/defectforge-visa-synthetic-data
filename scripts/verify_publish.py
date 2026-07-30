@@ -288,6 +288,19 @@ def audit_required_paths(repo: Path) -> dict[str, Any]:
     }
 
 
+def latest_release_tag(repo: Path) -> str | None:
+    """The newest annotated tag reachable from HEAD, or None in an untagged repository."""
+    completed = subprocess.run(
+        ["git", "-C", str(repo), "describe", "--tags", "--abbrev=0"],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    tag = completed.stdout.strip()
+    return tag if completed.returncode == 0 and tag else None
+
+
 def audit_plan_and_readme(repo: Path) -> dict[str, Any]:
     readme_path = repo / "README.md"
     readme = readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
@@ -300,10 +313,20 @@ def audit_plan_and_readme(repo: Path) -> dict[str, Any]:
         "## 重現方式",
         "## 授權與引用",
     )
+    # The status banner sat two releases out of date without anything noticing, because the
+    # only check here looked for the word "pending". Bind it to the tag instead: the banner
+    # is the most prominent claim on the page, so it deserves the same treatment as a table.
+    tag = latest_release_tag(repo)
+    declared = re.search(r"狀態：(v\d+\.\d+\.\d+)", readme[:500])
     return {
         "readme_has_required_sections": all(section in readme for section in required_sections),
         "readme_has_no_tbd_or_todo": "TBD" not in readme and "TODO" not in readme,
         "readme_status_is_final": "pending" not in readme[:500].lower(),
+        "readme_declared_version": declared.group(1) if declared else None,
+        "latest_release_tag": tag,
+        "readme_status_matches_latest_tag": (
+            tag is None or (declared is not None and declared.group(1) == tag)
+        ),
     }
 
 
@@ -778,6 +801,7 @@ def build_audit(repo: Path, *, waived_checks: Sequence[str] = ()) -> dict[str, A
             content["readme_has_required_sections"]
             and content["readme_has_no_tbd_or_todo"]
             and content["readme_status_is_final"]
+            and content["readme_status_matches_latest_tag"]
         ),
         "final_evidence_reports_passed": (
             not evidence["missing"]

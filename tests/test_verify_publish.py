@@ -401,3 +401,61 @@ def test_evidence_audit_binds_reports_to_current_artifacts(tmp_path: Path) -> No
     (tmp_path / "results/classification.csv").write_text("changed\n", encoding="utf-8")
     stale = audit_evidence(tmp_path)
     assert {item["target"] for item in stale["hash_mismatches"]} == {"results/classification.csv"}
+
+
+def _readme_with_status(version: str) -> str:
+    sections = (
+        "## 研究問題",
+        "## 方法與系統架構",
+        "## 實驗設計",
+        "## 實驗結果",
+        "## 限制與誠實揭露",
+        "## 重現方式",
+        "## 授權與引用",
+    )
+    return f"> **狀態：{version} 已完成並公開。**\n\n" + "\n\n".join(sections) + "\n"
+
+
+def _tagged_repo(tmp_path: Path, *, readme: str, tag: str | None) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "README.md").write_text(readme, encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "init", "-q"], check=True)
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x"],
+        check=True,
+    )
+    if tag is not None:
+        subprocess.run(["git", "-C", str(repo), "tag", "-a", tag, "-m", tag], check=True)
+    return repo
+
+
+def test_readme_status_banner_must_match_the_latest_tag(tmp_path: Path) -> None:
+    # Regression: the banner sat two releases stale because the only check looked for
+    # the word "pending". It is the most prominent claim on the page.
+    repo = _tagged_repo(tmp_path, readme=_readme_with_status("v1.2.1"), tag="v1.3.0")
+    content = audit_plan_and_readme(repo)
+    assert content["readme_declared_version"] == "v1.2.1"
+    assert content["latest_release_tag"] == "v1.3.0"
+    assert content["readme_status_matches_latest_tag"] is False
+
+
+def test_a_matching_banner_passes(tmp_path: Path) -> None:
+    repo = _tagged_repo(tmp_path, readme=_readme_with_status("v1.3.0"), tag="v1.3.0")
+    content = audit_plan_and_readme(repo)
+    assert content["readme_status_matches_latest_tag"] is True
+
+
+def test_a_missing_banner_fails_when_the_repository_is_tagged(tmp_path: Path) -> None:
+    repo = _tagged_repo(tmp_path, readme="> **狀態：已完成。**\n", tag="v1.3.0")
+    content = audit_plan_and_readme(repo)
+    assert content["readme_declared_version"] is None
+    assert content["readme_status_matches_latest_tag"] is False
+
+
+def test_an_untagged_repository_is_not_penalised(tmp_path: Path) -> None:
+    repo = _tagged_repo(tmp_path, readme=_readme_with_status("v0.1.0"), tag=None)
+    content = audit_plan_and_readme(repo)
+    assert content["latest_release_tag"] is None
+    assert content["readme_status_matches_latest_tag"] is True
