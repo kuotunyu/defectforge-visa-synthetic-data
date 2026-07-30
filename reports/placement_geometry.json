@@ -1,0 +1,89 @@
+{
+  "findings": {
+    "area_explains_every_object": false,
+    "objects_whose_smallest_placement_exceeds_the_real_median": [
+      "pcb1"
+    ],
+    "objects_with_area_fully_in_band": [
+      "capsules"
+    ],
+    "objects_with_majority_out_of_band_area": [
+      "pcb1"
+    ]
+  },
+  "objects": {
+    "capsules": {
+      "area": {
+        "median_ratio": 0.5609011072928599,
+        "real_band": [
+          118.0,
+          23119.0
+        ],
+        "real_median": 2619.0,
+        "synthetic_in_real_band_fraction": 1.0,
+        "synthetic_median": 1469.0,
+        "synthetic_min": 155,
+        "synthetic_min_exceeds_real_median": false
+      },
+      "blocklist": {
+        "blocklist_hits": 0,
+        "checked_sources": 371
+      },
+      "placements": 1083,
+      "real_components": 12,
+      "site_appearance": {
+        "real_intensity_median": 123.0,
+        "real_masks_measured": 10,
+        "real_saturation_median": 197.0,
+        "synthetic_intensity_median": 106.0,
+        "synthetic_masks_measured": 1083,
+        "synthetic_saturation_median": 208.0
+      },
+      "transform": {
+        "abs_rotation_median": 87.36975513255726,
+        "scale_below_half_fraction": 0.3656509695290859,
+        "scale_median": 0.6713593003721514
+      }
+    },
+    "pcb1": {
+      "area": {
+        "median_ratio": 6.162458836443469,
+        "real_band": [
+          26.0,
+          4769.0
+        ],
+        "real_median": 911.0,
+        "synthetic_in_real_band_fraction": 0.4269102990033223,
+        "synthetic_median": 5614.0,
+        "synthetic_min": 1904,
+        "synthetic_min_exceeds_real_median": true
+      },
+      "blocklist": {
+        "blocklist_hits": 0,
+        "checked_sources": 612
+      },
+      "placements": 1806,
+      "real_components": 26,
+      "site_appearance": {
+        "real_intensity_median": 105.0,
+        "real_masks_measured": 10,
+        "real_saturation_median": 23.0,
+        "synthetic_intensity_median": 162.5,
+        "synthetic_masks_measured": 1806,
+        "synthetic_saturation_median": 27.0
+      },
+      "transform": {
+        "abs_rotation_median": 91.4529081439243,
+        "scale_below_half_fraction": 0.07751937984496124,
+        "scale_median": 2.761208114992848
+      }
+    }
+  },
+  "reads_frozen_test": false,
+  "real_band_quantiles": [
+    0.05,
+    0.95
+  ],
+  "schema_version": 1,
+  "status": "passed"
+}
