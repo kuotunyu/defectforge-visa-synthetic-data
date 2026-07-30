@@ -1,0 +1,85 @@
+{
+  "confirmatory_run_authorized_by_gate": false,
+  "control": {
+    "42": {
+      "delta": -0.05092592592592582,
+      "metric_discriminates": true,
+      "scores": {
+        "db_current": 0.875,
+        "db_inband": 0.8240740740740742,
+        "real_only": 0.9120370370370371
+      }
+    },
+    "43": {
+      "delta": 0.0,
+      "metric_discriminates": true,
+      "scores": {
+        "db_current": 0.8287037037037037,
+        "db_inband": 0.8287037037037037,
+        "real_only": 0.8657407407407407
+      }
+    },
+    "44": {
+      "delta": 0.00925925925925919,
+      "metric_discriminates": true,
+      "scores": {
+        "db_current": 0.9074074074074074,
+        "db_inband": 0.9166666666666666,
+        "real_only": 0.9351851851851851
+      }
+    }
+  },
+  "control_anomalous": false,
+  "control_mean_delta": 0.004629629629629595,
+  "control_object": "capsules",
+  "disclosed_seed": 42,
+  "gate_status": {
+    "42": "stopped",
+    "43": "stopped",
+    "44": "stopped"
+  },
+  "metric": "auroc",
+  "preregistered_in": "ADR-040",
+  "primary": {
+    "42": {
+      "delta": -0.016666666666666607,
+      "metric_discriminates": true,
+      "scores": {
+        "db_current": 0.8833333333333333,
+        "db_inband": 0.8666666666666667,
+        "real_only": 0.9166666666666666
+      }
+    },
+    "43": {
+      "delta": 0.005555555555555536,
+      "metric_discriminates": true,
+      "scores": {
+        "db_current": 0.9611111111111111,
+        "db_inband": 0.9666666666666667,
+        "real_only": 0.9638888888888889
+      }
+    },
+    "44": {
+      "delta": 0.002777777777777768,
+      "metric_discriminates": true,
+      "scores": {
+        "db_current": 0.9333333333333333,
+        "db_inband": 0.9361111111111111,
+        "real_only": 0.9694444444444444
+      }
+    }
+  },
+  "primary_mean_delta": 0.004166666666666652,
+  "primary_object": "pcb1",
+  "schema_version": 1,
+  "status": "passed",
+  "usable_verdict_seeds": [
+    43,
+    44
+  ],
+  "verdict": "no_effect",
+  "verdict_seeds": [
+    43,
+    44
+  ]
+}
