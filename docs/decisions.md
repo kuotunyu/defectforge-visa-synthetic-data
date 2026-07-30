@@ -1567,3 +1567,81 @@ validation）全部沿用，5 candidates × 2 objects = **10 個 development run
 - runner 產生的 run name 仍帶 `m26_` 前綴（寫死在共用的 `_run_name`）。
   **刻意不改**：改它會動到 v2 的 resume 比對邏輯，破壞既有證據的可重現性。
   v3 的 run 以輸出目錄 `cls_v3_pilot` 區隔
+
+---
+
+## ADR-036 — v3 歸因結果：gate 再次未過；唯一有鑑別力的物件指向「放置／縫合」
+
+**狀態：Accepted**（2026-07-30）｜承接 [ADR-035](#adr-035) 的預註冊，**規則未作任何修改**
+
+### 有效性檢查（先於一切解讀）
+
+ADR-035 要求 `real_only` 必須重現 v2 的數值，否則立即停止。實測**四個指標全部完全相同**：
+
+| 物件 | Macro-F1 | Δ vs v2 | AUROC | Δ vs v2 |
+|---|---:|---:|---:|---:|
+| pcb1 | `0.6944` | `+0.0000` | `0.9167` | `-0.0000` |
+| capsules | `0.8133` | `+0.0000` | `0.9120` | `+0.0000` |
+
+無環境漂移，可以解讀其餘 candidate。
+
+### Gate：再次 `stopped`
+
+| 檢查 | 門檻 | 實測 | |
+|---|---|---:|:---:|
+| pcb1 Macro-F1 | ≥ −0.01 | `+0.0000` | ✅ |
+| pcb1 AUROC | ≥ −0.02 | `-0.0194` | ✅ |
+| capsules Macro-F1 | ≥ −0.01 | `-0.1244` | ❌ |
+| capsules AUROC | ≥ −0.02 | `-0.1343` | ❌ |
+| 兩物件 mean Macro-F1 gain | ≥ +0.01 | `-0.0622` | ❌ |
+
+`confirmatory_run_authorized_by_gate = false`。**沒有讀取 frozen test**
+（`test_data_loaded = false`），沒有跑 3 seeds，沒有花錢。M27 維持 `stopped`。
+
+### 歸因判定：依物件而異（但只有一個物件有鑑別力）
+
+| 物件 | P（放置＋縫合） | A（外觀） | 較大者 | 指標可分辨 |
+|---|---:|---:|---|:---:|
+| capsules | `+0.1319` | `-0.0074` | placement | 是 |
+| pcb1 | `+0.0000` | `+0.0000` | tie | **否** |
+
+依預註冊規則，pcb1 平手 → 整體判定 **`object_dependent`**，**不得**宣稱放置為主因。
+
+但 pcb1 的平手不是「兩種成因勢均力敵」：該物件上 `real_only`、`db_copypaste`、
+`db_diffusion` 的 Macro-F1 **完全相同（`0.6944`）**，指標在此物件沒有鑑別力。
+判定腳本會偵測並在報告中標記這一點，不讓它被讀成證據。
+
+因此**唯一有鑑別力的物件（capsules）給出強烈訊號**：把真實瑕疵貼到合成位置要付
+`+0.1319` 的代價，而把瑕疵材質從真實換成生成只要 `-0.0074`——**是負的**，
+生成外觀略優於真實外觀。這是**假說生成級**的證據，不是已確認的歸因。
+
+### 順帶推翻的一個既有排序
+
+現有的來源消融（`src_copypaste` / `src_procedural` / `src_diffusion`）全部是用 v1 壞掉的
+sampler 跑的（`real_bad=14`、`synthetic_bad=769`），排序為
+**copypaste > procedural > diffusion**，看起來像是「真實外觀比較好」。
+
+在修正後的取樣（`real_bad=613`、`synthetic_bad=215`）下，排序**反轉**為
+**diffusion > copypaste > filtered > procedural**。原排序是曝光崩潰的產物，不可採信；
+本 ADR 明確作廢它。
+
+### 修正的實作缺陷
+
+1. `decide_v3_source_attribution.py` 初版假設的結果 schema（`candidates` 巢狀 dict）
+   與 runner 實際輸出（`runs` 扁平 list）不符。**只改讀取層，判定規則一字未動。**
+2. 測試先抓到嚴格 `==` 讓「平手」分支在浮點下永遠走不到（`0.8−0.6` ≠ `0.6−0.4`），
+   已於 ADR-035 commit 前改用 `math.isclose` 並註明那是浮點護欄。
+3. 新增 `metric_discriminates` 旗標與兩項測試，讓「指標無鑑別力」不會被誤讀成平手。
+
+### 執行事實
+
+10 個 development run，本機 RTX 4090。實測約 **75 秒／run**，比 ADR-035 估的 30–45 秒慢，
+因為 `src_*` 群組要額外雜湊驗證合成檔案。中途一次 process 中斷留下 1 個半成品目錄，
+runner 的 fail-closed 檢查正確擋下並要求人工檢視；該目錄無指標、模型也無綁定報告，
+刪除後由 seed 42 決定性重跑，其餘 5 個完整 run 原封沿用。
+
+### 下一步的候選（皆尚未預註冊）
+
+若要繼續，必須再開一個先提交的版本。目前看來最有價值的方向是**檢驗放置管線**
+（M9 的 mask placement 與 M12 的縫合），而不是再換生成模型——但這只是傾向，
+不是本 ADR 的結論。

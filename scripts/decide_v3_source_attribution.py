@@ -55,38 +55,60 @@ def load_pilot(path: Path) -> dict[str, Any]:
     return payload
 
 
+def _candidate_of(run: Mapping[str, Any], seed: int) -> str:
+    """The runner encodes the candidate in the run name: m26_<candidate>_<object>_seed_<seed>_dev."""
+    name = str(run["run_name"])
+    suffix = f"_{run['object']}_seed_{seed}_dev"
+    require(name.startswith("m26_"), f"Unexpected pilot run name: {name}")
+    require(name.endswith(suffix), f"Unexpected pilot run name: {name}")
+    return name[len("m26_") : -len(suffix)]
+
+
+def index_runs(payload: Mapping[str, Any]) -> dict[tuple[str, str], Mapping[str, Any]]:
+    seed = int(payload["seed"])
+    indexed: dict[tuple[str, str], Mapping[str, Any]] = {}
+    for run in payload["runs"]:
+        key = (_candidate_of(run, seed), str(run["object"]))
+        require(key not in indexed, f"Duplicate pilot run: {key}")
+        indexed[key] = run
+    require(bool(indexed), "Pilot result contains no runs")
+    return indexed
+
+
 def _metric(
-    payload: Mapping[str, Any],
+    indexed: Mapping[tuple[str, str], Mapping[str, Any]],
     *,
     candidate: str,
     object_name: str,
     metric: str = ATTRIBUTION_METRIC,
 ) -> float:
-    candidates = payload["candidates"]
-    require(candidate in candidates, f"Pilot result is missing candidate: {candidate}")
-    per_object = candidates[candidate]
-    require(object_name in per_object, f"Missing {candidate}/{object_name}")
-    value = float(per_object[object_name]["metrics"][metric])
+    key = (candidate, object_name)
+    require(key in indexed, f"Pilot result is missing candidate: {candidate}/{object_name}")
+    value = float(indexed[key]["metrics"][metric])
     require(math.isfinite(value), f"Non-finite {metric}: {candidate}/{object_name}")
     return value
 
 
 def attribute(payload: Mapping[str, Any]) -> dict[str, Any]:
-    objects = [str(value) for value in payload["objects"]]
+    indexed = index_runs(payload)
+    objects = sorted({object_name for _, object_name in indexed})
     require(len(objects) >= 2, "Attribution needs at least two objects")
     per_object: dict[str, Any] = {}
     for object_name in objects:
-        baseline = _metric(payload, candidate=BASELINE, object_name=object_name)
+        baseline = _metric(indexed, candidate=BASELINE, object_name=object_name)
         real_appearance = _metric(
-            payload,
+            indexed,
             candidate=REAL_APPEARANCE,
             object_name=object_name,
         )
         generated = _metric(
-            payload,
+            indexed,
             candidate=GENERATED_APPEARANCE,
             object_name=object_name,
         )
+        # A tie can mean the metric simply cannot separate the candidates on this object.
+        # That is not evidence of balance, so it is recorded rather than glossed over.
+        discriminates = len({baseline, real_appearance, generated}) > 1
         placement = baseline - real_appearance
         appearance = real_appearance - generated
         # Guard against float representation only, not a scientific threshold: two
@@ -102,6 +124,7 @@ def attribute(payload: Mapping[str, Any]) -> dict[str, Any]:
             "placement_penalty": placement,
             "appearance_penalty": appearance,
             "dominant": dominant,
+            "metric_discriminates": discriminates,
         }
     dominants = {item["dominant"] for item in per_object.values()}
     if dominants == {"placement"}:
@@ -127,6 +150,11 @@ def attribute(payload: Mapping[str, Any]) -> dict[str, Any]:
         "caveat": (
             "copy-paste keeps real defect pixels but blends them with a synthetic seam, "
             "so the placement penalty bundles placement with blending"
+        ),
+        "non_discriminating_objects": sorted(
+            name
+            for name, item in per_object.items()
+            if not item["metric_discriminates"]
         ),
     }
 
@@ -167,18 +195,31 @@ def build_report(payload: Mapping[str, Any]) -> str:
         "- 放置懲罰 `P = real_only − db_copypaste`",
         "- 外觀懲罰 `A = db_copypaste − db_diffusion`",
         "",
-        "| 物件 | P（放置＋縫合） | A（外觀） | 該物件較大者 |",
-        "|---|---:|---:|---|",
+        "| 物件 | P（放置＋縫合） | A（外觀） | 該物件較大者 | 指標可分辨 |",
+        "|---|---:|---:|---|:---:|",
     ]
     for object_name, item in attribution["objects"].items():
         lines.append(
             f"| {object_name} | {item['placement_penalty']:+.4f} "
-            f"| {item['appearance_penalty']:+.4f} | {item['dominant']} |"
+            f"| {item['appearance_penalty']:+.4f} | {item['dominant']} "
+            f"| {'是' if item['metric_discriminates'] else '**否**'} |"
         )
+    blind = attribution["non_discriminating_objects"]
     lines += [
         "",
         f"**判定：{labels[attribution['verdict']]}**",
         "",
+    ]
+    if blind:
+        lines += [
+            (
+                f"⚠️ **{'、'.join(blind)} 上三個 candidate 的 {attribution['metric']} 完全相同**，"
+                "代表該指標在這個物件上無法分辨，其「平手」不是兩種成因勢均力敵的證據，"
+                "而是**這個物件沒有提供資訊**。判定仍照預註冊規則計入，但解讀時必須扣除。"
+            ),
+            "",
+        ]
+    lines += [
         (
             f"兩物件平均：P `{attribution['placement_penalty_mean']:+.4f}`、"
             f"A `{attribution['appearance_penalty_mean']:+.4f}`。"

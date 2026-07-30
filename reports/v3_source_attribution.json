@@ -1,0 +1,33 @@
+{
+  "attribution": {
+    "appearance_penalty_mean": -0.003707716383772708,
+    "caveat": "copy-paste keeps real defect pixels but blends them with a synthetic seam, so the placement penalty bundles placement with blending",
+    "metric": "macro_f1",
+    "non_discriminating_objects": [
+      "pcb1"
+    ],
+    "objects": {
+      "capsules": {
+        "appearance_penalty": -0.007415432767545416,
+        "dominant": "placement",
+        "metric_discriminates": true,
+        "placement_penalty": 0.13185987721198977
+      },
+      "pcb1": {
+        "appearance_penalty": 0.0,
+        "dominant": "tie",
+        "metric_discriminates": false,
+        "placement_penalty": 0.0
+      }
+    },
+    "placement_penalty_mean": 0.06592993860599489,
+    "rule": "P = real_only - db_copypaste; A = db_copypaste - db_diffusion; one cause dominates only when the same side wins on every object",
+    "verdict": "object_dependent"
+  },
+  "confirmatory_run_authorized_by_gate": false,
+  "gate_status": "stopped",
+  "preregistered_in": "ADR-035",
+  "schema_version": 1,
+  "source": "results/v3/pilot_classification.json",
+  "status": "passed"
+}
