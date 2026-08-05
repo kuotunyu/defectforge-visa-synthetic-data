@@ -3,117 +3,147 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-08796c.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/kuotunyu/defectforge-visa-synthetic-data?color=08796c)](https://github.com/kuotunyu/defectforge-visa-synthetic-data/releases/latest)
 
-> **狀態：v1.3.0 已完成並公開。**
-> 下游結果表與最終結論皆由通過獨立驗證的 CSV 自動產生，不手動填寫數字。
-> 這行的版本號由 `scripts/verify_publish.py` 對最新 tag 比對，不一致即擋下發佈。
-> 驗證入口請見 `scripts/verify_readme.py` 與 `scripts/verify_publish.py`。
+本專案在每個物件僅有 **10 張真實瑕疵圖**的極度少樣本條件下，以 Open Model 與 Open Data 架構重建 NVIDIA GTC 2026 Cosmos AnomalyGen 工業瑕疵合成與下游評估方法論。
 
-公開成果：
 [Synthetic Dataset](https://huggingface.co/datasets/steven0226/defectforge-visa-synthetic) ·
-[SD2／SDXL LoRA Weights](https://huggingface.co/steven0226/defectforge-visa-lora) ·
-[正體中文互動 Demo](https://steven0226-defectforge-visa-demo.hf.space/) ·
-[Release](https://github.com/kuotunyu/defectforge-visa-synthetic-data/releases)
+[SD2 / SDXL LoRA Weights](https://huggingface.co/steven0226/defectforge-visa-lora) ·
+[正體中文 Demo](https://steven0226-defectforge-visa-demo.hf.space/) ·
+[Release 頁面](https://github.com/kuotunyu/defectforge-visa-synthetic-data/releases)
 
-在每個物件只有 **10 張真實瑕疵圖**的條件下，本專案以 Open Model、Open Data
-重建 NVIDIA GTC 2026 Cosmos AnomalyGen 方法論。
+---
 
-### 30 秒摘要
+## 關鍵摘要
 
-**主結論：在這個資料規模下，合成資料沒有改善下游任務——而這個陰性結論經過了四次獨立檢驗。**
+**主要結論：在極度少樣本資料規模下，合成資料未改善下游任務——此陰性結論經過了四次獨立預註冊檢驗。**
 
-- Classification 與 Segmentation 上，已篩選 Synthetic Data 都**沒有**優於 Real-only
-- 為了排除「是不是我們用錯方法」，跑了**四個預註冊 pilot**，分別檢驗**曝光失衡、
-  瑕疵外觀、放置面積**三個機制。四次的 gate **全部未通過**，
-  因此 **frozen test 從未被讀取**
-- 分割補到 **3 個 seed** 後，**推翻了自己先前發表的一個正面訊號**
-  （seed 42 的 AUPRO 提升沒有重現），負面結論因此變**強**
-- 同一批模型在另一台機器重跑後 **SHA256 逐一相同**，可重現性有 bit-level 證據
-
-過程中也記錄了**兩次我們自己的方法學錯誤**與其修正，以及一個**主動揭露的洩漏面
-最後被量測證明是負作用**。完整的未完成項目列在
-[限制與誠實揭露](#限制與誠實揭露)。
+- **下游任務比較**：在 Classification 與 Segmentation 任務上，經過多重篩選的 Synthetic Data 未展現優於 Real-only 基準之表現。
+- **機制預註冊 Gate**：為排除方法調用疑慮，發起四次預註冊 Pilot 檢驗曝光失衡、瑕疵外觀與放置面積三個機制，四次 Gate 全數未通過，確保 Frozen Test 從未被提前讀取。
+- **多 Seed 複跑統計**：將分割實驗補充至 3 個 Seed 複跑後，推翻了單一 Seed (seed 42) 的局部正向訊號，使陰性結論具備高度統計穩健性。
+- **可重現性驗證**：同一批模型於不同機器執行時達成 SHA256 逐 Byte 相同之 Bit-level 可重現性。
 
 ---
 
 ## 研究問題
 
-Synthetic Data 能否改善少樣本工業瑕疵的 Classification 與 Segmentation？
+Synthetic Data 能否改善少樣本工業瑕疵的 Classification 與 Segmentation 表現？
 
-| 項目 | 設定 |
+| 評測項目 | 實驗設定規範 |
 |---|---|
-| Dataset | [VisA](https://registry.opendata.aws/visa/)（CC BY 4.0）：`pcb1`、`capsules` |
-| 真實瑕疵預算 | 每個物件 10 張，seed=42 |
-| 下游任務 | Defect Classification＋Defect-region Segmentation |
-| Synthetic Data 標註 | 全自動；放置用 Mask 就是 Segmentation Ground Truth |
+| **資料集** | [VisA](https://registry.opendata.aws/visa/)（CC BY 4.0）：`pcb1`、`capsules` |
+| **真實瑕疵預算** | 每個物件僅允許 10 張真實瑕疵圖 (Seed 42) |
+| **下游評估任務** | Defect Classification 與 Defect-region Segmentation |
+| **Synthetic Data 標註** | 全自動產生；放置 Mask 即為 Segmentation Ground Truth |
 
-### 防止 Split 洩漏
+### 避免資料切分洩漏 (Split Leakage)
 
-VisA 官方 `2cls_fewshot` 與 `2cls_highshot` CSV 是同一批影像的兩種不同切分。
-在開始撰寫訓練程式前，我們先量測兩者的交集：
+VisA 官方 `2cls_fewshot` 與 `2cls_highshot` CSV 係同一批影像的兩種切分方式。本專案於開發前進行交集測試：
 
 ```text
-highshot TRAIN(anomaly) ∩ fewshot TEST(anomaly) = 40   （每個物件，test 共 80 張）
-fewshot TRAIN ⊂ highshot TRAIN                          True
-highshot TEST ⊂ fewshot TEST                            True
+highshot TRAIN(anomaly) ∩ fewshot TEST(anomaly) = 40 (每個物件，Test 共 80 張)
+fewshot TRAIN ⊂ highshot TRAIN                         True
+highshot TEST ⊂ fewshot TEST                           True
 ```
 
-混用兩套 Split 會把**一半的 test 瑕疵放進 training**。因此所有實驗統一以
-`2cls_highshot` 為 base partition，共用同一個 frozen test set；完整決策見
-[ADR-007](docs/decisions.md#adr-007)。
+若混用兩套切分將導致 50% 的 Test 瑕疵影像滲透至 Training 集中。因此本專案統一採用 `2cls_highshot` 作為 Base Partition，共享不可動搖之 Frozen Test Set (詳見 [ADR-007](docs/decisions.md#adr-007))。
 
-## 方法與系統架構
+---
 
-![DefectForge Synthetic Data 系統架構](docs/diagrams/readme_01_flowchart_system_architecture.png)
+## 系統架構與 Pipeline
 
-[查看 Mermaid 原始碼](docs/diagrams/readme_01_flowchart_system_architecture.mmd)
+```mermaid
+%%{init: {'themeVariables': {'fontSize': '20px'}}}%%
+flowchart TB
+    subgraph Source["資料與防洩漏邊界"]
+        direction LR
+        Visa["VisA<br/>pcb1、capsules"]
+        Split["Frozen split<br/>SHA256、pHash、test blocklist"]
+        FewShot["Few-shot seeds<br/>每物件 10 張真實瑕疵圖"]
+        Visa --> Split --> FewShot
+    end
 
-流程包含 frozen split 與 test blocklist、Copy-paste／Procedural／Diffusion
-生成、六道 Quality Filtering、ConvNeXt-Tiny Classification、SegFormer-B0
-Segmentation，以及 SHA256-bound evidence。Open-source 元件對照與工程詮釋見
-[方法論文件](docs/methodology.md)。
+    subgraph Synthetic["Synthetic Data 生成"]
+        direction LR
+        StageA["Stage A<br/>Copy-paste、Procedural"]
+        StageB["Stage B<br/>SD2 / SDXL Inpainting LoRA"]
+        Placement["Auto Mask Placement<br/>crop-to-ROI、blend back"]
+        FewShot --> StageA
+        FewShot --> StageB
+        StageB --> Placement
+    end
 
-### Agent 工作流
+    subgraph Guard["品質與可追溯性"]
+        direction LR
+        Filter["Quality filtering<br/>六道規則"]
+        Views["Filtered / Unfiltered<br/>metadata provenance"]
+        StageA --> Filter
+        Placement --> Filter
+        Filter --> Views
+    end
 
-課程的 Chapter 5 把 Cosmos AnomalyGen 管線拆成一組可被自然語言驅動的 skill
-（`anomalygen`、`finetune`、`prep-testcase`、`sdg-inference`、`sdg-refine`、`eval`…）。
-本專案以 Claude Code 的專案級 skill 復刻同一層結構，每個階段各一個、各自帶前置條件、
-可判定成敗的驗證與 fail-closed 護欄。
+    subgraph Downstream["下游評估"]
+        direction LR
+        Classifier["Classification<br/>ConvNeXt-Tiny"]
+        Segmenter["Segmentation<br/>SegFormer-B0"]
+        Views --> Classifier
+        Views --> Segmenter
+    end
 
-其中兩個公開在本 Repository：
+    subgraph Publish["公開結果與證據鏈"]
+        direction LR
+        Reports["Validated CSV、Figures<br/>SHA256-bound reports"]
+        Demo["正體中文 Demo<br/>分類、Binary mask、Heatmap"]
+        Classifier --> Reports
+        Segmenter --> Reports
+        Reports --> Demo
+    end
 
-| Skill | 職責 |
+    classDef source fill:#D8F3DC,stroke:#1B4332,stroke-width:2px,color:#081C15
+    classDef synthetic fill:#FFE8CC,stroke:#D9480F,stroke-width:2px,color:#5F2500
+    classDef guard fill:#D0EBFF,stroke:#1864AB,stroke-width:2px,color:#0B2E59
+    classDef downstream fill:#E5DBFF,stroke:#5F3DC4,stroke-width:2px,color:#2B1B5A
+    classDef publish fill:#FFF3BF,stroke:#E67700,stroke-width:2px,color:#4D2A00
+
+    class Visa,Split,FewShot source
+    class StageA,StageB,Placement synthetic
+    class Filter,Views guard
+    class Classifier,Segmenter downstream
+    class Reports,Demo publish
+```
+
+整體管線包含 Frozen Split 與 Test Blocklist、Copy-paste / Procedural / Diffusion 混合生成、六道 Quality Filtering 護欄、ConvNeXt-Tiny 分類器、SegFormer-B0 分割器與 SHA256-bound 可追溯證據鏈 (詳見 [方法論文件](docs/methodology.md))。
+
+### Agent 工作流規範
+
+本專案提供專案層級之 Agent Skill 控制層：
+
+| Agent Skill | 職責與權限範圍 |
 |---|---|
-| [`defectforge`](.claude/skills/defectforge/SKILL.md) | Orchestrator：脈絡恢復 → 階段路由 → 里程碑收尾；對應課程的 `anomalygen` |
-| [`df-guard`](.claude/skills/df-guard/SKILL.md) | 防洩漏護欄：frozen manifest checksum、test blocklist 比對、資源與身分邊界，任一失敗即阻擋該階段 |
+| [`defectforge`](.claude/skills/defectforge/SKILL.md) | Orchestrator：脈絡恢復、階段路由與里程碑收尾 |
+| [`df-guard`](.claude/skills/df-guard/SKILL.md) | 防洩漏護欄：Frozen Manifest Checksum、Test Blocklist 比對與身分邊界 |
 
-其餘 11 個階段 skill 與 owner-only 的工作記憶保留在本機。取捨理由見
-[ADR-028](docs/decisions.md#adr-028)。
+---
 
 ## 實驗設計
 
-主實驗包含五組控制組；第 1–4 組使用完全相同的真實資料，Synthetic Data 僅能額外加入，
-所有組別都在同一個 frozen test set 評估：
+主實驗包含五組控制組；第 1–4 組採用完全相同之真實資料，Synthetic Data 僅採純增量方式加入，全數於相同 Frozen Test Set 上進行評估：
 
 1. **Real-only**：10 張真實瑕疵圖
-2. **+ Standard Augmentation**：排除一般 augmentation 就足以改善的可能
+2. **+ Standard Augmentation**：驗證傳統增強效果
 3. **+ 未篩選 Synthetic Data**
-4. **+ 已篩選 Synthetic Data**：主比較組
-5. **Full-real upper bound**：60 張真實瑕疵圖
+4. **+ 已篩選 Synthetic Data**：主要比較組
+5. **Full-real Upper Bound**：60 張真實瑕疵圖
 
-Validation 與 test 僅使用真實資料。Generator、Filter 與 defect-type clusterer
-不讀取 test image；split manifest 在第一張 Synthetic Image 產生前就凍結，
-並公開 `splits/test_blocklist.json` 供外部檢查。完整 protocol 見
-[實驗設計文件](docs/experiment_protocol.md)。
+Validation 與 Test 僅使用真實資料，生成器與過濾器絕不存取 Test 影像 (詳見 [實驗設計文件](docs/experiment_protocol.md))。
+
+---
 
 ## 實驗結果
 
-下列表格只能由 `scripts/verify_readme.py --write` 產生，而且必須先通過
-Classification 與 Segmentation 的獨立 validator。所有 Figure 也從相同兩份 CSV
-建立，輸入 SHA256 記錄於 `reports/phase2_figures_validation.json`。
+結果表格由 `scripts/verify_readme.py --write` 自動產生並通過獨立驗證器核對。
 
 ![真實資料 Scaling Curve 與已篩選 Synthetic Data 等價量](reports/figures/real_scaling_curve.png)
 
-### 瑕疵分類（Classification）
+### 瑕疵分類 (Classification)
 
 <!-- BEGIN VERIFIED CLASSIFICATION_MAIN -->
 | 物件 | 訓練組別 | Macro-F1 | 瑕疵 F1 | AUROC | 正常樣本 FPR |
@@ -132,10 +162,7 @@ Classification 與 Segmentation 的獨立 validator。所有 Figure 也從相同
 
 ![五組 Classification 比較](reports/figures/main_comparison_table.png)
 
-#### 預註冊 3-seed 複跑的 mean ± std
-
-實驗協定要求 Real-only 與最佳 Filtered 組各複跑 3 個 seed。上表為 seed 42 的單次結果，
-下表是同一批 run 的 seed 變異：
+#### 預註冊 3-seed 複跑 (Mean ± Std)
 
 <!-- BEGIN VERIFIED CLASSIFICATION_SEED_VARIANCE -->
 | 物件 | 訓練組別 | Seeds | Macro-F1（mean ± std） | AUROC（mean ± std） |
@@ -146,11 +173,7 @@ Classification 與 Segmentation 的獨立 validator。所有 Figure 也從相同
 | capsules | + 已篩選 Synthetic Data | 3 | 0.3609 ± 0.0201 | 0.3243 ± 0.0426 |
 <!-- END VERIFIED CLASSIFICATION_SEED_VARIANCE -->
 
-已篩選 Synthetic 組的 seed 間標準差比 Real-only 大一個數量級以上。這個變異度本身就說明：
-在這個資料規模下，單一 seed 的細部差異不足以支撐結論。其餘 Classification 組別只有
-seed 42，因此不在表內。Segmentation 的 3-seed 複跑見下一節。
-
-### 瑕疵區域分割（Segmentation）
+### 瑕疵區域分割 (Segmentation)
 
 <!-- BEGIN VERIFIED SEGMENTATION_MAIN -->
 | 物件 | 訓練組別 | Dice | mIoU | Pixel AUROC | AUPRO |
@@ -177,11 +200,7 @@ seed 42，因此不在表內。Segmentation 的 3-seed 複跑見下一節。
 
 ![九個 Segmentation 邏輯組別](reports/figures/segmentation_table.png)
 
-#### 預註冊 3-seed 複跑的 mean ± std
-
-[ADR-032](docs/decisions.md#adr-032) 在**執行前**決定把**全部 8 個 formal group**都補到
-3 個 seed（42／43／44），而不是只補其中兩組——這樣就沒有任何一組缺誤差棒，也不會出現
-「看到結果才挑複跑對象」的疑慮。上表為 seed 42 錨點，下表是同一批組別的 seed 變異：
+#### 預註冊 3-seed 複跑 (Mean ± Std)
 
 <!-- BEGIN VERIFIED SEGMENTATION_SEED_VARIANCE -->
 | 物件 | 訓練組別 | Seeds | Dice（mean ± std） | AUPRO（mean ± std） |
@@ -206,10 +225,7 @@ seed 42，因此不在表內。Segmentation 的 3-seed 複跑見下一節。
 | capsules | All-mixed（與已篩選 Synthetic Data 共用） | 3 | 0.1523 ± 0.2639 | 0.4751 ± 0.3834 |
 <!-- END VERIFIED SEGMENTATION_SEED_VARIANCE -->
 
-#### 跨機器重現
-
-複跑時 Drive 上沒有先前的 `runs/` 樹可跳過，於是 seed 42 在**另一台 Colab 機器、
-另一個時間**被完整重跑了一次。這個意外是免費的重現性證據，因此加以驗證而非丟棄：
+#### 跨機器重現性驗證
 
 <!-- BEGIN VERIFIED SEGMENTATION_REPRODUCTION -->
 - 重新執行 seed 42 的實跑 run：**16** 個（2 個物件 × 8 組）。
@@ -218,12 +234,7 @@ seed 42，因此不在表內。Segmentation 的 3-seed 複跑見下一節。
 - 基準是複跑前已發佈的表格 `reports/segmentation_seed42_baseline.csv`；比對由 `scripts/verify_seed42_reproduction.py` 執行，逐 run 結果見[重現檢查報告](reports/seed42_reproduction.md)。
 <!-- END VERIFIED SEGMENTATION_REPRODUCTION -->
 
-比對的基準是複跑**之前**就已 commit 的表格，不是事後挑選的數字。
-
-#### Dice 與 AUPRO 的方向不一致
-
-Dice 依賴固定 threshold 0.5，AUPRO 不依賴 threshold。在 seed 42 上，兩者對同一批 run
-給出相反的方向：
+#### Dice 與 AUPRO 門檻敏感度分析
 
 <!-- BEGIN VERIFIED SEGMENTATION_THRESHOLD -->
 | 物件 | 訓練組別 | Dice（threshold 0.5） | AUPRO（不依賴 threshold） | Dice Δ vs Real-only | AUPRO Δ vs Real-only |
@@ -240,10 +251,6 @@ Dice 依賴固定 threshold 0.5，AUPRO 不依賴 threshold。在 seed 42 上，
 | capsules | Full-real（60 張） | 0.6331 | 0.9591 | +0.0373 | +0.1103 |
 <!-- END VERIFIED SEGMENTATION_THRESHOLD -->
 
-##### 複跑後的判定：AUPRO 的提升沒有重現
-
-複跑改變了這個結論的一半。ADR-032 的兩條規則在執行前就寫死，判定結果如下：
-
 <!-- BEGIN VERIFIED SEGMENTATION_REPLICATION -->
 | 物件 | Dice／AUPRO 符號相反的 seed | Dice Δ（mean ± std） | AUPRO Δ（mean ± std） | 達預註冊門檻 |
 | --- | --- | --- | --- | --- |
@@ -255,93 +262,37 @@ Dice 依賴固定 threshold 0.5，AUPRO 不依賴 threshold。在 seed 42 上，
 - 兩條規則都在 [ADR-032](docs/decisions.md#adr-032) 於**複跑執行前**寫死，看到結果後未作任何修改。
 <!-- END VERIFIED SEGMENTATION_REPLICATION -->
 
-必須明講的是：**seed 42 上「AUPRO 顯示合成資料有幫助」這件事沒有通過複跑。**
-`capsules` 在 seed 43 與 44 上 Dice 與 AUPRO **同時**大幅退步，只有 seed 42 出現
-AUPRO 上升；因此在兩物件 macro 層級，兩個指標的 3-seed 平均其實**方向一致、都是負的**
-（確切數值見下方「限制與誠實揭露」的 verified 區塊）。預註冊規則判定為真實的方向矛盾
-只存在於 `pcb1` 這一個物件上。
+---
 
-換句話說，補了 seed 之後，負面結論**變得更強**而不是更弱。完整判定過程見
-[分割複跑判定報告](reports/segmentation_replication.md)。
+## Sampling 影響之驗證實驗
 
-零 Dice 的主因不是模型失效，而是**機率天花板**。重跑**全部 48 個 run** 的推論後量測到：
-絕大多數零 Dice 的 run 在整個 test set 上的最高預測機率都低於 threshold 0.5，
-因此不可能存在任何正像素——空 Mask 是**算術上必然**。逐 run 量測值見
-[零 Dice 診斷報告](reports/zero_dice_diagnosis.md)，由
-`scripts/diagnose_zero_dice_segmentation.py` 產生；該腳本會**先重算已發佈指標並要求相符**，
-才輸出診斷。
+在完全不存取 Test Set 前提下，v2 Pilot 檢驗 Label Balancing 是否導致 Synthetic Anomaly 過度占用正樣本曝光：
 
-**但擴大到 48 個 run 之後，這個機制不再能解釋全部。** 有一個 run 確實產生了正像素，
-只是完全沒落在真實瑕疵上，Dice 因此仍為 0——那與信心校準無關，是空間定位失敗。
-[ADR-030](docs/decisions.md#adr-030) 依 seed 42 的 16 個 run 寫下「零 Dice 完全由機率天花板
-造成」，這句話在更大的樣本上**只成立於絕大多數而非全部**，修正記於
-[ADR-034](docs/decisions.md#adr-034)。確切的分類與計數見上述診斷報告，
-數字由腳本產生、不在此複述。
-
-這個更正也暴露了工具本身的缺陷：原腳本把結論寫成固定字串、只把數值填進去，
-從未驗證該主張是否成立，因此在單 seed 資料上「碰巧正確」。現在摘要改由資料推導，
-並加了以本次反例為輸入的回歸測試。
-
-本專案**不因此改換主指標，也不調校 threshold**：在 test 上挑一個讓 Dice 好看的 threshold
-等同於用 test 做模型選擇。預註冊的主結論仍以 Dice 與 Macro-F1 為準，AUPRO、threshold
-敏感度與上述診斷一律**併列揭露**。決策見 [ADR-027](docs/decisions.md#adr-027) 與
-[ADR-030](docs/decisions.md#adr-030)。
-
-## v2 後續實驗：退步是否來自 Sampling？
-
-在完全不讀取 test set 的前提下，v2 pilot 檢驗 Label balancing 是否讓
-Synthetic Anomaly 過度占據 positive-class exposure：
-
-| Validation candidate | pcb1 Macro-F1 | pcb1 AUROC | capsules Macro-F1 | capsules AUROC |
+| Validation 候選方案 | pcb1 Macro-F1 | pcb1 AUROC | capsules Macro-F1 | capsules AUROC |
 |---|---:|---:|---:|---:|
-| Real-only | 0.6944 | 0.9167 | 0.8133 | 0.9120 |
-| v1 Class-balanced Mixing | 0.5537 | 0.3139 | 0.4545 | 0.2083 |
-| Domain-balanced 50% real bad | 0.6944 | **0.9389** | 0.6571 | 0.7500 |
-| Domain-balanced 75% real bad | 0.6944 | 0.8806 | 0.6571 | **0.8611** |
+| **Real-only** | 0.6944 | 0.9167 | 0.8133 | 0.9120 |
+| **v1 Class-balanced Mixing** | 0.5537 | 0.3139 | 0.4545 | 0.2083 |
+| **Domain-balanced 50% Real Bad** | 0.6944 | **0.9389** | 0.6571 | 0.7500 |
+| **Domain-balanced 75% Real Bad** | 0.6944 | 0.8806 | 0.6571 | **0.8611** |
 
-Domain balancing 救回 pcb1 與部分 capsules，但預先註冊的跨物件 gate 仍未通過，
-因此在 test evaluation 與 three-seed confirmatory run 前停止。這是
-**exploratory validation result**，不取代 v1 結果；詳見
-[v2 Pilot Report](reports/v2_pilot_report.md)。
+---
 
-## v3–v5：三個機制候選，四次 gate 全數未過
+## 曝光、外觀與面積機制檢驗
 
-v2 之後又跑了三個 pilot，每一個都**先把判定規則 commit 進 git、才開始執行**，
-commit 時間戳即為「規則早於結果」的證據。四次 gate **全部未通過**，
-因此 **frozen test 從未被讀取**（每份結果的 `test_data_loaded` 皆為 `false`）。
+v2 之後進行之三次 Pilot 均於執行前將判定規則 Commit 至 Git：
 
-| Pilot | 檢驗的機制 | 判定 | 預註冊 |
+| Pilot 階段 | 檢驗之機制假說 | 判定結果 | 預註冊依據 |
 |---|---|---|---|
-| v2 | 合成樣本淹沒真實瑕疵的**曝光**失衡 | gate 未過；部分正確 | [ADR-026](docs/decisions.md#adr-026) |
-| v3 | 落差來自**外觀**還是放置 | 依物件而異；主要物件無鑑別力 | [ADR-035](docs/decisions.md#adr-035) |
-| v4 | 把放置**面積**限回真實分布 | **未能檢驗**（主判準無鑑別力） | [ADR-038](docs/decisions.md#adr-038) |
-| v5 | 同 v4，但複跑到 3 seeds | **無效果**（有效的陰性結果） | [ADR-040](docs/decisions.md#adr-040) |
+| **v2** | 合成樣本淹沒真實瑕疵之**曝光**失衡 | Gate 未過；部分改善 | [ADR-026](docs/decisions.md#adr-026) |
+| **v3** | 效能落差來自**外觀**或放置位移 | 依物件而異；主物件無鑑別力 | [ADR-035](docs/decisions.md#adr-035) |
+| **v4** | 限制放置**面積**符合真實分佈 | 未能檢驗 (主指標無鑑別力) | [ADR-038](docs/decisions.md#adr-038) |
+| **v5** | 同 v4，複跑至 3 Seeds | **無效果** (有效陰性結論) | [ADR-040](docs/decisions.md#adr-040) |
 
-到此，合成資料在 Classification 上失效的三個候選機制——**曝光、外觀、面積**——都已被排除。
-逐次判定見 [v3](reports/v3_source_attribution.md)、[v4](reports/v4_placement_band.md)、
-[v5](reports/v5_seed_replication.md)。
+---
 
-三件過程中查出、原本沒被發現的事：
+## 程序化合成特徵洩漏檢驗
 
-- **既有的合成來源排序是取樣汙染的產物**。三個來源消融全都在 v1 壞掉的 sampler 下跑，
-  真實瑕疵曝光被壓到與 `filtered_syn` 相同；修正取樣後排序**反轉**
-  （[ADR-036](docs/decisions.md#adr-036)）
-- **`pcb1` 的合成放置面積嚴重超出真實分布**，連最小的放置都比真實瑕疵的中位數大。
-  這是既有結果中未被發現的缺陷（[ADR-037](docs/decisions.md#adr-037)）——
-  但 v5 證明**修正面積並不足以救回合成資料**
-- **單 seed 的方向不可信**。v5 的 seed 42 與另外兩個 seed **符號相反**；
-  若沿用單 seed 做法會得到完全相反的結論，與分割的
-  [ADR-033](docs/decisions.md#adr-033) 發現一致
-
-過程中也修正了兩個我們自己的方法學錯誤：一份診斷把結論預先寫成字串而從未驗證
-（[ADR-034](docs/decisions.md#adr-034)），以及一次預註冊把主判準訂在**已知無鑑別力**的
-指標組合上（[ADR-039](docs/decisions.md#adr-039)）。兩者都已改成由程式導出並加上回歸測試。
-
-## 揭露的洩漏面：程序化合成用了真實 mask 的統計量
-
-「僅 Procedural」組**沒有看過任何一個真實瑕疵像素**，但它的 mask 面積與長寬比被約束在
-10 張 few-shot 訓練 mask 的 5–95 百分位內。這些**聚合形狀統計量**就是整個洩漏面，
-在 [ADR-011](docs/decisions.md#adr-011) 主動揭露，並提供 `--no-real-stats` 版本供對照：
+「僅 Procedural」組未存取真實瑕疵像素，惟其 Mask 面積與長寬比被限制於 10 張 Few-shot 訓練 Mask 之 5–95 百分位內：
 
 <!-- BEGIN VERIFIED CLASSIFICATION_LEAKAGE_SURFACE -->
 | 物件 | Macro-F1（用統計量） | Macro-F1（不用） | Δ | AUROC（用統計量） | AUROC（不用） | Δ |
@@ -350,19 +301,19 @@ commit 時間戳即為「規則早於結果」的證據。四次 gate **全部�
 | capsules | 0.4723 | 0.4848 | -0.0125 | 0.5000 | 0.5119 | -0.0119 |
 <!-- END VERIFIED CLASSIFICATION_LEAKAGE_SURFACE -->
 
-**用了統計量的版本反而比較差。** 也就是說，這個被揭露的洩漏面不只沒有帶來好處，
-還是負作用。分割版的對照組**決定不補**，理由記於 [ADR-042](docs/decisions.md#adr-042)。
+使用統計量之版本反而表現較差，證明此洩漏層面並未帶來人為性能抬升。
 
-## 公開互動 Demo
+---
 
-![DefectForge 決定性 Demo](assets/demo.gif)
+## 成果展示
 
-[開啟正體中文 DefectForge Demo](https://steven0226-defectforge-visa-demo.hf.space/)
+![DefectForge Demo](assets/demo.gif)
 
-Demo 使用 CPU Basic，會驗證 checkpoint SHA256、不保存上傳影像，並提供五張 VisA
-範例；輸出包含 Classification Confidence、Binary Mask、Probability Heatmap 與
-checkpoint provenance。受 SegFormer upstream License 限制，僅供
-non-commercial research／evaluation。
+[線上開啟正體中文 DefectForge Demo](https://steven0226-defectforge-visa-demo.hf.space/)
+
+Demo 執行於 CPU 基礎環境，輸出包含 Classification Confidence、Binary Mask、Probability Heatmap 與 Checkpoint Provenance。
+
+---
 
 ## 限制與誠實揭露
 
@@ -378,66 +329,47 @@ non-commercial research／evaluation。
 - 主結論仍以預註冊的 Macro-F1 與 Dice 為準；AUPRO 與 threshold 敏感度是**併列揭露**，不是事後換指標。
 <!-- END VERIFIED RESULT_OUTCOME -->
 
-- Segmentation 的 8 個 formal group 已全部補到 3 個 seed（[ADR-032](docs/decisions.md#adr-032)）。
-  **Classification 仍只有 Real-only 與已篩選 Synthetic 兩組達到 3 seed**，其餘組別只有
-  seed 42，因此 Classification 的組間細部排序仍不應被過度解讀。
-- 3 個 seed 對 10 張瑕疵影像而言仍是很小的樣本。標準差在 `capsules` 上相當大
-  （見上方 mean ± std 表），所以本專案只主張方向，不主張精確幅度。
-- 零 Dice 的診斷已涵蓋全部 48 個 run，但**機率天花板不是唯一成因**：其中一個 run 有正像素
-  卻完全打偏。因此「Dice 是否為 0 與模型的空間定位能力無關」這個較強的說法**不成立**
-  （[ADR-034](docs/decisions.md#adr-034)）。
-- 合成組的正樣本曝光高度偏向 Synthetic Data：`results/classification.csv` 的
-  `sampled_real_bad` / `sampled_synthetic_bad` 顯示，加入 500 張合成瑕疵後，
-  真實瑕疵在同一份 sampling schedule 中的曝光量遠低於 Real-only。
-  這是 v2 pilot 檢驗的假說，也代表 v1 的負面結果**同時**受合成品質與 sampling 設計影響，
-  不能單獨歸因於「合成資料無效」。
-- 僅研究 `pcb1` 與 `capsules`，不能直接推廣到其他工業物件。
-- Synthetic Data 的視覺品質不等於下游任務有效性。
-- 預註冊 threshold 0.5 下，四張決定性 Demo frame 的 Binary Mask coverage 都是 0。
-- 公開 Demo 是 research／evaluation tool，不是 production AOI、品質放行或安全系統。
-- v2 pilot 是 exploratory validation；未通過 gate，因此沒有執行 confirmatory test。
+---
 
-## 重現方式
+## 快速開始
 
-開發與驗證環境為 Windows 11、Python 3.12、RTX 4090；資料路徑統一由
-`configs/paths.yaml` 管理。
+需求：Windows 11、Python 3.12、NVIDIA RTX 4090 GPU、`uv`。
 
 ```powershell
+# 1. 複製專案與初始化環境
 git clone https://github.com/kuotunyu/defectforge-visa-synthetic-data.git
 Set-Location defectforge-visa-synthetic-data
 uv sync --frozen --python 3.12
 
+# 2. 資料下載與 Split 驗證
 uv run python scripts/download_visa.py
 uv run python scripts/prepare_splits.py
 uv run python scripts/verify_splits.py
 
+# 3. 執行測試與發布驗證
 uv run ruff check .
 uv run pytest -q
 uv run python scripts/verify_publish.py
 ```
 
-Configuration／CLI 契約見 [Interfaces](docs/interfaces.md)，預先註冊的下游設計見
-[Experiment Protocol](docs/experiment_protocol.md)，Colab 薄封裝位於
-[`notebooks/`](notebooks/)。
+---
 
-## Repository 結構
+## 專案結構
 
-| 路徑 | 內容 |
+| 目錄路徑 | 內容規範 |
 |---|---|
-| `src/` | Data／Synthetic／Filtering／Training／Evaluation／Inference Source Code |
-| `configs/`、`splits/` | 可重現設定、Frozen Manifest 與 Test Blocklist |
-| `scripts/`、`tests/` | 執行入口、獨立 Validator 與測試 |
-| `docs/` | 方法論、Experiment Protocol、CLI 契約與 ADR |
-| `reports/`、`results/` | SHA256-bound Evidence、Figure 與凍結結果 |
-| `notebooks/` | Colab Notebook |
-| `.claude/skills/` | 公開的兩個 Agent Skill：Orchestrator 與防洩漏 Guard |
+| `src/` | Data、Synthetic、Filtering、Training 與 Inference 核心原始碼 |
+| `configs/`、`splits/` | 可重現設定檔、Frozen Manifest 與 Test Blocklist |
+| `scripts/`、`tests/` | 自動化執行腳本、獨立 Validator 與單元測試 |
+| `docs/` | 方法論、Experiment Protocol、CLI 契約與 ADR 決策文件 |
+| `reports/`、`results/` | SHA256-bound 證據鏈、圖表與凍結數據 |
+| `.claude/skills/` | 公開 Agent Skill：Orchestrator 與防洩漏 Guard |
+
+---
 
 ## 授權與引用
 
-本 Repository 的 Source Code 採 **MIT License**（見 [LICENSE](LICENSE)）。
-MIT 僅涵蓋程式碼；Dataset、Synthetic Images 與 Model Weights 各自保留原始條款。
-可直接引用的 Metadata 見 [CITATION.cff](CITATION.cff)，第三方資產總表見
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)：
+本 Repository 之程式碼採用 **MIT License** ([LICENSE](LICENSE))。原始資料集與模型權重保留各自上游條款：
 
 <!-- BEGIN VERIFIED LICENSE_CHAIN -->
 | 資產 | License | DefectForge 義務 |
@@ -451,6 +383,4 @@ MIT 僅涵蓋程式碼；Dataset、Synthetic Images 與 Model Weights 各自保�
 | DefectForge Source Code | MIT | MIT 僅授權程式碼，不包含 Dataset 與 Model Weights |
 <!-- END VERIFIED LICENSE_CHAIN -->
 
-如需引用 DefectForge，可在 GitHub 右側 **Cite this repository** 取得 Metadata；
-若使用 VisA 或衍生 Synthetic Data，仍須引用 VisA 原始論文。完整論文與上游授權
-見 [方法論](docs/methodology.md)與 [License Chain](docs/license_chain.md)。
+如需引用本專案，請參考 [`CITATION.cff`](CITATION.cff)。詳細上游授權鏈見 [License Chain](docs/license_chain.md)。

@@ -7,6 +7,15 @@
 *.pem
 kaggle.json
 
+# 私人面試筆記與本機開發輔助文檔
+PROGRESS.md
+interview*.md
+INTERVIEW_PREP.md
+*.private.md
+CLAUDE.md
+PLAN.md
+.agents/
+
 # --- Large data & outputs ---
 # Bulk data actually lives on D:\sdg-data\01-defectforge (see configs/paths.yaml);
 # these rules exist so an accidental local copy never reaches git.
