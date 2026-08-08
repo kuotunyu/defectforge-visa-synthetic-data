@@ -3,6 +3,10 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-08796c.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/kuotunyu/defectforge-visa-synthetic-data?color=08796c)](https://github.com/kuotunyu/defectforge-visa-synthetic-data/releases/latest)
 
+> **狀態：v1.3.0 已完成並公開。**
+> 下游結果表與最終結論皆由通過獨立驗證的 CSV 自動產生，不手動填寫數字。
+> 這行的版本號由 `scripts/verify_publish.py` 對最新 tag 比對，不一致即擋下發佈。
+
 本專案在每個物件僅有 **10 張真實瑕疵圖**的極度少樣本條件下，以 Open Model 與 Open Data 架構重建 NVIDIA GTC 2026 Cosmos AnomalyGen 工業瑕疵合成與下游評估方法論。
 
 [Synthetic Dataset](https://huggingface.co/datasets/steven0226/defectforge-visa-synthetic) ·
@@ -48,7 +52,7 @@ highshot TEST ⊂ fewshot TEST                           True
 
 ---
 
-## 系統架構與 Pipeline
+## 方法與系統架構（Pipeline）
 
 ```mermaid
 %%{init: {'themeVariables': {'fontSize': '20px'}}}%%
@@ -331,7 +335,7 @@ Demo 執行於 CPU 基礎環境，輸出包含 Classification Confidence、Binar
 
 ---
 
-## 快速開始
+## 重現方式（快速開始）
 
 需求：Windows 11、Python 3.12、NVIDIA RTX 4090 GPU、`uv`。
 
