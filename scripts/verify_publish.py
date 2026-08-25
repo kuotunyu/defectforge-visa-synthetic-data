@@ -730,7 +730,7 @@ def audit_closeout_metadata(repo: Path) -> dict[str, Any]:
         and citation.get("type") == "software"
         and citation.get("repository-code") == expected_repository
         and citation.get("license") == "MIT"
-        and str(citation.get("version")) == "1.2.1"
+        and str(citation.get("version")) == "1.3.0"
         and "kuotunyu" in author_names
     )
     standard_mit = bool(

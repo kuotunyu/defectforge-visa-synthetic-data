@@ -1,6 +1,6 @@
 [project]
 name = "defectforge-visa"
-version = "0.1.0"
+version = "1.3.0"
 description = "Few-shot industrial defect synthesis on VisA: an open-source replication of the NVIDIA GTC 2026 Cosmos AnomalyGen methodology."
 readme = "README.md"
 license = { file = "LICENSE" }

@@ -248,7 +248,7 @@ authors:
   - name: "kuotunyu"
 repository-code: "https://github.com/kuotunyu/defectforge-visa-synthetic-data"
 license: MIT
-version: 1.2.1
+version: 1.3.0
 """,
         encoding="utf-8",
     )
