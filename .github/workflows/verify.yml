@@ -58,4 +58,7 @@ jobs:
       # step above already proves the upstream licences right now. It is reported but
       # not gating here. A release runs this script with no flags.
       - name: Audit committed publication evidence and contributor identity
-        run: uv run --frozen python scripts/verify_publish.py --allow-stale-license-check
+        run: >
+          uv run --frozen python scripts/verify_publish.py
+          --allow-stale-license-check
+          --revision "${{ github.event.pull_request.head.sha || github.sha }}"

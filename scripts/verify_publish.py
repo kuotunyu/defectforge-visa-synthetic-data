@@ -229,17 +229,23 @@ def scan_tracked_tree(repo: Path, paths: Sequence[Path]) -> dict[str, Any]:
     }
 
 
-def audit_identities(repo: Path) -> dict[str, Any]:
+def audit_identities(repo: Path, *, revision: str | None = None) -> dict[str, Any]:
+    scope = (revision,) if revision else ("--all",)
     rows = [
         tuple(line.split("\t"))
-        for line in _git(repo, "log", "--all", "--format=%an\t%ae\t%cn\t%ce").splitlines()
+        for line in _git(
+            repo,
+            "log",
+            *scope,
+            "--format=%an\t%ae\t%cn\t%ce",
+        ).splitlines()
         if line
     ]
     require(bool(rows), "Git history is empty")
     unique = sorted(set(rows))
     expected = (EXPECTED_NAME, EXPECTED_EMAIL, EXPECTED_NAME, EXPECTED_EMAIL)
     invalid = [row for row in unique if row != expected]
-    bodies = _git(repo, "log", "--all", "--format=%B%x00")
+    bodies = _git(repo, "log", *scope, "--format=%B%x00")
     trailer_matches = len(COAUTHOR_TRAILER.findall(bodies))
     return {
         "commit_count": len(rows),
@@ -773,7 +779,12 @@ def audit_release_acceptance(repo: Path) -> dict[str, Any]:
     }
 
 
-def build_audit(repo: Path, *, waived_checks: Sequence[str] = ()) -> dict[str, Any]:
+def build_audit(
+    repo: Path,
+    *,
+    waived_checks: Sequence[str] = (),
+    revision: str | None = None,
+) -> dict[str, Any]:
     """Audit the repository. `waived_checks` are still reported honestly, just not gating.
 
     The only intended waiver is `model_license_verification_fresh` in continuous
@@ -783,7 +794,7 @@ def build_audit(repo: Path, *, waived_checks: Sequence[str] = ()) -> dict[str, A
     repo = repo.resolve(strict=True)
     require((repo / ".git").exists(), f"Not a Git repository: {repo}")
     tree = scan_tracked_tree(repo, tracked_paths(repo))
-    identities = audit_identities(repo)
+    identities = audit_identities(repo, revision=revision)
     required = audit_required_paths(repo)
     content = audit_plan_and_readme(repo)
     evidence = audit_evidence(repo)
@@ -877,13 +888,20 @@ def build_parser() -> argparse.ArgumentParser:
             "Never use this for a release."
         ),
     )
+    parser.add_argument(
+        "--revision",
+        help=(
+            "Audit Git identities and co-author trailers only in this revision and "
+            "its ancestors. Omit for the strict release audit of every ref."
+        ),
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     waived = ("model_license_verification_fresh",) if args.allow_stale_license_check else ()
-    audit = build_audit(args.repo, waived_checks=waived)
+    audit = build_audit(args.repo, waived_checks=waived, revision=args.revision)
     atomic_write_json(args.output, audit)
     if audit["status"] != "passed":
         print(json.dumps(audit["checks"], indent=2, sort_keys=True))

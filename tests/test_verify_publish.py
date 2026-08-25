@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+import yaml
 from PIL import Image
 
 from scripts.verify_publish import (
@@ -41,13 +43,45 @@ def test_hugging_face_cards_document_supported_release_interfaces() -> None:
     assert "blend-back" in model_card
 
 
-def _git(repo: Path, *args: str) -> None:
-    subprocess.run(
+def _git(repo: Path, *args: str) -> str:
+    result = subprocess.run(
         ["git", "-C", str(repo), *args],
         check=True,
         capture_output=True,
         text=True,
     )
+    return result.stdout.strip()
+
+
+def _synthetic_pr_merge(repo: Path, base: str, head: str) -> str:
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "GIT_AUTHOR_NAME": EXPECTED_NAME,
+            "GIT_AUTHOR_EMAIL": EXPECTED_EMAIL,
+            "GIT_COMMITTER_NAME": "GitHub",
+            "GIT_COMMITTER_EMAIL": "noreply@github.com",
+        }
+    )
+    result = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repo),
+            "commit-tree",
+            _git(repo, "rev-parse", f"{head}^{{tree}}"),
+            "-p",
+            base,
+            "-p",
+            head,
+        ],
+        check=True,
+        capture_output=True,
+        input="Synthetic pull request merge\n",
+        text=True,
+        env=environment,
+    )
+    return result.stdout.strip()
 
 
 def test_scan_text_reports_locations_without_secret_values() -> None:
@@ -112,6 +146,56 @@ def test_identity_audit_detects_other_contributor_and_coauthor(tmp_path: Path) -
         ["Other Person", "other@example.com", "Other Person", "other@example.com"]
     ]
     assert rejected["coauthor_trailer_count"] == 1
+
+    scoped = audit_identities(tmp_path, revision="HEAD")
+    assert scoped["invalid_rows"] == rejected["invalid_rows"]
+    assert scoped["coauthor_trailer_count"] == 1
+
+
+def test_identity_audit_scopes_pr_head_away_from_synthetic_merge_ref(
+    tmp_path: Path,
+) -> None:
+    _git(tmp_path, "init")
+    _git(tmp_path, "config", "user.name", EXPECTED_NAME)
+    _git(tmp_path, "config", "user.email", EXPECTED_EMAIL)
+    tracked = tmp_path / "tracked.txt"
+    tracked.write_text("base\n", encoding="utf-8")
+    _git(tmp_path, "add", "tracked.txt")
+    _git(tmp_path, "commit", "-m", "base")
+    base = _git(tmp_path, "rev-parse", "HEAD")
+
+    tracked.write_text("feature\n", encoding="utf-8")
+    _git(tmp_path, "add", "tracked.txt")
+    _git(tmp_path, "commit", "-m", "feature")
+    head = _git(tmp_path, "rev-parse", "HEAD")
+    merge = _synthetic_pr_merge(tmp_path, base, head)
+    _git(tmp_path, "update-ref", "refs/pull/1/merge", merge)
+
+    strict = audit_identities(tmp_path)
+    assert strict["invalid_rows"] == [
+        [EXPECTED_NAME, EXPECTED_EMAIL, "GitHub", "noreply@github.com"]
+    ]
+
+    scoped = audit_identities(tmp_path, revision=head)
+    assert scoped["invalid_rows"] == []
+    assert scoped["coauthor_trailer_count"] == 0
+
+
+def test_verify_workflow_scopes_identity_audit_to_event_head() -> None:
+    workflow = yaml.load(
+        (REPO_ROOT / ".github/workflows/verify.yml").read_text(encoding="utf-8"),
+        Loader=yaml.BaseLoader,
+    )
+    audit_step = next(
+        step
+        for step in workflow["jobs"]["test"]["steps"]
+        if step.get("name") == "Audit committed publication evidence and contributor identity"
+    )
+
+    assert (
+        '--revision "${{ github.event.pull_request.head.sha || github.sha }}"'
+        in audit_step["run"]
+    )
 
 
 def test_readme_audit_requires_public_sections_and_final_copy(tmp_path: Path) -> None:
