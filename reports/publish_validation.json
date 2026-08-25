@@ -7,7 +7,7 @@
     "final_figures_valid": true,
     "github_social_preview_valid": true,
     "hf_upload_plan_safe_dry_run": true,
-    "model_license_verification_fresh": false,
+    "model_license_verification_fresh": true,
     "no_coauthor_trailers": true,
     "no_oversized_tracked_files": true,
     "no_secret_or_personal_path": true,
@@ -40,14 +40,14 @@
     "hf_upload_plan_is_safe_dry_run": true,
     "invalid": [],
     "missing": [],
-    "model_license_fresh_within_24h": false,
+    "model_license_fresh_within_24h": true,
     "passed_report_count": 12,
     "policy_failures": []
   },
   "failed_checks": [],
   "git": {
     "coauthor_trailer_count": 0,
-    "commit_count": 110,
+    "commit_count": 111,
     "invalid_rows": [],
     "unique_author_committer_rows": [
       [
@@ -148,7 +148,5 @@
     "secret_or_path_findings": [],
     "tracked_env": []
   },
-  "waived_checks": [
-    "model_license_verification_fresh"
-  ]
+  "waived_checks": []
 }

@@ -68,7 +68,8 @@ uv run python src/synthetic/generate_diffusion.py `
   --refine
 ```
 
-The equivalent Python flow is:
+The equivalent Python flow is described below. This is a conceptual flow, not a
+standalone callable API; use the supported repository command above for inference.
 
 ```python
 # 1. Load a frozen normal image and a placement mask.

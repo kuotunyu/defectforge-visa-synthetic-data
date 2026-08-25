@@ -26,6 +26,20 @@ from scripts.verify_publish import (
     sha256_file,
 )
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_hugging_face_cards_document_supported_release_interfaces() -> None:
+    dataset_card = (REPO_ROOT / "hf_cards/dataset/README.md").read_text(
+        encoding="utf-8"
+    )
+    model_card = (REPO_ROOT / "hf_cards/model/README.md").read_text(encoding="utf-8")
+
+    assert "Dataset viewer and download scope" in dataset_card
+    assert "metadata.jsonl" in dataset_card
+    assert "crop-to-ROI" in model_card
+    assert "blend-back" in model_card
+
 
 def _git(repo: Path, *args: str) -> None:
     subprocess.run(

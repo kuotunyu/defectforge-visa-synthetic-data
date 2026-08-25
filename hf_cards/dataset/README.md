@@ -23,6 +23,16 @@ reference sets.
 10 張真實瑕疵訓練圖；mask 是生成時使用的標註，不是模型事後預測。資料同時提供
 filtered 與 unfiltered 版本，並公開 provenance 與 test SHA-256 blocklist。
 
+## Dataset viewer and download scope
+
+This release is a roughly 14 GB, file-oriented image/mask bundle. The Hugging Face table
+viewer is not its canonical interface and is not expected to render every paired binary
+asset. Each leaf dataset's `metadata.jsonl`, together with its paired `images/...` and
+`masks/...` paths, is the canonical schema for programmatic use and provenance review.
+
+No original VisA image is redistributed. Users must obtain VisA independently and use
+the relative source paths plus SHA-256 values to reconstruct source provenance.
+
 ## What is included
 
 ```text
@@ -39,9 +49,8 @@ splits/
   *.sha256
 ```
 
-Each leaf dataset also contains `metadata.jsonl`. No original VisA image is
-redistributed. Source image fields are relative VisA paths plus SHA-256 values so users
-can reconstruct provenance after obtaining VisA independently.
+Each leaf dataset also contains `metadata.jsonl`. Source image fields are relative VisA
+paths plus SHA-256 values.
 
 The formal downstream pool has 3,000 unfiltered samples: copy-paste, procedural, and
 searched SD2, 500 per object and source. The frozen M13 filter accepts 1,770 of them.
