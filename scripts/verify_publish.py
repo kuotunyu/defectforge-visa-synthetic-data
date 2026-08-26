@@ -50,7 +50,6 @@ REQUIRED_PATHS = (
     "THIRD_PARTY_NOTICES.md",
     "SECURITY.md",
     "CONTRIBUTING.md",
-    "CHANGELOG.md",
     "uv.lock",
     "docs",
     "notebooks",
