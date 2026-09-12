@@ -1189,7 +1189,7 @@ CI 的實查步驟用 `--output` 寫到 `runner.temp`，**不覆寫已提交的�
 1. **主指標不變。** 預註冊的 Dice 與 Macro-F1 結論、[ADR-027](#adr-027) 的措辭與
    `negative_results_preserved` 全部維持。
 2. **不做 threshold 調校，也不回報調校後的 Dice。** 在 test 上挑一個讓 Dice 變好看的
-   threshold，就是用 test 做模型選擇，違反 [autonomy_policy 的誠實性紅線](autonomy_policy.md)。
+   threshold，就是用 test 做模型選擇，違反 owner-only `docs/autonomy_policy.md` 的誠實性紅線。
    本 ADR 只新增**量測**，不新增結果。
 3. **修正 ADR-027 的敘述強度**：正確說法不是「3 個仍有訊號」，而是
    「**6 個全部**的機率天花板低於 threshold」。這個說法更強、更簡單，也更容易驗證。
@@ -1468,7 +1468,7 @@ pixel AUROC `0.8959`，判定 `positive_pixels_never_overlap_ground_truth`。
 - 新增 3 項回歸測試，其中一項直接以本次的反例為輸入
 
 **教訓**：任何「全部 X 都滿足 Y」的敘述都必須由程式檢查後產生，不得預先寫成字串。
-這與 [CLAUDE.md](../CLAUDE.md) 既有的「數字只能由腳本產生」是同一條原則的延伸——
+這與 owner-only `CLAUDE.md` 既有的「數字只能由腳本產生」是同一條原則的延伸——
 **結論本身也算數字**。
 
 ---
@@ -2012,5 +2012,5 @@ ADR-011 的意圖是「讓讀者自己判斷那些統計量值多少」。實際
 
 ### 缺口不消失
 
-分割版對照仍留在 [PLAN.md](../PLAN.md) 的誠實清單上，標註為**刻意不做**與本 ADR 的連結，
+分割版對照仍留在 owner-only `PLAN.md` 的誠實清單上，標註為**刻意不做**與本 ADR 的連結，
 不得被讀成已完成或被遺忘。
