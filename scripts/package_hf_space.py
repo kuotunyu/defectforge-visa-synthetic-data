@@ -160,7 +160,7 @@ def _package_segmenter(
 def _scan_text(package_root: Path) -> list[str]:
     findings: list[str] = []
     forbidden = (
-        "C:\\Users\\3Hml",
+        str(Path.home()),
         "D:\\sdg-data",
         "D:/sdg-data",
         "HF_TOKEN=",
