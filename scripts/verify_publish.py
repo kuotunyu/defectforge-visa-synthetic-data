@@ -18,6 +18,9 @@ from PIL import Image
 
 EXPECTED_NAME = "kuotunyu"
 EXPECTED_EMAIL = "61350295+kuotunyu@users.noreply.github.com"
+# GitHub becomes the committer when a pull request is merged in the web UI;
+# the author must still be the expected identity.
+GITHUB_WEB_COMMITTER = ("GitHub", "noreply@github.com")
 MAX_TRACKED_BYTES = 10 * 1024 * 1024
 MODEL_LICENSE_MAX_AGE = timedelta(hours=24)
 FINAL_FIGURES = (
@@ -242,8 +245,11 @@ def audit_identities(repo: Path, *, revision: str | None = None) -> dict[str, An
     ]
     require(bool(rows), "Git history is empty")
     unique = sorted(set(rows))
-    expected = (EXPECTED_NAME, EXPECTED_EMAIL, EXPECTED_NAME, EXPECTED_EMAIL)
-    invalid = [row for row in unique if row != expected]
+    allowed = {
+        (EXPECTED_NAME, EXPECTED_EMAIL, EXPECTED_NAME, EXPECTED_EMAIL),
+        (EXPECTED_NAME, EXPECTED_EMAIL, *GITHUB_WEB_COMMITTER),
+    }
+    invalid = [row for row in unique if row not in allowed]
     bodies = _git(repo, "log", *scope, "--format=%B%x00")
     trailer_matches = len(COAUTHOR_TRAILER.findall(bodies))
     return {
