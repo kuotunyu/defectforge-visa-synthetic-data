@@ -172,9 +172,7 @@ def test_identity_audit_scopes_pr_head_away_from_synthetic_merge_ref(
     _git(tmp_path, "update-ref", "refs/pull/1/merge", merge)
 
     strict = audit_identities(tmp_path)
-    assert strict["invalid_rows"] == [
-        [EXPECTED_NAME, EXPECTED_EMAIL, "GitHub", "noreply@github.com"]
-    ]
+    assert strict["invalid_rows"] == []
 
     scoped = audit_identities(tmp_path, revision=head)
     assert scoped["invalid_rows"] == []
@@ -558,3 +556,43 @@ def test_an_untagged_repository_is_not_penalised(tmp_path: Path) -> None:
     content = audit_plan_and_readme(repo)
     assert content["latest_release_tag"] is None
     assert content["readme_status_matches_latest_tag"] is True
+
+
+def test_identity_audit_accepts_github_web_merge_committer_only_for_expected_author(
+    tmp_path: Path,
+) -> None:
+    _git(tmp_path, "init")
+    _git(tmp_path, "config", "user.name", EXPECTED_NAME)
+    _git(tmp_path, "config", "user.email", EXPECTED_EMAIL)
+    tracked = tmp_path / "tracked.txt"
+    tracked.write_text("base\n", encoding="utf-8")
+    _git(tmp_path, "add", "tracked.txt")
+    _git(tmp_path, "commit", "-m", "base")
+
+    def web_commit(author_name: str, author_email: str, text: str) -> str:
+        tracked.write_text(text, encoding="utf-8")
+        _git(tmp_path, "add", "tracked.txt")
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "GIT_AUTHOR_NAME": author_name,
+                "GIT_AUTHOR_EMAIL": author_email,
+                "GIT_COMMITTER_NAME": "GitHub",
+                "GIT_COMMITTER_EMAIL": "noreply@github.com",
+            }
+        )
+        subprocess.run(
+            ["git", "-C", str(tmp_path), "commit", "-m", "squash merge"],
+            check=True,
+            capture_output=True,
+            env=environment,
+        )
+        return _git(tmp_path, "rev-parse", "HEAD")
+
+    squash = web_commit(EXPECTED_NAME, EXPECTED_EMAIL, "squash\n")
+    assert audit_identities(tmp_path, revision=squash)["invalid_rows"] == []
+
+    other = web_commit("someone", "someone@example.com", "other\n")
+    assert audit_identities(tmp_path, revision=other)["invalid_rows"] == [
+        ["someone", "someone@example.com", "GitHub", "noreply@github.com"]
+    ]
